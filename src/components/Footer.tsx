@@ -10,16 +10,16 @@ import {
 
 export function Footer() {
   return (
-    <footer className="py-16" style={{ backgroundColor: '#D91A73' }}>
+    <footer className="py-16" style={{ backgroundColor: '#C599B6' }}>
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <h3 className="text-xl text-white">KatHome In Town </h3>
-            <p className="text-white/80 text-sm leading-relaxed">
-              Trải nghiệm kỳ nghỉ đáng nhớ tại homestay xinh đẹp giữa lòng Đà Lạt. 
-              Không gian ấm cúng như chính ngôi nhà của bạn.
-            </p>
+             <p className="text-white/80 text-sm leading-relaxed">
+               Hệ thống homestay hiện đại tại Hà Nội với thiết kế ấm cúng.
+               THOẢI MÁI & RIÊNG TƯ - Nơi lý tưởng để thư giãn.
+             </p>
             <div className="flex space-x-3">
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer">
                 <Facebook className="w-4 h-4 text-white" />
@@ -69,11 +69,11 @@ export function Footer() {
           <div className="space-y-4">
             <h4 className="text-white">Dịch vụ</h4>
             <ul className="space-y-2 text-sm">
-              <li className="text-white/80">Đặt phòng trực tuyến</li>
-              <li className="text-white/80">Tư vấn tour du lịch</li>
-              <li className="text-white/80">Thuê xe máy</li>
-              <li className="text-white/80">Đón tiễn sân bay</li>
-              <li className="text-white/80">Hỗ trợ 24/7</li>
+               <li className="text-white/80">Đặt phòng trực tuyến</li>
+               <li className="text-white/80">Tư vấn tour Hà Nội</li>
+               <li className="text-white/80">Thuê xe di chuyển</li>
+               <li className="text-white/80">Đón tiễn sân bay Nội Bài</li>
+               <li className="text-white/80">Hỗ trợ 24/7</li>
             </ul>
           </div>
 
@@ -82,19 +82,19 @@ export function Footer() {
             <h4 className="text-white">Thông tin liên hệ</h4>
             <div className="space-y-3 text-sm">
               <div className="flex items-start space-x-3">
-                <MapPin className="w-4 h-4 text-white/80 mt-0.5 flex-shrink-0" />
-                <span className="text-white/80">
-                  123 Đường Hoa Hồng, Phường 1<br />
-                  Thành phố Đà Lạt, Lâm Đồng
-                </span>
+                 <MapPin className="w-4 h-4 text-white/80 mt-0.5 flex-shrink-0" />
+                 <span className="text-white/80">
+                   Hệ thống cơ sở tại Hà Nội<br />
+                   Tây Hồ, Ba Đình, Hoàn Kiếm...
+                 </span>
               </div>
               <div className="flex items-center space-x-3">
-                <Phone className="w-4 h-4 text-white/80 flex-shrink-0" />
-                <span className="text-white/80">0123 456 789</span>
+                 <Phone className="w-4 h-4 text-white/80 flex-shrink-0" />
+                 <span className="text-white/80">098 894 65 68</span>
               </div>
               <div className="flex items-center space-x-3">
-                <Mail className="w-4 h-4 text-white/80 flex-shrink-0" />
-                <span className="text-white/80">info@rosehomestay.com</span>
+                 <Mail className="w-4 h-4 text-white/80 flex-shrink-0" />
+                 <span className="text-white/80">kathome.luv@gmail.com</span>
               </div>
             </div>
           </div>
@@ -108,7 +108,7 @@ export function Footer() {
           <div className="flex items-center space-x-1 text-white/60 text-sm mt-4 md:mt-0">
             <span>Được thiết kế với</span>
             <Heart className="w-4 h-4 text-red-400 fill-current" />
-            <span>tại Đà Lạt</span>
+             <span>tại Hà Nội</span>
           </div>
         </div>
       </div>

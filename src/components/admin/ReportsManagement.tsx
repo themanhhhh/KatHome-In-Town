@@ -235,7 +235,7 @@ export function ReportsManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: '#D91A73' }}>
+          <h1 className="text-3xl font-bold" style={{ color: '#C599B6' }}>
             Báo cáo & Thống kê
           </h1>
           <p className="text-gray-600 mt-2">
@@ -247,7 +247,7 @@ export function ReportsManagement() {
             variant="outline"
             size="sm"
             className="flex items-center space-x-2"
-            style={{ borderColor: '#D91A73', color: '#D91A73' }}
+            style={{ borderColor: '#C599B6', color: '#C599B6' }}
           >
             <RefreshCw className="w-4 h-4" />
             <span>Làm mới</span>
@@ -255,7 +255,7 @@ export function ReportsManagement() {
           <Button
             size="sm"
             className="flex items-center space-x-2 text-white"
-            style={{ backgroundColor: '#D91A73' }}
+            style={{ backgroundColor: '#C599B6' }}
           >
             <FileText className="w-4 h-4" />
             <span>Tạo báo cáo</span>
@@ -323,12 +323,12 @@ export function ReportsManagement() {
       </div>
 
       {/* Filters */}
-      <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+      <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                 <Input
                   placeholder="Tìm theo tên báo cáo, mô tả..."
                   value={searchTerm}
@@ -340,7 +340,7 @@ export function ReportsManagement() {
             
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <Filter className="w-4 h-4" style={{ color: '#D91A73' }} />
+                <Filter className="w-4 h-4" style={{ color: '#C599B6' }} />
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Loại báo cáo" />
@@ -378,19 +378,19 @@ export function ReportsManagement() {
       <div className="space-y-4">
         {/* Header with bulk actions */}
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold" style={{ color: '#D91A73' }}>
+          <h2 className="text-xl font-semibold" style={{ color: '#C599B6' }}>
             Danh sách báo cáo ({filteredReports.length})
           </h2>
           {selectedReports.length > 0 && (
             <div className="flex items-center space-x-3">
-              <span className="text-sm" style={{ color: '#D91A73' }}>
+              <span className="text-sm" style={{ color: '#C599B6' }}>
                 Đã chọn {selectedReports.length} báo cáo
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 className="flex items-center space-x-2"
-                style={{ borderColor: '#D91A73', color: '#D91A73' }}
+                style={{ borderColor: '#C599B6', color: '#C599B6' }}
               >
                 <Download className="w-4 h-4" />
                 <span>Tải xuống hàng loạt</span>
@@ -405,9 +405,9 @@ export function ReportsManagement() {
             type="checkbox"
             checked={selectedReports.length === filteredReports.length && filteredReports.length > 0}
             onChange={handleSelectAll}
-            style={{ accentColor: '#D91A73' }}
+            style={{ accentColor: '#C599B6' }}
           />
-          <span className="text-sm font-medium" style={{ color: '#D91A73' }}>
+          <span className="text-sm font-medium" style={{ color: '#C599B6' }}>
             Chọn tất cả báo cáo
           </span>
         </div>
@@ -425,11 +425,11 @@ export function ReportsManagement() {
                         type="checkbox"
                         checked={selectedReports.includes(report.id)}
                         onChange={() => handleSelectReport(report.id)}
-                        style={{ accentColor: '#D91A73' }}
+                        style={{ accentColor: '#C599B6' }}
                         className="mt-1"
                       />
                       <div className="flex-1">
-                        <h3 className="font-semibold text-lg leading-tight" style={{ color: '#D91A73' }}>
+                        <h3 className="font-semibold text-lg leading-tight" style={{ color: '#C599B6' }}>
                           {report.title}
                         </h3>
                         <p className="text-sm text-gray-600 mt-1">
@@ -439,7 +439,7 @@ export function ReportsManagement() {
                     </div>
                     <div className="flex flex-col items-end space-y-2">
                       {getStatusBadge(report.status)}
-                      <div className="flex items-center space-x-2 text-sm" style={{ color: '#D91A73' }}>
+                      <div className="flex items-center space-x-2 text-sm" style={{ color: '#C599B6' }}>
                         {getTypeIcon(report.type)}
                         <span>{getTypeName(report.type)}</span>
                       </div>
@@ -451,7 +451,7 @@ export function ReportsManagement() {
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <div className="text-2xl font-bold" style={{ color: '#D91A73' }}>
+                          <div className="text-2xl font-bold" style={{ color: '#C599B6' }}>
                             {report.type === 'revenue' && formatPrice(report.data.value)}
                             {report.type === 'bookings' && `${report.data.value} booking`}
                             {report.type === 'occupancy' && `${report.data.value}%`}
@@ -469,7 +469,7 @@ export function ReportsManagement() {
                           </div>
                         </div>
                         <div className="text-right">
-                          <PieChart className="w-12 h-12 opacity-20" style={{ color: '#D91A73' }} />
+                          <PieChart className="w-12 h-12 opacity-20" style={{ color: '#C599B6' }} />
                         </div>
                       </div>
                     </div>
@@ -515,16 +515,16 @@ export function ReportsManagement() {
                     </div>
                     
                     <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm" style={{ color: '#D91A73' }}>
+                      <Button variant="ghost" size="sm" style={{ color: '#C599B6' }}>
                         <Eye className="w-4 h-4" />
                       </Button>
                       {report.status === 'completed' && (
-                        <Button variant="ghost" size="sm" style={{ color: '#D91A73' }}>
+                        <Button variant="ghost" size="sm" style={{ color: '#C599B6' }}>
                           <Download className="w-4 h-4" />
                         </Button>
                       )}
                       {report.status === 'failed' && (
-                        <Button variant="ghost" size="sm" style={{ color: '#D91A73' }}>
+                        <Button variant="ghost" size="sm" style={{ color: '#C599B6' }}>
                           <RefreshCw className="w-4 h-4" />
                         </Button>
                       )}
@@ -540,8 +540,8 @@ export function ReportsManagement() {
         {filteredReports.length === 0 && (
           <Card className="bg-white border border-gray-200">
             <CardContent className="text-center py-12">
-              <FileText className="w-16 h-16 mx-auto mb-4 opacity-30" style={{ color: '#D91A73' }} />
-              <h3 className="text-lg font-medium mb-2" style={{ color: '#D91A73' }}>
+              <FileText className="w-16 h-16 mx-auto mb-4 opacity-30" style={{ color: '#C599B6' }} />
+              <h3 className="text-lg font-medium mb-2" style={{ color: '#C599B6' }}>
                 Không tìm thấy báo cáo nào
               </h3>
               <p className="text-gray-500 mb-6">
@@ -549,7 +549,7 @@ export function ReportsManagement() {
               </p>
               <Button
                 className="text-white"
-                style={{ backgroundColor: '#D91A73' }}
+                style={{ backgroundColor: '#C599B6' }}
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Tạo báo cáo đầu tiên

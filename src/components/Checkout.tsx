@@ -166,21 +166,21 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#F2D8D8' }}>
+      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#FAD0C4' }}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
             <Button 
               variant="ghost" 
               onClick={onBack}
               className="flex items-center space-x-2"
-              style={{ color: '#D91A73' }}
+              style={{ color: '#C599B6' }}
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Quay lại</span>
             </Button>
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-semibold" style={{ color: '#D91A73' }}>Thanh toán</h1>
-              <Badge style={{ backgroundColor: '#F2A7C3', color: '#D91A73' }}>
+              <h1 className="text-xl font-semibold" style={{ color: '#C599B6' }}>Thanh toán</h1>
+              <Badge style={{ backgroundColor: '#F2A7C3', color: '#C599B6' }}>
                 Bước 1/2
               </Badge>
             </div>
@@ -194,9 +194,9 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Guest Information */}
-              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2" style={{ color: '#D91A73' }}>
+                  <CardTitle className="flex items-center space-x-2" style={{ color: '#C599B6' }}>
                     <User className="w-5 h-5" />
                     <span>Thông tin khách hàng</span>
                   </CardTitle>
@@ -204,7 +204,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label style={{ color: '#D91A73' }}>Họ *</Label>
+                      <Label style={{ color: '#C599B6' }}>Họ *</Label>
                       <Input
                         value={formData.firstName}
                         onChange={(e) => handleInputChange('firstName', e.target.value)}
@@ -219,7 +219,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label style={{ color: '#D91A73' }}>Tên *</Label>
+                      <Label style={{ color: '#C599B6' }}>Tên *</Label>
                       <Input
                         value={formData.lastName}
                         onChange={(e) => handleInputChange('lastName', e.target.value)}
@@ -236,7 +236,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   </div>
 
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Email *</Label>
+                    <Label style={{ color: '#C599B6' }}>Email *</Label>
                     <div className="relative">
                       <Input
                         type="email"
@@ -245,7 +245,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                         placeholder="example@email.com"
                         className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
                       />
-                      <Mail className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                      <Mail className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                     </div>
                     {errors.email && (
                       <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -256,7 +256,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   </div>
 
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Số điện thoại *</Label>
+                    <Label style={{ color: '#C599B6' }}>Số điện thoại *</Label>
                     <div className="relative">
                       <Input
                         value={formData.phone}
@@ -264,7 +264,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                         placeholder="0123456789"
                         className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
                       />
-                      <Phone className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                      <Phone className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                     </div>
                     {errors.phone && (
                       <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -275,7 +275,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   </div>
 
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Địa chỉ *</Label>
+                    <Label style={{ color: '#C599B6' }}>Địa chỉ *</Label>
                     <div className="relative">
                       <Input
                         value={formData.address}
@@ -283,7 +283,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                         placeholder="123 Đường ABC, Quận/Huyện"
                         className={`pl-10 ${errors.address ? 'border-red-500' : ''}`}
                       />
-                      <MapPin className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                      <MapPin className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                     </div>
                     {errors.address && (
                       <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -295,7 +295,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label style={{ color: '#D91A73' }}>Thành phố *</Label>
+                      <Label style={{ color: '#C599B6' }}>Thành phố *</Label>
                       <Select value={formData.city} onValueChange={(value) => handleInputChange('city', value)}>
                         <SelectTrigger className={errors.city ? 'border-red-500' : ''}>
                           <SelectValue placeholder="Chọn thành phố" />
@@ -318,7 +318,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label style={{ color: '#D91A73' }}>Mã bưu điện</Label>
+                      <Label style={{ color: '#C599B6' }}>Mã bưu điện</Label>
                       <Input
                         value={formData.zipCode}
                         onChange={(e) => handleInputChange('zipCode', e.target.value)}
@@ -328,7 +328,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   </div>
 
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Yêu cầu đặc biệt</Label>
+                    <Label style={{ color: '#C599B6' }}>Yêu cầu đặc biệt</Label>
                     <Textarea
                       value={formData.specialRequests}
                       onChange={(e) => handleInputChange('specialRequests', e.target.value)}
@@ -340,16 +340,16 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               </Card>
 
               {/* Payment Information */}
-              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2" style={{ color: '#D91A73' }}>
+                  <CardTitle className="flex items-center space-x-2" style={{ color: '#C599B6' }}>
                     <CreditCard className="w-5 h-5" />
                     <span>Thông tin thanh toán</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Phương thức thanh toán *</Label>
+                    <Label style={{ color: '#C599B6' }}>Phương thức thanh toán *</Label>
                     <Select value={formData.paymentMethod} onValueChange={(value) => handleInputChange('paymentMethod', value)}>
                       <SelectTrigger className={errors.paymentMethod ? 'border-red-500' : ''}>
                         <SelectValue placeholder="Chọn phương thức thanh toán" />
@@ -371,7 +371,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   {formData.paymentMethod === "card" && (
                     <div className="space-y-4 p-4 rounded-lg bg-white/50">
                       <div className="space-y-2">
-                        <Label style={{ color: '#D91A73' }}>Số thẻ *</Label>
+                        <Label style={{ color: '#C599B6' }}>Số thẻ *</Label>
                         <Input
                           value={formData.cardNumber}
                           onChange={(e) => {
@@ -392,7 +392,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label style={{ color: '#D91A73' }}>Ngày hết hạn *</Label>
+                          <Label style={{ color: '#C599B6' }}>Ngày hết hạn *</Label>
                           <Input
                             value={formData.expiryDate}
                             onChange={(e) => {
@@ -411,7 +411,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                           )}
                         </div>
                         <div className="space-y-2">
-                          <Label style={{ color: '#D91A73' }}>CVV *</Label>
+                          <Label style={{ color: '#C599B6' }}>CVV *</Label>
                           <Input
                             value={formData.cvv}
                             onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, ''))}
@@ -429,7 +429,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                       </div>
 
                       <div className="space-y-2">
-                        <Label style={{ color: '#D91A73' }}>Tên trên thẻ *</Label>
+                        <Label style={{ color: '#C599B6' }}>Tên trên thẻ *</Label>
                         <Input
                           value={formData.cardName}
                           onChange={(e) => handleInputChange('cardName', e.target.value.toUpperCase())}
@@ -449,8 +449,8 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   {formData.paymentMethod === "bank-transfer" && (
                     <div className="p-4 rounded-lg bg-white/50">
                       <div className="space-y-2">
-                        <h4 style={{ color: '#D91A73' }}>Thông tin chuyển khoản:</h4>
-                        <div className="text-sm space-y-1" style={{ color: '#D91A73' }}>
+                        <h4 style={{ color: '#C599B6' }}>Thông tin chuyển khoản:</h4>
+                        <div className="text-sm space-y-1" style={{ color: '#C599B6' }}>
                           <p><strong>Ngân hàng:</strong> Vietcombank</p>
                           <p><strong>Số tài khoản:</strong> 0123456789</p>
                           <p><strong>Tên tài khoản:</strong> KatHome In Town </p>
@@ -462,7 +462,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                   {formData.paymentMethod === "cash" && (
                     <div className="p-4 rounded-lg bg-white/50">
-                      <p className="text-sm" style={{ color: '#D91A73' }}>
+                      <p className="text-sm" style={{ color: '#C599B6' }}>
                         Bạn sẽ thanh toán trực tiếp tại homestay khi nhận phòng.
                       </p>
                     </div>
@@ -475,7 +475,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                 type="submit"
                 disabled={isProcessing}
                 className="w-full text-white py-3"
-                style={{ backgroundColor: '#D91A73' }}
+                style={{ backgroundColor: '#C599B6' }}
               >
                 {isProcessing ? (
                   <div className="flex items-center space-x-2">
@@ -495,9 +495,9 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
           {/* Booking Summary */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
-              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
                 <CardHeader>
-                  <CardTitle style={{ color: '#D91A73' }}>Tóm tắt đặt phòng</CardTitle>
+                  <CardTitle style={{ color: '#C599B6' }}>Tóm tắt đặt phòng</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Room Info */}
@@ -510,9 +510,9 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                       />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold" style={{ color: '#D91A73' }}>{roomData.name}</h3>
-                      <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>{roomData.type}</p>
-                      <div className="flex items-center space-x-4 mt-2 text-xs" style={{ color: '#D91A73' }}>
+                      <h3 className="font-semibold" style={{ color: '#C599B6' }}>{roomData.name}</h3>
+                      <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>{roomData.type}</p>
+                      <div className="flex items-center space-x-4 mt-2 text-xs" style={{ color: '#C599B6' }}>
                         <div className="flex items-center space-x-1">
                           <Users className="w-3 h-3" />
                           <span>{roomData.maxGuests} khách</span>
@@ -530,15 +530,15 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   {/* Booking Details */}
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
-                      <Calendar className="w-4 h-4" style={{ color: '#D91A73' }} />
-                      <div className="text-sm" style={{ color: '#D91A73' }}>
+                      <Calendar className="w-4 h-4" style={{ color: '#C599B6' }} />
+                      <div className="text-sm" style={{ color: '#C599B6' }}>
                         <div>Nhận phòng: {formatDate(searchData.checkIn)}</div>
                         <div>Trả phòng: {formatDate(searchData.checkOut)}</div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Users className="w-4 h-4" style={{ color: '#D91A73' }} />
-                      <span className="text-sm" style={{ color: '#D91A73' }}>
+                      <Users className="w-4 h-4" style={{ color: '#C599B6' }} />
+                      <span className="text-sm" style={{ color: '#C599B6' }}>
                         {searchData.guests} khách, {calculateNights()} đêm
                       </span>
                     </div>
@@ -548,20 +548,20 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                   {/* Price Breakdown */}
                   <div className="space-y-3">
-                    <div className="flex justify-between text-sm" style={{ color: '#D91A73' }}>
+                    <div className="flex justify-between text-sm" style={{ color: '#C599B6' }}>
                       <span>{formatPrice(roomData.price)} x {calculateNights()} đêm</span>
                       <span>{formatPrice(roomData.price * calculateNights())}</span>
                     </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#D91A73' }}>
+                    <div className="flex justify-between text-sm" style={{ color: '#C599B6' }}>
                       <span>Phí dịch vụ (5%)</span>
                       <span>{formatPrice(roomData.price * calculateNights() * 0.05)}</span>
                     </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#D91A73' }}>
+                    <div className="flex justify-between text-sm" style={{ color: '#C599B6' }}>
                       <span>Thuế (10%)</span>
                       <span>{formatPrice(roomData.price * calculateNights() * 0.1)}</span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between font-semibold text-lg" style={{ color: '#D91A73' }}>
+                    <div className="flex justify-between font-semibold text-lg" style={{ color: '#C599B6' }}>
                       <span>Tổng cộng</span>
                       <span>{formatPrice(getTotalPrice())}</span>
                     </div>
@@ -571,15 +571,15 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                   {/* Security Notice */}
                   <div className="flex items-start space-x-2 p-3 rounded-lg bg-white/50">
-                    <Shield className="w-4 h-4 mt-0.5" style={{ color: '#D91A73' }} />
-                    <div className="text-xs" style={{ color: '#D91A73' }}>
+                    <Shield className="w-4 h-4 mt-0.5" style={{ color: '#C599B6' }} />
+                    <div className="text-xs" style={{ color: '#C599B6' }}>
                       <p className="font-medium">Thanh toán an toàn</p>
                       <p className="opacity-80">Thông tin của bạn được bảo mật với công nghệ mã hóa SSL</p>
                     </div>
                   </div>
 
                   {/* Cancellation Policy */}
-                  <div className="text-xs space-y-2" style={{ color: '#D91A73' }}>
+                  <div className="text-xs space-y-2" style={{ color: '#C599B6' }}>
                     <div className="flex items-center space-x-2">
                       <Clock className="w-3 h-3" />
                       <span className="font-medium">Chính sách hủy phòng</span>

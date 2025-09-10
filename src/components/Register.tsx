@@ -120,37 +120,37 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#F2D8D8' }}>
+      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#FAD0C4' }}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
             <Button 
               variant="ghost" 
               onClick={onBack}
               className="flex items-center space-x-2"
-              style={{ color: '#D91A73' }}
+              style={{ color: '#C599B6' }}
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Quay lại</span>
             </Button>
-            <h1 className="text-xl font-semibold" style={{ color: '#D91A73' }}>Đăng ký</h1>
+            <h1 className="text-xl font-semibold" style={{ color: '#C599B6' }}>Đăng ký</h1>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-lg mx-auto">
-          <Card className="border-0 shadow-xl" style={{ backgroundColor: '#F2D8D8' }}>
+          <Card className="border-0 shadow-xl" style={{ backgroundColor: '#FAD0C4' }}>
             <CardHeader className="text-center pb-6">
               <div 
                 className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center shadow-lg"
-                style={{ backgroundColor: '#D91A73' }}
+                style={{ backgroundColor: '#C599B6' }}
               >
                 <UserPlus className="w-8 h-8 text-white" />
               </div>
-              <CardTitle className="text-2xl" style={{ color: '#D91A73' }}>
+              <CardTitle className="text-2xl" style={{ color: '#C599B6' }}>
                 Tạo tài khoản mới
               </CardTitle>
-              <p className="text-sm opacity-80 mt-2" style={{ color: '#D91A73' }}>
+              <p className="text-sm opacity-80 mt-2" style={{ color: '#C599B6' }}>
                 Đăng ký để trải nghiệm dịch vụ tốt nhất tại KatHome In Town 
               </p>
             </CardHeader>
@@ -160,7 +160,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
                 {/* Name Fields */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Họ *</Label>
+                    <Label style={{ color: '#C599B6' }}>Họ *</Label>
                     <div className="relative">
                       <Input
                         value={formData.firstName}
@@ -168,7 +168,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
                         placeholder="Nguyễn"
                         className={`pl-10 ${errors.firstName ? 'border-red-500' : ''}`}
                       />
-                      <User className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                      <User className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                     </div>
                     {errors.firstName && (
                       <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -178,7 +178,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Tên *</Label>
+                    <Label style={{ color: '#C599B6' }}>Tên *</Label>
                     <Input
                       value={formData.lastName}
                       onChange={(e) => handleInputChange('lastName', e.target.value)}
@@ -196,7 +196,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <Label style={{ color: '#D91A73' }}>Email *</Label>
+                  <Label style={{ color: '#C599B6' }}>Email *</Label>
                   <div className="relative">
                     <Input
                       type="email"
@@ -205,7 +205,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
                       placeholder="example@email.com"
                       className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
                     />
-                    <Mail className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                    <Mail className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                   </div>
                   {errors.email && (
                     <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -217,7 +217,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
 
                 {/* Phone */}
                 <div className="space-y-2">
-                  <Label style={{ color: '#D91A73' }}>Số điện thoại *</Label>
+                  <Label style={{ color: '#C599B6' }}>Số điện thoại *</Label>
                   <div className="relative">
                     <Input
                       value={formData.phone}
@@ -225,7 +225,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
                       placeholder="0123456789"
                       className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
                     />
-                    <Phone className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                    <Phone className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                   </div>
                   {errors.phone && (
                     <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -237,7 +237,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
 
                 {/* City */}
                 <div className="space-y-2">
-                  <Label style={{ color: '#D91A73' }}>Thành phố *</Label>
+                  <Label style={{ color: '#C599B6' }}>Thành phố *</Label>
                   <Select value={formData.city} onValueChange={(value) => handleInputChange('city', value)}>
                     <SelectTrigger className={errors.city ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Chọn thành phố" />
@@ -264,7 +264,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
 
                 {/* Password */}
                 <div className="space-y-2">
-                  <Label style={{ color: '#D91A73' }}>Mật khẩu *</Label>
+                  <Label style={{ color: '#C599B6' }}>Mật khẩu *</Label>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
@@ -273,12 +273,12 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
                       placeholder="••••••••"
                       className={`pl-10 pr-10 ${errors.password ? 'border-red-500' : ''}`}
                     />
-                    <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                    <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      style={{ color: '#D91A73' }}
+                      style={{ color: '#C599B6' }}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -293,7 +293,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
 
                 {/* Confirm Password */}
                 <div className="space-y-2">
-                  <Label style={{ color: '#D91A73' }}>Xác nhận mật khẩu *</Label>
+                  <Label style={{ color: '#C599B6' }}>Xác nhận mật khẩu *</Label>
                   <div className="relative">
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
@@ -302,12 +302,12 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
                       placeholder="••••••••"
                       className={`pl-10 pr-10 ${errors.confirmPassword ? 'border-red-500' : ''}`}
                     />
-                    <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                    <Lock className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-3 top-1/2 transform -translate-y-1/2"
-                      style={{ color: '#D91A73' }}
+                      style={{ color: '#C599B6' }}
                     >
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -328,9 +328,9 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
                       checked={formData.acceptTerms}
                       onChange={(e) => handleInputChange('acceptTerms', e.target.checked)}
                       className="mt-1 rounded" 
-                      style={{ accentColor: '#D91A73' }} 
+                      style={{ accentColor: '#C599B6' }} 
                     />
-                    <span className="text-sm" style={{ color: '#D91A73' }}>
+                    <span className="text-sm" style={{ color: '#C599B6' }}>
                       Tôi đồng ý với{' '}
                       <button type="button" className="underline hover:no-underline font-medium">
                         Điều khoản sử dụng
@@ -354,7 +354,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
                   type="submit"
                   disabled={isLoading}
                   className="w-full text-white py-3 mt-6"
-                  style={{ backgroundColor: '#D91A73' }}
+                  style={{ backgroundColor: '#C599B6' }}
                 >
                   {isLoading ? (
                     <div className="flex items-center space-x-2">
@@ -373,12 +373,12 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
               <div className="mt-6">
                 <Separator />
                 <div className="text-center mt-6">
-                  <p className="text-sm" style={{ color: '#D91A73' }}>
+                  <p className="text-sm" style={{ color: '#C599B6' }}>
                     Đã có tài khoản?{' '}
                     <button 
                       onClick={onSwitchToLogin}
                       className="font-semibold underline hover:no-underline"
-                      style={{ color: '#D91A73' }}
+                      style={{ color: '#C599B6' }}
                     >
                       Đăng nhập ngay
                     </button>

@@ -35,102 +35,103 @@ export function Hero({ onSearch }: HeroProps) {
   return (
     <section id="home" className="relative min-h-[90vh] flex items-center">
       {/* Background with gradient overlay */}
-      <div 
-        className="absolute inset-0 bg-gradient-to-br from-opacity-20 to-opacity-40"
-        style={{ 
-          backgroundColor: '#F2D8D8',
-          backgroundImage: `linear-gradient(135deg, #F2D8D8 0%, #F2BBC9 50%, #F2A7C3 100%)`
-        }}
-      />
+       <div 
+         className="absolute inset-0 bg-gradient-to-br from-opacity-20 to-opacity-40"
+         style={{ 
+           backgroundColor: '#FDF7F7',
+           backgroundImage: `linear-gradient(135deg, #FDF7F7 0%, #FFF5F5 50%, #F8E8EC 100%)`
+         }}
+       />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left content */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-sm" style={{ color: '#D91A73' }}>
-                <MapPin className="w-4 h-4" />
-                <span>Đà Lạt, Lâm Đồng</span>
-              </div>
-              
-              <h1 className="text-4xl md:text-6xl leading-tight" style={{ color: '#D91A73' }}>
-                KatHome In Town 
-                <br />
-                <span className="text-2xl md:text-3xl" style={{ color: '#D95291' }}>
-                  Không gian ấm cúng như nhà
-                </span>
-              </h1>
-              
-              <p className="text-lg opacity-80 max-w-lg" style={{ color: '#D91A73' }}>
-                Trải nghiệm kỳ nghỉ tuyệt vời tại homestay xinh đẹp giữa lòng Đà Lạt. 
-                Nơi lý tưởng để thư giãn và tận hưởng không khí trong lành của thành phố ngàn hoa.
-              </p>
+               <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: '#E8A5B8' }}>
+                 <MapPin className="w-4 h-4" />
+                 <span>Hà Nội, Việt Nam</span>
+               </div>
+               
+               <div className="space-y-3">
+                 <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight" style={{ color: '#E8A5B8' }}>
+                   KatHome In Town
+                 </h1>
+                 <h2 className="text-xl md:text-2xl font-semibold" style={{ color: '#B8899A' }}>
+                   THOẢI MÁI & RIÊNG TƯ
+                 </h2>
+               </div>
+               
+               <p className="text-lg max-w-lg leading-relaxed font-light" style={{ color: '#6B7280' }}>
+                 Ở KatHome In Town, mỗi một vị khách khi ghé thăm đều là một người bạn thân thiết tới chơi nhà. 
+                 Chúng mình mong muốn trở thành điểm dừng chân thân thuộc, an yên và riêng biệt của bạn giữa nhịp sống hối hả.
+               </p>
               
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-current" style={{ color: '#D91A73' }} />
-                  ))}
-                </div>
-                <span className="text-sm" style={{ color: '#D91A73' }}>4.9/5 (127 đánh giá)</span>
+                 <div className="flex items-center space-x-1">
+                   {[...Array(5)].map((_, i) => (
+                     <Star key={i} className="w-5 h-5 fill-current" style={{ color: '#E8A5B8' }} />
+                   ))}
+                 </div>
+                 <span className="text-sm font-medium" style={{ color: '#E8A5B8' }}>4.9/5 (127 đánh giá)</span>
               </div>
             </div>
             
             {/* Quick booking form */}
-            <Card className="p-6 bg-white/90 backdrop-blur-sm border-0 shadow-lg">
-              <CardContent className="p-0">
-                <h3 className="mb-4" style={{ color: '#D91A73' }}>Đặt phòng nhanh</h3>
+            <Card className="p-6 bg-white/95 backdrop-blur-sm border-0 shadow-lg">
+               <CardContent className="p-0">
+                 <h3 className="mb-4 font-bold" style={{ color: '#E8A5B8' }}>Đặt phòng nhanh</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Ngày nhận phòng</Label>
-                    <div className="relative">
-                      <Input 
-                        type="date" 
-                        className="pl-10"
-                        value={checkIn}
-                        onChange={(e) => setCheckIn(e.target.value)}
-                      />
-                      <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                     <Label className="font-semibold" style={{ color: '#E8A5B8' }}>Ngày nhận phòng</Label>
+                     <div className="relative">
+                       <Input 
+                         type="date" 
+                         className="pl-10"
+                         value={checkIn}
+                         onChange={(e) => setCheckIn(e.target.value)}
+                       />
+                       <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#E8A5B8' }} />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Ngày trả phòng</Label>
-                    <div className="relative">
-                      <Input 
-                        type="date" 
-                        className="pl-10"
-                        value={checkOut}
-                        onChange={(e) => setCheckOut(e.target.value)}
-                      />
-                      <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                     <Label className="font-semibold" style={{ color: '#E8A5B8' }}>Ngày trả phòng</Label>
+                     <div className="relative">
+                       <Input 
+                         type="date" 
+                         className="pl-10"
+                         value={checkOut}
+                         onChange={(e) => setCheckOut(e.target.value)}
+                       />
+                       <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#E8A5B8' }} />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Số khách</Label>
-                    <div className="relative">
-                      <Input 
-                        type="number" 
-                        placeholder="2 khách" 
-                        className="pl-10" 
-                        min="1" 
-                        max="8"
-                        value={guests}
-                        onChange={(e) => setGuests(parseInt(e.target.value) || 2)}
-                      />
-                      <Users className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                     <Label className="font-semibold" style={{ color: '#E8A5B8' }}>Số khách</Label>
+                     <div className="relative">
+                       <Input 
+                         type="number" 
+                         placeholder="2 khách" 
+                         className="pl-10" 
+                         min="1" 
+                         max="8"
+                         value={guests}
+                         onChange={(e) => setGuests(parseInt(e.target.value) || 2)}
+                       />
+                       <Users className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#E8A5B8' }} />
                     </div>
                   </div>
                   
                   <div className="flex items-end">
-                    <Button 
-                      className="w-full text-white hover:opacity-90 transition-opacity"
-                      style={{ backgroundColor: '#D91A73' }}
-                      onClick={handleSearch}
-                    >
-                      Tìm phòng trống
-                    </Button>
+                     <Button 
+                       className="w-full text-white hover:opacity-90 transition-opacity font-semibold"
+                       style={{ backgroundColor: '#E8A5B8' }}
+                       onClick={handleSearch}
+                     >
+                       Tìm phòng trống
+                     </Button>
                   </div>
                 </div>
               </CardContent>
@@ -146,22 +147,22 @@ export function Hero({ onSearch }: HeroProps) {
                 className="w-full h-[600px] object-cover"
               />
               {/* Overlay badge */}
-              <div 
-                className="absolute top-6 left-6 px-4 py-2 rounded-full text-white text-sm"
-                style={{ backgroundColor: '#D91A73' }}
-              >
-                Từ 800.000đ/đêm
-              </div>
+               <div 
+                 className="absolute top-6 left-6 px-4 py-2 rounded-full text-white text-sm font-semibold"
+                 style={{ backgroundColor: '#E8A5B8' }}
+               >
+                 from 400k/4h
+               </div>
             </div>
             
             {/* Floating elements */}
-            <div 
-              className="absolute -bottom-6 -left-6 p-4 rounded-xl bg-white shadow-lg"
-              style={{ borderLeft: `4px solid #D91A73` }}
-            >
-              <div className="text-sm" style={{ color: '#D91A73' }}>Đặc biệt</div>
-              <div className="text-xs opacity-70">Giảm 20% cho khách mới</div>
-            </div>
+             <div 
+               className="absolute -bottom-6 -left-6 p-4 rounded-xl bg-white shadow-lg"
+               style={{ borderLeft: `4px solid #E8A5B8` }}
+             >
+               <div className="text-sm font-semibold" style={{ color: '#E8A5B8' }}>Đặc biệt</div>
+               <div className="text-xs" style={{ color: '#B8899A' }}>Giảm 20% cho khách mới</div>
+             </div>
           </div>
         </div>
       </div>

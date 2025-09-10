@@ -98,7 +98,7 @@ export function AdminDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold" style={{ color: '#D91A73' }}>
+        <h1 className="text-3xl font-bold" style={{ color: '#C599B6' }}>
           Dashboard
         </h1>
         <p className="text-gray-600 mt-2">
@@ -167,9 +167,9 @@ export function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Bookings */}
-        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2" style={{ color: '#D91A73' }}>
+            <CardTitle className="flex items-center space-x-2" style={{ color: '#C599B6' }}>
               <Calendar className="w-5 h-5" />
               <span>Đặt phòng gần đây</span>
             </CardTitle>
@@ -180,23 +180,23 @@ export function AdminDashboard() {
                 <div key={booking.id} className="flex items-center justify-between p-4 rounded-lg bg-white/50">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium" style={{ color: '#D91A73' }}>
+                      <h4 className="font-medium" style={{ color: '#C599B6' }}>
                         {booking.guestName}
                       </h4>
                       {getStatusBadge(booking.status)}
                     </div>
-                    <p className="text-sm opacity-80 mb-1" style={{ color: '#D91A73' }}>
+                    <p className="text-sm opacity-80 mb-1" style={{ color: '#C599B6' }}>
                       {booking.room}
                     </p>
-                    <p className="text-sm opacity-60" style={{ color: '#D91A73' }}>
+                    <p className="text-sm opacity-60" style={{ color: '#C599B6' }}>
                       {booking.checkIn} - {booking.checkOut}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold" style={{ color: '#D91A73' }}>
+                    <p className="font-semibold" style={{ color: '#C599B6' }}>
                       {formatPrice(booking.total)}
                     </p>
-                    <p className="text-xs opacity-60" style={{ color: '#D91A73' }}>
+                    <p className="text-xs opacity-60" style={{ color: '#C599B6' }}>
                       {booking.id}
                     </p>
                   </div>
@@ -207,9 +207,9 @@ export function AdminDashboard() {
         </Card>
 
         {/* Upcoming Check-ins */}
-        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2" style={{ color: '#D91A73' }}>
+            <CardTitle className="flex items-center space-x-2" style={{ color: '#C599B6' }}>
               <Clock className="w-5 h-5" />
               <span>Khách nhận phòng hôm nay</span>
             </CardTitle>
@@ -218,17 +218,17 @@ export function AdminDashboard() {
             <div className="space-y-4">
               {upcomingCheckIns.map((checkin) => (
                 <div key={checkin.id} className="flex items-center space-x-4 p-4 rounded-lg bg-white/50">
-                  <div className="p-2 rounded-full" style={{ backgroundColor: '#D91A73' }}>
+                  <div className="p-2 rounded-full" style={{ backgroundColor: '#C599B6' }}>
                     <Users className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium" style={{ color: '#D91A73' }}>
+                    <h4 className="font-medium" style={{ color: '#C599B6' }}>
                       {checkin.guestName}
                     </h4>
-                    <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+                    <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
                       {checkin.room} • {checkin.guests} khách
                     </p>
-                    <div className="flex items-center space-x-4 mt-2 text-sm opacity-60" style={{ color: '#D91A73' }}>
+                    <div className="flex items-center space-x-4 mt-2 text-sm opacity-60" style={{ color: '#C599B6' }}>
                       <div className="flex items-center space-x-1">
                         <Clock className="w-3 h-3" />
                         <span>{checkin.checkIn}</span>
@@ -243,7 +243,7 @@ export function AdminDashboard() {
               ))}
               
               {upcomingCheckIns.length === 0 && (
-                <div className="text-center py-8 opacity-60" style={{ color: '#D91A73' }}>
+                <div className="text-center py-8 opacity-60" style={{ color: '#C599B6' }}>
                   <Clock className="w-8 h-8 mx-auto mb-2" />
                   <p>Không có khách nhận phòng hôm nay</p>
                 </div>
@@ -255,52 +255,52 @@ export function AdminDashboard() {
 
       {/* Quick Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
           <CardContent className="p-6 text-center">
-            <div className="p-3 rounded-full inline-flex mb-4" style={{ backgroundColor: '#D91A73' }}>
+            <div className="p-3 rounded-full inline-flex mb-4" style={{ backgroundColor: '#C599B6' }}>
               <Star className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-2" style={{ color: '#D91A73' }}>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: '#C599B6' }}>
               {stats.averageRating}/5
             </h3>
-            <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+            <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
               Đánh giá trung bình
             </p>
-            <p className="text-xs opacity-60 mt-1" style={{ color: '#D91A73' }}>
+            <p className="text-xs opacity-60 mt-1" style={{ color: '#C599B6' }}>
               Từ 127 đánh giá
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
           <CardContent className="p-6 text-center">
-            <div className="p-3 rounded-full inline-flex mb-4" style={{ backgroundColor: '#D91A73' }}>
+            <div className="p-3 rounded-full inline-flex mb-4" style={{ backgroundColor: '#C599B6' }}>
               <CheckCircle className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-2" style={{ color: '#D91A73' }}>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: '#C599B6' }}>
               98%
             </h3>
-            <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+            <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
               Tỷ lệ xác nhận
             </p>
-            <p className="text-xs opacity-60 mt-1" style={{ color: '#D91A73' }}>
+            <p className="text-xs opacity-60 mt-1" style={{ color: '#C599B6' }}>
               Booking được xác nhận
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
           <CardContent className="p-6 text-center">
-            <div className="p-3 rounded-full inline-flex mb-4" style={{ backgroundColor: '#D91A73' }}>
+            <div className="p-3 rounded-full inline-flex mb-4" style={{ backgroundColor: '#C599B6' }}>
               <XCircle className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-2" style={{ color: '#D91A73' }}>
+            <h3 className="text-2xl font-bold mb-2" style={{ color: '#C599B6' }}>
               2%
             </h3>
-            <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+            <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
               Tỷ lệ hủy phòng
             </p>
-            <p className="text-xs opacity-60 mt-1" style={{ color: '#D91A73' }}>
+            <p className="text-xs opacity-60 mt-1" style={{ color: '#C599B6' }}>
               Booking bị hủy
             </p>
           </CardContent>

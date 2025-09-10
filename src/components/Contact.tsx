@@ -15,13 +15,13 @@ import {
 
 export function Contact() {
   return (
-    <section id="contact" className="py-20" style={{ backgroundColor: '#F2BBC9' }}>
+    <section id="contact" className="py-20" style={{ backgroundColor: '#E6B2BA' }}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl mb-4" style={{ color: '#D91A73' }}>
+          <h2 className="text-3xl md:text-4xl mb-4" style={{ color: '#C599B6' }}>
             Liên hệ & Đặt phòng
           </h2>
-          <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#D91A73' }}>
+          <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#C599B6' }}>
             Hãy để lại thông tin để chúng tôi tư vấn và hỗ trợ bạn tốt nhất
           </p>
         </div>
@@ -30,7 +30,7 @@ export function Contact() {
           {/* Contact Information */}
           <div className="space-y-8">
             <div>
-              <h3 className="text-2xl mb-6" style={{ color: '#D91A73' }}>
+              <h3 className="text-2xl mb-6" style={{ color: '#C599B6' }}>
                 Thông tin liên hệ
               </h3>
               <div className="space-y-6">
@@ -40,14 +40,14 @@ export function Contact() {
                       className="p-3 rounded-lg"
                       style={{ backgroundColor: '#F2A7C3' }}
                     >
-                      <MapPin className="w-6 h-6" style={{ color: '#D91A73' }} />
+                      <MapPin className="w-6 h-6" style={{ color: '#C599B6' }} />
                     </div>
                     <div>
-                      <h4 className="mb-1" style={{ color: '#D91A73' }}>Địa chỉ</h4>
-                      <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>
-                        123 Đường Hoa Hồng, Phường 1<br />
-                        Thành phố Đà Lạt, Lâm Đồng
-                      </p>
+                       <h4 className="mb-1" style={{ color: '#C599B6' }}>Địa chỉ</h4>
+                       <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
+                         Hệ thống cơ sở tại Hà Nội:<br />
+                         Tây Hồ, Ba Đình, Hoàn Kiếm, Thanh Xuân...
+                       </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -58,14 +58,14 @@ export function Contact() {
                       className="p-3 rounded-lg"
                       style={{ backgroundColor: '#F2A7C3' }}
                     >
-                      <Phone className="w-6 h-6" style={{ color: '#D91A73' }} />
+                      <Phone className="w-6 h-6" style={{ color: '#C599B6' }} />
                     </div>
                     <div>
-                      <h4 className="mb-1" style={{ color: '#D91A73' }}>Điện thoại</h4>
-                      <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>
-                        Hotline: 0123 456 789<br />
-                        Zalo: 0123 456 789
-                      </p>
+                       <h4 className="mb-1" style={{ color: '#C599B6' }}>Điện thoại</h4>
+                       <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
+                         Hotline: 098 894 65 68<br />
+                         Zalo: 098 894 65 68
+                       </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -76,14 +76,14 @@ export function Contact() {
                       className="p-3 rounded-lg"
                       style={{ backgroundColor: '#F2A7C3' }}
                     >
-                      <Mail className="w-6 h-6" style={{ color: '#D91A73' }} />
+                      <Mail className="w-6 h-6" style={{ color: '#C599B6' }} />
                     </div>
                     <div>
-                      <h4 className="mb-1" style={{ color: '#D91A73' }}>Email</h4>
-                      <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>
-                        info@rosehomestay.com<br />
-                        booking@rosehomestay.com
-                      </p>
+                       <h4 className="mb-1" style={{ color: '#C599B6' }}>Email</h4>
+                       <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
+                         kathome.luv@gmail.com<br />
+                         support@kathome.vn
+                       </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -94,11 +94,11 @@ export function Contact() {
                       className="p-3 rounded-lg"
                       style={{ backgroundColor: '#F2A7C3' }}
                     >
-                      <Clock className="w-6 h-6" style={{ color: '#D91A73' }} />
+                      <Clock className="w-6 h-6" style={{ color: '#C599B6' }} />
                     </div>
                     <div>
-                      <h4 className="mb-1" style={{ color: '#D91A73' }}>Giờ làm việc</h4>
-                      <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+                      <h4 className="mb-1" style={{ color: '#C599B6' }}>Giờ làm việc</h4>
+                      <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
                         Thứ 2 - Chủ nhật: 6:00 - 22:00<br />
                         Hỗ trợ khẩn cấp: 24/7
                       </p>
@@ -110,28 +110,28 @@ export function Contact() {
 
             {/* Social Media */}
             <div>
-              <h4 className="mb-4" style={{ color: '#D91A73' }}>
+              <h4 className="mb-4" style={{ color: '#C599B6' }}>
                 Kết nối với chúng tôi
               </h4>
               <div className="flex space-x-4">
                 <Button 
                   size="icon" 
                   className="text-white"
-                  style={{ backgroundColor: '#D91A73' }}
+                  style={{ backgroundColor: '#C599B6' }}
                 >
                   <Facebook className="w-5 h-5" />
                 </Button>
                 <Button 
                   size="icon" 
                   className="text-white"
-                  style={{ backgroundColor: '#D91A73' }}
+                  style={{ backgroundColor: '#C599B6' }}
                 >
                   <Instagram className="w-5 h-5" />
                 </Button>
                 <Button 
                   size="icon" 
                   className="text-white"
-                  style={{ backgroundColor: '#D91A73' }}
+                  style={{ backgroundColor: '#C599B6' }}
                 >
                   <MessageCircle className="w-5 h-5" />
                 </Button>
@@ -142,45 +142,45 @@ export function Contact() {
           {/* Contact Form */}
           <Card className="p-8 bg-white/90 border-0">
             <CardContent className="p-0">
-              <h3 className="text-xl mb-6" style={{ color: '#D91A73' }}>
+              <h3 className="text-xl mb-6" style={{ color: '#C599B6' }}>
                 Gửi yêu cầu đặt phòng
               </h3>
               
               <form className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Họ và tên *</Label>
+                    <Label style={{ color: '#C599B6' }}>Họ và tên *</Label>
                     <Input placeholder="Nhập họ và tên" required />
                   </div>
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Số điện thoại *</Label>
+                    <Label style={{ color: '#C599B6' }}>Số điện thoại *</Label>
                     <Input placeholder="Nhập số điện thoại" required />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label style={{ color: '#D91A73' }}>Email *</Label>
+                  <Label style={{ color: '#C599B6' }}>Email *</Label>
                   <Input type="email" placeholder="Nhập email" required />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Ngày nhận phòng</Label>
+                    <Label style={{ color: '#C599B6' }}>Ngày nhận phòng</Label>
                     <Input type="date" />
                   </div>
                   <div className="space-y-2">
-                    <Label style={{ color: '#D91A73' }}>Ngày trả phòng</Label>
+                    <Label style={{ color: '#C599B6' }}>Ngày trả phòng</Label>
                     <Input type="date" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label style={{ color: '#D91A73' }}>Số khách</Label>
+                  <Label style={{ color: '#C599B6' }}>Số khách</Label>
                   <Input type="number" placeholder="Nhập số khách" min="1" max="8" />
                 </div>
 
                 <div className="space-y-2">
-                  <Label style={{ color: '#D91A73' }}>Yêu cầu đặc biệt</Label>
+                  <Label style={{ color: '#C599B6' }}>Yêu cầu đặc biệt</Label>
                   <Textarea 
                     placeholder="Ví dụ: Phòng tầng cao, view đẹp, có nôi em bé..."
                     rows={4}
@@ -191,7 +191,7 @@ export function Contact() {
                   <Button 
                     type="submit"
                     className="flex-1 text-white"
-                    style={{ backgroundColor: '#D91A73' }}
+                    style={{ backgroundColor: '#C599B6' }}
                   >
                     Gửi yêu cầu đặt phòng
                   </Button>
@@ -200,17 +200,17 @@ export function Contact() {
                     variant="outline"
                     className="flex-1"
                     style={{ 
-                      borderColor: '#D91A73',
-                      color: '#D91A73'
+                      borderColor: '#C599B6',
+                      color: '#C599B6'
                     }}
                   >
-                    Gọi ngay: 0123 456 789
+                     Gọi ngay: 098 894 65 68
                   </Button>
                 </div>
               </form>
 
-              <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: '#F2D8D8' }}>
-                <p className="text-sm text-center opacity-80" style={{ color: '#D91A73' }}>
+              <div className="mt-6 p-4 rounded-lg" style={{ backgroundColor: '#FAD0C4' }}>
+                <p className="text-sm text-center opacity-80" style={{ color: '#C599B6' }}>
                   * Chúng tôi sẽ phản hồi trong vòng 30 phút trong giờ làm việc
                 </p>
               </div>

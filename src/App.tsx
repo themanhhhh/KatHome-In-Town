@@ -3,8 +3,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { Header } from "./components/Header";
 import { Hero } from "./components/Hero";
 import { About } from "./components/About";
-import { Amenities } from "./components/Amenities";
-import { Gallery } from "./components/Gallery";
+import { Services } from "./components/Services";
+import { Locations } from "./components/Locations";
 import { Contact } from "./components/Contact";
 import { Footer } from "./components/Footer";
 import { SearchResults } from "./components/SearchResults";
@@ -104,7 +104,7 @@ function AppContent() {
         case 'analytics':
           return <ReportsManagement />;
         case 'settings':
-          return <div className="text-center py-12" style={{ color: '#D91A73' }}>Cài đặt - Đang phát triển</div>;
+          return <div className="text-center py-12" style={{ color: '#C599B6' }}>Cài đặt - Đang phát triển</div>;
         default:
           return <AdminDashboard />;
       }
@@ -200,11 +200,11 @@ function AppContent() {
         onShowAdmin={handleShowAdmin}
       />
       <main>
-        <Hero onSearch={handleSearch} />
-        <About />
-        <Amenities />
-        <Gallery />
-        <Contact />
+          <Hero onSearch={handleSearch} />
+          <About />
+          <Services />
+          <Locations />
+          <Contact />
       </main>
       <Footer />
     </div>

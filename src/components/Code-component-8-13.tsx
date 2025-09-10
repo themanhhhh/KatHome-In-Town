@@ -124,41 +124,41 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
   return (
     <div className="min-h-screen bg-white">
       {/* Header với thông tin tìm kiếm */}
-      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#F2D8D8' }}>
+      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#FAD0C4' }}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-4">
             <Button 
               variant="ghost" 
               onClick={onBackToHome}
               className="flex items-center space-x-2"
-              style={{ color: '#D91A73' }}
+              style={{ color: '#C599B6' }}
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Về trang chủ</span>
             </Button>
             
-            <div className="text-sm" style={{ color: '#D91A73' }}>
+            <div className="text-sm" style={{ color: '#C599B6' }}>
               {rooms.length} phòng có sẵn
             </div>
           </div>
 
           {/* Thông tin tìm kiếm */}
-          <div className="flex flex-wrap items-center gap-4 p-4 rounded-lg" style={{ backgroundColor: '#F2D8D8' }}>
+          <div className="flex flex-wrap items-center gap-4 p-4 rounded-lg" style={{ backgroundColor: '#FAD0C4' }}>
             <div className="flex items-center space-x-2">
-              <Calendar className="w-4 h-4" style={{ color: '#D91A73' }} />
-              <span className="text-sm" style={{ color: '#D91A73' }}>
+              <Calendar className="w-4 h-4" style={{ color: '#C599B6' }} />
+              <span className="text-sm" style={{ color: '#C599B6' }}>
                 {formatDate(searchData.checkIn)} - {formatDate(searchData.checkOut)}
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              <Users className="w-4 h-4" style={{ color: '#D91A73' }} />
-              <span className="text-sm" style={{ color: '#D91A73' }}>
+              <Users className="w-4 h-4" style={{ color: '#C599B6' }} />
+              <span className="text-sm" style={{ color: '#C599B6' }}>
                 {searchData.guests} khách
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              <MapPin className="w-4 h-4" style={{ color: '#D91A73' }} />
-              <span className="text-sm" style={{ color: '#D91A73' }}>
+              <MapPin className="w-4 h-4" style={{ color: '#C599B6' }} />
+              <span className="text-sm" style={{ color: '#C599B6' }}>
                 KatHome In Town , Đà Lạt
               </span>
             </div>
@@ -170,10 +170,10 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
         {/* Filters và Sort */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-2xl mb-2" style={{ color: '#D91A73' }}>
+            <h1 className="text-2xl mb-2" style={{ color: '#C599B6' }}>
               Các phòng có sẵn
             </h1>
-            <p className="opacity-80" style={{ color: '#D91A73' }}>
+            <p className="opacity-80" style={{ color: '#C599B6' }}>
               Tìm thấy {rooms.length} phòng phù hợp với yêu cầu của bạn
             </p>
           </div>
@@ -183,18 +183,18 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
               variant="outline" 
               onClick={() => setShowFilters(!showFilters)}
               className="flex items-center space-x-2"
-              style={{ borderColor: '#D91A73', color: '#D91A73' }}
+              style={{ borderColor: '#C599B6', color: '#C599B6' }}
             >
               <Filter className="w-4 h-4" />
               <span>Bộ lọc</span>
             </Button>
             
             <div className="flex items-center space-x-2">
-              <span className="text-sm" style={{ color: '#D91A73' }}>Sắp xếp:</span>
+              <span className="text-sm" style={{ color: '#C599B6' }}>Sắp xếp:</span>
               <Button 
                 variant="outline"
                 className="flex items-center space-x-2"
-                style={{ borderColor: '#D91A73', color: '#D91A73' }}
+                style={{ borderColor: '#C599B6', color: '#C599B6' }}
               >
                 <span>Giá thấp nhất</span>
                 <ChevronDown className="w-4 h-4" />
@@ -206,7 +206,7 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
         {/* Danh sách phòng */}
         <div className="space-y-6">
           {rooms.map((room) => (
-            <Card key={room.id} className="overflow-hidden hover:shadow-lg transition-shadow border-0" style={{ backgroundColor: '#F2D8D8' }}>
+            <Card key={room.id} className="overflow-hidden hover:shadow-lg transition-shadow border-0" style={{ backgroundColor: '#FAD0C4' }}>
               <CardContent className="p-0">
                 <div className="grid md:grid-cols-3 gap-0">
                   {/* Hình ảnh */}
@@ -219,7 +219,7 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
                     {room.isPopular && (
                       <Badge 
                         className="absolute top-4 left-4 text-white"
-                        style={{ backgroundColor: '#D91A73' }}
+                        style={{ backgroundColor: '#C599B6' }}
                       >
                         Phổ biến
                       </Badge>
@@ -234,10 +234,10 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="text-xl" style={{ color: '#D91A73' }}>
+                          <h3 className="text-xl" style={{ color: '#C599B6' }}>
                             {room.name}
                           </h3>
-                          <Badge variant="secondary" style={{ backgroundColor: '#F2A7C3', color: '#D91A73' }}>
+                          <Badge variant="secondary" style={{ backgroundColor: '#F2A7C3', color: '#C599B6' }}>
                             {room.type}
                           </Badge>
                         </div>
@@ -247,15 +247,15 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
                               <Star 
                                 key={i} 
                                 className={`w-4 h-4 ${i < Math.floor(room.rating) ? 'fill-current' : ''}`}
-                                style={{ color: '#D91A73' }}
+                                style={{ color: '#C599B6' }}
                               />
                             ))}
                           </div>
-                          <span className="text-sm" style={{ color: '#D91A73' }}>
+                          <span className="text-sm" style={{ color: '#C599B6' }}>
                             {room.rating} ({room.reviews} đánh giá)
                           </span>
                         </div>
-                        <p className="text-sm opacity-80 mb-4" style={{ color: '#D91A73' }}>
+                        <p className="text-sm opacity-80 mb-4" style={{ color: '#C599B6' }}>
                           {room.description}
                         </p>
                       </div>
@@ -264,20 +264,20 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
                     {/* Thông số phòng */}
                     <div className="grid grid-cols-3 gap-4 mb-4 p-4 rounded-lg bg-white/50">
                       <div className="flex items-center space-x-2">
-                        <Users className="w-4 h-4" style={{ color: '#D91A73' }} />
-                        <span className="text-sm" style={{ color: '#D91A73' }}>
+                        <Users className="w-4 h-4" style={{ color: '#C599B6' }} />
+                        <span className="text-sm" style={{ color: '#C599B6' }}>
                           Tối đa {room.maxGuests} khách
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Bed className="w-4 h-4" style={{ color: '#D91A73' }} />
-                        <span className="text-sm" style={{ color: '#D91A73' }}>
+                        <Bed className="w-4 h-4" style={{ color: '#C599B6' }} />
+                        <span className="text-sm" style={{ color: '#C599B6' }}>
                           {room.beds} giường
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Bath className="w-4 h-4" style={{ color: '#D91A73' }} />
-                        <span className="text-sm" style={{ color: '#D91A73' }}>
+                        <Bath className="w-4 h-4" style={{ color: '#C599B6' }} />
+                        <span className="text-sm" style={{ color: '#C599B6' }}>
                           {room.bathrooms} phòng tắm
                         </span>
                       </div>
@@ -291,7 +291,7 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
                             key={index} 
                             variant="outline" 
                             className="text-xs"
-                            style={{ borderColor: '#D91A73', color: '#D91A73' }}
+                            style={{ borderColor: '#C599B6', color: '#C599B6' }}
                           >
                             {amenity}
                           </Badge>
@@ -300,7 +300,7 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
                           <Badge 
                             variant="outline" 
                             className="text-xs"
-                            style={{ borderColor: '#D91A73', color: '#D91A73' }}
+                            style={{ borderColor: '#C599B6', color: '#C599B6' }}
                           >
                             +{room.amenities.length - 5} tiện nghi
                           </Badge>
@@ -312,20 +312,20 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end">
                       <div className="mb-4 md:mb-0">
                         <div className="flex items-center space-x-2">
-                          <span className="text-2xl" style={{ color: '#D91A73' }}>
+                          <span className="text-2xl" style={{ color: '#C599B6' }}>
                             {formatPrice(room.price)}
                           </span>
                           {room.originalPrice > room.price && (
-                            <span className="text-sm line-through opacity-60" style={{ color: '#D91A73' }}>
+                            <span className="text-sm line-through opacity-60" style={{ color: '#C599B6' }}>
                               {formatPrice(room.originalPrice)}
                             </span>
                           )}
                         </div>
-                        <span className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+                        <span className="text-sm opacity-80" style={{ color: '#C599B6' }}>
                           /đêm (đã bao gồm thuế)
                         </span>
                         {room.originalPrice > room.price && (
-                          <div className="text-xs mt-1" style={{ color: '#D91A73' }}>
+                          <div className="text-xs mt-1" style={{ color: '#C599B6' }}>
                             Tiết kiệm {formatPrice(room.originalPrice - room.price)}
                           </div>
                         )}
@@ -334,13 +334,13 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
                       <div className="flex space-x-3">
                         <Button 
                           variant="outline"
-                          style={{ borderColor: '#D91A73', color: '#D91A73' }}
+                          style={{ borderColor: '#C599B6', color: '#C599B6' }}
                         >
                           Xem chi tiết
                         </Button>
                         <Button 
                           className="text-white"
-                          style={{ backgroundColor: '#D91A73' }}
+                          style={{ backgroundColor: '#C599B6' }}
                         >
                           Đặt phòng ngay
                         </Button>
@@ -356,16 +356,16 @@ export function SearchResults({ searchData, onBackToHome }: SearchResultsProps) 
         {/* Pagination */}
         <div className="flex justify-center mt-12">
           <div className="flex items-center space-x-2">
-            <Button variant="outline" disabled style={{ borderColor: '#D91A73', color: '#D91A73' }}>
+            <Button variant="outline" disabled style={{ borderColor: '#C599B6', color: '#C599B6' }}>
               Trước
             </Button>
-            <Button className="text-white" style={{ backgroundColor: '#D91A73' }}>
+            <Button className="text-white" style={{ backgroundColor: '#C599B6' }}>
               1
             </Button>
-            <Button variant="outline" style={{ borderColor: '#D91A73', color: '#D91A73' }}>
+            <Button variant="outline" style={{ borderColor: '#C599B6', color: '#C599B6' }}>
               2
             </Button>
-            <Button variant="outline" style={{ borderColor: '#D91A73', color: '#D91A73' }}>
+            <Button variant="outline" style={{ borderColor: '#C599B6', color: '#C599B6' }}>
               Sau
             </Button>
           </div>

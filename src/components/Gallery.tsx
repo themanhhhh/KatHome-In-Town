@@ -54,12 +54,12 @@ export function Gallery() {
     <section id="gallery" className="py-20" style={{ backgroundColor: '#F2A7C3' }}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl mb-4" style={{ color: '#D91A73' }}>
+          <h2 className="text-3xl md:text-4xl mb-4" style={{ color: '#C599B6' }}>
             Thư viện ảnh
           </h2>
-          <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#D91A73' }}>
-            Khám phá không gian xinh đẹp của KatHome In Town  qua những hình ảnh chân thực
-          </p>
+           <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#C599B6' }}>
+             Khám phá không gian xinh đẹp của KatHome In Town qua những hình ảnh chân thực
+           </p>
         </div>
 
         {/* Gallery Grid */}
@@ -91,8 +91,8 @@ export function Gallery() {
             variant="outline" 
             className="border-2 hover:bg-white/20"
             style={{ 
-              borderColor: '#D91A73',
-              color: '#D91A73'
+              borderColor: '#C599B6',
+              color: '#C599B6'
             }}
           >
             Xem thêm ảnh

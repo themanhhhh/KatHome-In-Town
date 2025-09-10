@@ -182,7 +182,7 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
   return (
     <div className="min-h-screen bg-white">
       {/* Header Navigation */}
-      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#F2D8D8' }}>
+      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#FAD0C4' }}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -190,17 +190,17 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                 variant="ghost" 
                 onClick={onBackToSearch}
                 className="flex items-center space-x-2"
-                style={{ color: '#D91A73' }}
+                style={{ color: '#C599B6' }}
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Trở lại kết quả</span>
               </Button>
-              <span className="text-sm opacity-60" style={{ color: '#D91A73' }}>|</span>
+              <span className="text-sm opacity-60" style={{ color: '#C599B6' }}>|</span>
               <Button 
                 variant="ghost" 
                 onClick={onBackToHome}
                 className="text-sm"
-                style={{ color: '#D91A73' }}
+                style={{ color: '#C599B6' }}
               >
                 Trang chủ
               </Button>
@@ -208,10 +208,10 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
             
             <div className="flex items-center space-x-2">
               <Button variant="ghost" size="sm">
-                <Heart className="w-4 h-4" style={{ color: '#D91A73' }} />
+                <Heart className="w-4 h-4" style={{ color: '#C599B6' }} />
               </Button>
               <Button variant="ghost" size="sm">
-                <Share2 className="w-4 h-4" style={{ color: '#D91A73' }} />
+                <Share2 className="w-4 h-4" style={{ color: '#C599B6' }} />
               </Button>
             </div>
           </div>
@@ -264,7 +264,7 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                     className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
                       index === currentImageIndex ? 'border-opacity-100' : 'border-transparent'
                     }`}
-                    style={{ borderColor: index === currentImageIndex ? '#D91A73' : 'transparent' }}
+                    style={{ borderColor: index === currentImageIndex ? '#C599B6' : 'transparent' }}
                   >
                     <ImageWithFallback
                       src={image}
@@ -281,10 +281,10 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <div className="flex items-center space-x-2 mb-2">
-                    <h1 className="text-3xl" style={{ color: '#D91A73' }}>
+                    <h1 className="text-3xl" style={{ color: '#C599B6' }}>
                       {room.name}
                     </h1>
-                    <Badge style={{ backgroundColor: '#F2A7C3', color: '#D91A73' }}>
+                    <Badge style={{ backgroundColor: '#F2A7C3', color: '#C599B6' }}>
                       {room.type}
                     </Badge>
                   </div>
@@ -294,15 +294,15 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                         <Star 
                           key={i} 
                           className={`w-4 h-4 ${i < Math.floor(room.rating) ? 'fill-current' : ''}`}
-                          style={{ color: '#D91A73' }}
+                          style={{ color: '#C599B6' }}
                         />
                       ))}
                     </div>
-                    <span className="text-sm" style={{ color: '#D91A73' }}>
+                    <span className="text-sm" style={{ color: '#C599B6' }}>
                       {room.rating} ({room.reviews} đánh giá)
                     </span>
                   </div>
-                  <div className="flex items-center space-x-2 text-sm" style={{ color: '#D91A73' }}>
+                  <div className="flex items-center space-x-2 text-sm" style={{ color: '#C599B6' }}>
                     <MapPin className="w-4 h-4" />
                     <span>{room.location}</span>
                   </div>
@@ -312,33 +312,33 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
               <p className="text-gray-600 mb-6">{room.detailedDescription}</p>
 
               {/* Room Specs */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 rounded-lg" style={{ backgroundColor: '#F2D8D8' }}>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 rounded-lg" style={{ backgroundColor: '#FAD0C4' }}>
                 <div className="flex items-center space-x-2">
-                  <Users className="w-5 h-5" style={{ color: '#D91A73' }} />
+                  <Users className="w-5 h-5" style={{ color: '#C599B6' }} />
                   <div>
-                    <div className="text-sm" style={{ color: '#D91A73' }}>Khách tối đa</div>
-                    <div className="text-lg" style={{ color: '#D91A73' }}>{room.maxGuests} người</div>
+                    <div className="text-sm" style={{ color: '#C599B6' }}>Khách tối đa</div>
+                    <div className="text-lg" style={{ color: '#C599B6' }}>{room.maxGuests} người</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Bed className="w-5 h-5" style={{ color: '#D91A73' }} />
+                  <Bed className="w-5 h-5" style={{ color: '#C599B6' }} />
                   <div>
-                    <div className="text-sm" style={{ color: '#D91A73' }}>Giường</div>
-                    <div className="text-lg" style={{ color: '#D91A73' }}>{room.beds} giường</div>
+                    <div className="text-sm" style={{ color: '#C599B6' }}>Giường</div>
+                    <div className="text-lg" style={{ color: '#C599B6' }}>{room.beds} giường</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Bath className="w-5 h-5" style={{ color: '#D91A73' }} />
+                  <Bath className="w-5 h-5" style={{ color: '#C599B6' }} />
                   <div>
-                    <div className="text-sm" style={{ color: '#D91A73' }}>Phòng tắm</div>
-                    <div className="text-lg" style={{ color: '#D91A73' }}>{room.bathrooms} phòng</div>
+                    <div className="text-sm" style={{ color: '#C599B6' }}>Phòng tắm</div>
+                    <div className="text-lg" style={{ color: '#C599B6' }}>{room.bathrooms} phòng</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Maximize2 className="w-5 h-5" style={{ color: '#D91A73' }} />
+                  <Maximize2 className="w-5 h-5" style={{ color: '#C599B6' }} />
                   <div>
-                    <div className="text-sm" style={{ color: '#D91A73' }}>Diện tích</div>
-                    <div className="text-lg" style={{ color: '#D91A73' }}>{room.size}m²</div>
+                    <div className="text-sm" style={{ color: '#C599B6' }}>Diện tích</div>
+                    <div className="text-lg" style={{ color: '#C599B6' }}>{room.size}m²</div>
                   </div>
                 </div>
               </div>
@@ -346,10 +346,10 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
 
             {/* Tabs for details */}
             <Tabs defaultValue="amenities" className="w-full">
-              <TabsList className="grid w-full grid-cols-3" style={{ backgroundColor: '#F2D8D8' }}>
-                <TabsTrigger value="amenities" style={{ color: '#D91A73' }}>Tiện nghi</TabsTrigger>
-                <TabsTrigger value="policies" style={{ color: '#D91A73' }}>Chính sách</TabsTrigger>
-                <TabsTrigger value="reviews" style={{ color: '#D91A73' }}>Đánh giá</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3" style={{ backgroundColor: '#FAD0C4' }}>
+                <TabsTrigger value="amenities" style={{ color: '#C599B6' }}>Tiện nghi</TabsTrigger>
+                <TabsTrigger value="policies" style={{ color: '#C599B6' }}>Chính sách</TabsTrigger>
+                <TabsTrigger value="reviews" style={{ color: '#C599B6' }}>Đánh giá</TabsTrigger>
               </TabsList>
               
               <TabsContent value="amenities" className="mt-6">
@@ -358,10 +358,10 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                     <div 
                       key={index} 
                       className="flex items-center space-x-2 p-3 rounded-lg"
-                      style={{ backgroundColor: '#F2D8D8' }}
+                      style={{ backgroundColor: '#FAD0C4' }}
                     >
-                      <CheckCircle className="w-4 h-4" style={{ color: '#D91A73' }} />
-                      <span className="text-sm" style={{ color: '#D91A73' }}>{amenity}</span>
+                      <CheckCircle className="w-4 h-4" style={{ color: '#C599B6' }} />
+                      <span className="text-sm" style={{ color: '#C599B6' }}>{amenity}</span>
                     </div>
                   ))}
                 </div>
@@ -373,10 +373,10 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                     <div 
                       key={index} 
                       className="flex items-start space-x-3 p-3 rounded-lg"
-                      style={{ backgroundColor: '#F2D8D8' }}
+                      style={{ backgroundColor: '#FAD0C4' }}
                     >
-                      <Clock className="w-4 h-4 mt-0.5" style={{ color: '#D91A73' }} />
-                      <span className="text-sm" style={{ color: '#D91A73' }}>{policy}</span>
+                      <Clock className="w-4 h-4 mt-0.5" style={{ color: '#C599B6' }} />
+                      <span className="text-sm" style={{ color: '#C599B6' }}>{policy}</span>
                     </div>
                   ))}
                 </div>
@@ -388,13 +388,13 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                     <div 
                       key={review.id} 
                       className="p-4 rounded-lg"
-                      style={{ backgroundColor: '#F2D8D8' }}
+                      style={{ backgroundColor: '#FAD0C4' }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center space-x-3">
                           <div>
-                            <div style={{ color: '#D91A73' }}>{review.name}</div>
-                            <div className="text-xs opacity-70" style={{ color: '#D91A73' }}>{review.date}</div>
+                            <div style={{ color: '#C599B6' }}>{review.name}</div>
+                            <div className="text-xs opacity-70" style={{ color: '#C599B6' }}>{review.date}</div>
                           </div>
                         </div>
                         <div className="flex items-center space-x-1">
@@ -402,12 +402,12 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                             <Star 
                               key={i} 
                               className={`w-3 h-3 ${i < review.rating ? 'fill-current' : ''}`}
-                              style={{ color: '#D91A73' }}
+                              style={{ color: '#C599B6' }}
                             />
                           ))}
                         </div>
                       </div>
-                      <p className="text-sm" style={{ color: '#D91A73' }}>{review.comment}</p>
+                      <p className="text-sm" style={{ color: '#C599B6' }}>{review.comment}</p>
                     </div>
                   ))}
                 </div>
@@ -418,20 +418,20 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
           {/* Booking Card */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
-              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
                 <CardContent className="p-6">
                   <div className="mb-6">
                     <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-2xl" style={{ color: '#D91A73' }}>
+                      <span className="text-2xl" style={{ color: '#C599B6' }}>
                         {formatPrice(room.price)}
                       </span>
                       {room.originalPrice > room.price && (
-                        <span className="text-lg line-through opacity-60" style={{ color: '#D91A73' }}>
+                        <span className="text-lg line-through opacity-60" style={{ color: '#C599B6' }}>
                           {formatPrice(room.originalPrice)}
                         </span>
                       )}
                     </div>
-                    <span className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+                    <span className="text-sm opacity-80" style={{ color: '#C599B6' }}>
                       /đêm (đã bao gồm thuế)
                     </span>
                   </div>
@@ -439,7 +439,7 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                   <div className="space-y-4 mb-6">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label style={{ color: '#D91A73' }}>Nhận phòng</Label>
+                        <Label style={{ color: '#C599B6' }}>Nhận phòng</Label>
                         <Input 
                           type="date"
                           value={checkIn}
@@ -447,7 +447,7 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label style={{ color: '#D91A73' }}>Trả phòng</Label>
+                        <Label style={{ color: '#C599B6' }}>Trả phòng</Label>
                         <Input 
                           type="date"
                           value={checkOut}
@@ -457,7 +457,7 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                     </div>
                     
                     <div className="space-y-2">
-                      <Label style={{ color: '#D91A73' }}>Số khách</Label>
+                      <Label style={{ color: '#C599B6' }}>Số khách</Label>
                       <Input 
                         type="number"
                         min="1"
@@ -470,16 +470,16 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
 
                   {/* Booking Summary */}
                   <div className="space-y-3 mb-6 p-4 rounded-lg bg-white/50">
-                    <div className="flex justify-between text-sm" style={{ color: '#D91A73' }}>
+                    <div className="flex justify-between text-sm" style={{ color: '#C599B6' }}>
                       <span>{formatPrice(room.price)} x {calculateNights()} đêm</span>
                       <span>{formatPrice(getTotalPrice())}</span>
                     </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#D91A73' }}>
+                    <div className="flex justify-between text-sm" style={{ color: '#C599B6' }}>
                       <span>Phí dịch vụ</span>
                       <span>Miễn phí</span>
                     </div>
                     <div className="border-t pt-3">
-                      <div className="flex justify-between" style={{ color: '#D91A73' }}>
+                      <div className="flex justify-between" style={{ color: '#C599B6' }}>
                         <span>Tổng cộng</span>
                         <span>{formatPrice(getTotalPrice())}</span>
                       </div>
@@ -488,7 +488,7 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
 
                   <Button 
                     className="w-full mb-4 text-white"
-                    style={{ backgroundColor: '#D91A73' }}
+                    style={{ backgroundColor: '#C599B6' }}
                     onClick={() => onProceedToCheckout({
                       id: room.id,
                       name: room.name,
@@ -503,18 +503,18 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
                     Đặt phòng ngay
                   </Button>
                   
-                  <div className="text-center text-xs opacity-70" style={{ color: '#D91A73' }}>
+                  <div className="text-center text-xs opacity-70" style={{ color: '#C599B6' }}>
                     Bạn sẽ chưa bị tính phí
                   </div>
 
                   <div className="mt-6 space-y-3">
                     <div className="flex items-center space-x-2">
-                      <Phone className="w-4 h-4" style={{ color: '#D91A73' }} />
-                      <span className="text-sm" style={{ color: '#D91A73' }}>+84 123 456 789</span>
+                      <Phone className="w-4 h-4" style={{ color: '#C599B6' }} />
+                      <span className="text-sm" style={{ color: '#C599B6' }}>+84 123 456 789</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Mail className="w-4 h-4" style={{ color: '#D91A73' }} />
-                      <span className="text-sm" style={{ color: '#D91A73' }}>info@rosehomestay.com</span>
+                      <Mail className="w-4 h-4" style={{ color: '#C599B6' }} />
+                      <span className="text-sm" style={{ color: '#C599B6' }}>info@rosehomestay.com</span>
                     </div>
                   </div>
                 </CardContent>

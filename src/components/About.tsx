@@ -3,57 +3,57 @@ import { CheckCircle, Heart, Home, Users } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 export function About() {
-  const features = [
-    {
-      icon: <Home className="w-6 h-6" />,
-      title: "Không gian ấm cúng",
-      description: "Thiết kế nội thất hiện đại, ấm cúng như chính ngôi nhà của bạn"
-    },
-    {
-      icon: <Heart className="w-6 h-6" />,
-      title: "Dịch vụ tận tâm",
-      description: "Đội ngũ nhân viên nhiệt tình, sẵn sàng hỗ trợ 24/7"
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: "Phù hợp gia đình",
-      description: "Không gian rộng rãi, an toàn cho cả gia đình và nhóm bạn"
-    }
-  ];
+    const features = [
+      {
+        icon: <Home className="w-6 h-6" />,
+        title: "Self Check-in/out",
+        description: "Chúng mình không có lễ tân. Riêng tư và bảo mật là tiêu chí hàng đầu của KatHome In Town."
+      },
+      {
+        icon: <Heart className="w-6 h-6" />,
+        title: "Home Cinema",
+        description: "Smart tivi và máy chiếu màn ảnh rộng 120-150 inch sắc nét, âm thanh sống động"
+      },
+      {
+        icon: <Users className="w-6 h-6" />,
+        title: "Master Chef Kitchen",
+        description: "Nhập vai siêu đầu bếp trổ tài nấu nướng trong căn bếp ấm cúng và tiện nghi"
+      }
+    ];
 
   const highlights = [
-    "Vị trí trung tâm Đà Lạt, gần các điểm du lịch",
-    "Phòng ốc sạch sẽ, thoáng mát với view đẹp",
-    "Bếp đầy đủ tiện nghi để nấu ăn",
-    "Wifi miễn phí tốc độ cao",
-    "Chỗ đậu xe riêng an toàn",
-    "Hỗ trợ đặt tour và thuê xe máy"
+    "Hệ thống nhiều cơ sở tại Hà Nội (Tây Hồ, Ba Đình, Hoàn Kiếm...)",
+    "Phòng ốc sạch sẽ, thiết kế hiện đại với không gian riêng tư",
+    "Bếp đầy đủ tiện nghi cho trải nghiệm Master Chef",
+    "Home Cinema với smart TV và máy chiếu màn hình lớn",
+    "Self check-in/check-out đảm bảo riêng tư tuyệt đối",
+    "Romantic Bath Experience cho những khoảnh khắc lãng mạn"
   ];
 
   return (
-    <section id="about" className="py-20" style={{ backgroundColor: '#F2D8D8' }}>
+    <section id="about" className="py-20" style={{ backgroundColor: '#FFF7F3' }}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl mb-4" style={{ color: '#D91A73' }}>
+          <h2 className="text-3xl md:text-4xl mb-4" style={{ color: '#C599B6' }}>
             Về KatHome In Town 
           </h2>
-          <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#D91A73' }}>
-            Chúng tôi tự hào mang đến cho du khách những trải nghiệm lưu trú đáng nhớ 
-            tại thành phố Đà Lạt thơ mộng
-          </p>
+            <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#C599B6' }}>
+             Chúng tôi tự hào mang đến cho du khách những trải nghiệm lưu trú đáng nhớ 
+             tại thủ đô Hà Nội với hệ thống homestay hiện đại
+            </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
           <div className="space-y-8">
             <div className="space-y-6">
-              <h3 className="text-2xl" style={{ color: '#D91A73' }}>
+              <h3 className="text-2xl" style={{ color: '#C599B6' }}>
                 Tại sao chọn KatHome In Town ?
               </h3>
-              <p className="text-lg leading-relaxed opacity-90" style={{ color: '#D91A73' }}>
-                KatHome In Town  không chỉ là nơi nghỉ ngơi mà còn là ngôi nhà thứ hai của bạn tại Đà Lạt. 
-                Với thiết kế hiện đại kết hợp phong cách địa phương, chúng tôi tạo ra không gian 
-                vừa quen thuộc vừa mới mẻ.
-              </p>
+               <p className="text-lg leading-relaxed opacity-90" style={{ color: '#C599B6' }}>
+                 KatHome In Town không chỉ là nơi nghỉ ngơi mà còn là ngôi nhà thứ hai của bạn tại Hà Nội. 
+                 Với thiết kế hiện đại kết hợp phong cách địa phương, chúng tôi tạo ra không gian 
+                 vừa quen thuộc vừa mới mẻ, mang đến cảm giác ấm cúng như ở nhà.
+               </p>
             </div>
 
             <div className="space-y-4">
@@ -64,15 +64,15 @@ export function About() {
                       className="p-2 rounded-lg"
                       style={{ backgroundColor: '#F2A7C3' }}
                     >
-                      <div style={{ color: '#D91A73' }}>
+                      <div style={{ color: '#C599B6' }}>
                         {feature.icon}
                       </div>
                     </div>
                     <div>
-                      <h4 className="mb-2" style={{ color: '#D91A73' }}>
+                      <h4 className="mb-2" style={{ color: '#C599B6' }}>
                         {feature.title}
                       </h4>
-                      <p className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+                      <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
                         {feature.description}
                       </p>
                     </div>
@@ -114,14 +114,14 @@ export function About() {
 
         <Card className="p-8 bg-white/70 border-0">
           <CardContent className="p-0">
-            <h3 className="text-xl mb-6 text-center" style={{ color: '#D91A73' }}>
+            <h3 className="text-xl mb-6 text-center" style={{ color: '#C599B6' }}>
               Điểm nổi bật của KatHome In Town 
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               {highlights.map((highlight, index) => (
                 <div key={index} className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#D91A73' }} />
-                  <span className="text-sm" style={{ color: '#D91A73' }}>
+                  <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#C599B6' }} />
+                  <span className="text-sm" style={{ color: '#C599B6' }}>
                     {highlight}
                   </span>
                 </div>

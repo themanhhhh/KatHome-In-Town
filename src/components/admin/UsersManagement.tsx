@@ -184,7 +184,7 @@ export function UsersManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: '#D91A73' }}>
+          <h1 className="text-3xl font-bold" style={{ color: '#C599B6' }}>
             Quản lý người dùng
           </h1>
           <p className="text-gray-600 mt-2">
@@ -197,7 +197,7 @@ export function UsersManagement() {
             variant="outline"
             size="sm"
             className="flex items-center space-x-2"
-            style={{ borderColor: '#D91A73', color: '#D91A73' }}
+            style={{ borderColor: '#C599B6', color: '#C599B6' }}
           >
             <Download className="w-4 h-4" />
             <span>Xuất Excel</span>
@@ -205,7 +205,7 @@ export function UsersManagement() {
           <Button
             size="sm"
             className="flex items-center space-x-2 text-white"
-            style={{ backgroundColor: '#D91A73' }}
+            style={{ backgroundColor: '#C599B6' }}
           >
             <UserPlus className="w-4 h-4" />
             <span>Thêm người dùng</span>
@@ -214,12 +214,12 @@ export function UsersManagement() {
       </div>
 
       {/* Filters */}
-      <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+      <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#D91A73' }} />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
                 <Input
                   placeholder="Tìm theo tên, email, số điện thoại..."
                   value={searchTerm}
@@ -231,7 +231,7 @@ export function UsersManagement() {
             
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <Filter className="w-4 h-4" style={{ color: '#D91A73' }} />
+                <Filter className="w-4 h-4" style={{ color: '#C599B6' }} />
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Trạng thái" />
@@ -251,45 +251,45 @@ export function UsersManagement() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold" style={{ color: '#D91A73' }}>
+            <div className="text-2xl font-bold" style={{ color: '#C599B6' }}>
               {users.length}
             </div>
-            <div className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+            <div className="text-sm opacity-80" style={{ color: '#C599B6' }}>
               Tổng người dùng
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold" style={{ color: '#D91A73' }}>
+            <div className="text-2xl font-bold" style={{ color: '#C599B6' }}>
               {users.filter(u => u.status === 'active').length}
             </div>
-            <div className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+            <div className="text-sm opacity-80" style={{ color: '#C599B6' }}>
               Đang hoạt động
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold" style={{ color: '#D91A73' }}>
+            <div className="text-2xl font-bold" style={{ color: '#C599B6' }}>
               {users.reduce((sum, u) => sum + u.totalBookings, 0)}
             </div>
-            <div className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+            <div className="text-sm opacity-80" style={{ color: '#C599B6' }}>
               Tổng booking
             </div>
           </CardContent>
         </Card>
         
-        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+        <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold" style={{ color: '#D91A73' }}>
+            <div className="text-2xl font-bold" style={{ color: '#C599B6' }}>
               {formatPrice(users.reduce((sum, u) => sum + u.totalSpent, 0))}
             </div>
-            <div className="text-sm opacity-80" style={{ color: '#D91A73' }}>
+            <div className="text-sm opacity-80" style={{ color: '#C599B6' }}>
               Tổng chi tiêu
             </div>
           </CardContent>
@@ -297,21 +297,21 @@ export function UsersManagement() {
       </div>
 
       {/* Users Table */}
-      <Card className="border-0 shadow-lg" style={{ backgroundColor: '#F2D8D8' }}>
+      <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle style={{ color: '#D91A73' }}>
+            <CardTitle style={{ color: '#C599B6' }}>
               Danh sách người dùng ({filteredUsers.length})
             </CardTitle>
             {selectedUsers.length > 0 && (
               <div className="flex items-center space-x-2">
-                <span className="text-sm" style={{ color: '#D91A73' }}>
+                <span className="text-sm" style={{ color: '#C599B6' }}>
                   Đã chọn {selectedUsers.length} người dùng
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
-                  style={{ borderColor: '#D91A73', color: '#D91A73' }}
+                  style={{ borderColor: '#C599B6', color: '#C599B6' }}
                 >
                   Thao tác hàng loạt
                 </Button>
@@ -329,16 +329,16 @@ export function UsersManagement() {
                       type="checkbox"
                       checked={selectedUsers.length === filteredUsers.length}
                       onChange={handleSelectAll}
-                      style={{ accentColor: '#D91A73' }}
+                      style={{ accentColor: '#C599B6' }}
                     />
                   </th>
-                  <th className="text-left p-4" style={{ color: '#D91A73' }}>Người dùng</th>
-                  <th className="text-left p-4" style={{ color: '#D91A73' }}>Liên hệ</th>
-                  <th className="text-left p-4" style={{ color: '#D91A73' }}>Địa điểm</th>
-                  <th className="text-left p-4" style={{ color: '#D91A73' }}>Hoạt động</th>
-                  <th className="text-left p-4" style={{ color: '#D91A73' }}>Thống kê</th>
-                  <th className="text-left p-4" style={{ color: '#D91A73' }}>Trạng thái</th>
-                  <th className="text-left p-4" style={{ color: '#D91A73' }}>Hành động</th>
+                  <th className="text-left p-4" style={{ color: '#C599B6' }}>Người dùng</th>
+                  <th className="text-left p-4" style={{ color: '#C599B6' }}>Liên hệ</th>
+                  <th className="text-left p-4" style={{ color: '#C599B6' }}>Địa điểm</th>
+                  <th className="text-left p-4" style={{ color: '#C599B6' }}>Hoạt động</th>
+                  <th className="text-left p-4" style={{ color: '#C599B6' }}>Thống kê</th>
+                  <th className="text-left p-4" style={{ color: '#C599B6' }}>Trạng thái</th>
+                  <th className="text-left p-4" style={{ color: '#C599B6' }}>Hành động</th>
                 </tr>
               </thead>
               <tbody>
@@ -349,39 +349,39 @@ export function UsersManagement() {
                         type="checkbox"
                         checked={selectedUsers.includes(user.id)}
                         onChange={() => handleSelectUser(user.id)}
-                        style={{ accentColor: '#D91A73' }}
+                        style={{ accentColor: '#C599B6' }}
                       />
                     </td>
                     <td className="p-4">
                       <div>
-                        <div className="font-medium" style={{ color: '#D91A73' }}>
+                        <div className="font-medium" style={{ color: '#C599B6' }}>
                           {user.firstName} {user.lastName}
                         </div>
-                        <div className="text-xs opacity-60" style={{ color: '#D91A73' }}>
+                        <div className="text-xs opacity-60" style={{ color: '#C599B6' }}>
                           ID: {user.id}
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
                       <div className="space-y-1">
-                        <div className="text-sm flex items-center space-x-2" style={{ color: '#D91A73' }}>
+                        <div className="text-sm flex items-center space-x-2" style={{ color: '#C599B6' }}>
                           <Mail className="w-3 h-3" />
                           <span>{user.email}</span>
                         </div>
-                        <div className="text-sm flex items-center space-x-2" style={{ color: '#D91A73' }}>
+                        <div className="text-sm flex items-center space-x-2" style={{ color: '#C599B6' }}>
                           <Phone className="w-3 h-3" />
                           <span>{user.phone}</span>
                         </div>
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="flex items-center space-x-2" style={{ color: '#D91A73' }}>
+                      <div className="flex items-center space-x-2" style={{ color: '#C599B6' }}>
                         <MapPin className="w-3 h-3" />
                         <span className="text-sm">{user.city}</span>
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="text-sm space-y-1" style={{ color: '#D91A73' }}>
+                      <div className="text-sm space-y-1" style={{ color: '#C599B6' }}>
                         <div>
                           <span className="opacity-60">Đăng ký: </span>
                           {formatDate(user.registrationDate)}
@@ -395,21 +395,21 @@ export function UsersManagement() {
                     <td className="p-4">
                       <div className="space-y-2">
                         <div className="flex items-center space-x-2">
-                          <Calendar className="w-3 h-3" style={{ color: '#D91A73' }} />
-                          <span className="text-sm" style={{ color: '#D91A73' }}>
+                          <Calendar className="w-3 h-3" style={{ color: '#C599B6' }} />
+                          <span className="text-sm" style={{ color: '#C599B6' }}>
                             {user.totalBookings} booking
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <DollarSign className="w-3 h-3" style={{ color: '#D91A73' }} />
-                          <span className="text-sm" style={{ color: '#D91A73' }}>
+                          <DollarSign className="w-3 h-3" style={{ color: '#C599B6' }} />
+                          <span className="text-sm" style={{ color: '#C599B6' }}>
                             {formatPrice(user.totalSpent)}
                           </span>
                         </div>
                         {user.averageRating > 0 && (
                           <div className="flex items-center space-x-2">
-                            <Star className="w-3 h-3" style={{ color: '#D91A73' }} />
-                            <span className="text-sm" style={{ color: '#D91A73' }}>
+                            <Star className="w-3 h-3" style={{ color: '#C599B6' }} />
+                            <span className="text-sm" style={{ color: '#C599B6' }}>
                               {user.averageRating}/5
                             </span>
                           </div>
@@ -421,10 +421,10 @@ export function UsersManagement() {
                     </td>
                     <td className="p-4">
                       <div className="flex items-center space-x-2">
-                        <Button variant="ghost" size="sm" style={{ color: '#D91A73' }}>
+                        <Button variant="ghost" size="sm" style={{ color: '#C599B6' }}>
                           <Eye className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" style={{ color: '#D91A73' }}>
+                        <Button variant="ghost" size="sm" style={{ color: '#C599B6' }}>
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700">
@@ -438,7 +438,7 @@ export function UsersManagement() {
             </table>
             
             {filteredUsers.length === 0 && (
-              <div className="text-center py-12 opacity-60" style={{ color: '#D91A73' }}>
+              <div className="text-center py-12 opacity-60" style={{ color: '#C599B6' }}>
                 <Users className="w-12 h-12 mx-auto mb-4" />
                 <p>Không tìm thấy người dùng nào</p>
               </div>

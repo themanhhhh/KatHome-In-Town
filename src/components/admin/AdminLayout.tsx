@@ -86,7 +86,7 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm flex-shrink-0" style={{ borderColor: '#F2D8D8' }}>
+      <header className="bg-white border-b shadow-sm flex-shrink-0" style={{ borderColor: '#FAD0C4' }}>
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -96,14 +96,14 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
                 size="sm"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="mr-2"
-                style={{ color: '#D91A73' }}
+                style={{ color: '#C599B6' }}
                 title={sidebarOpen ? 'Thu gọn sidebar' : 'Mở rộng sidebar'}
               >
                 <Menu className="w-5 h-5" />
               </Button>
               
               <div className="flex items-center space-x-4">
-                <h1 className="text-xl font-semibold" style={{ color: '#D91A73' }}>
+                <h1 className="text-xl font-semibold" style={{ color: '#C599B6' }}>
                   KatHome In Town  Admin
                 </h1>
                 
@@ -116,7 +116,7 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
                 size="sm"
                 onClick={onBackToHome}
                 className="flex items-center space-x-2"
-                style={{ color: '#D91A73' }}
+                style={{ color: '#C599B6' }}
               >
                 <Home className="w-4 h-4" />
                 <span className="hidden sm:inline">Về trang chủ</span>
@@ -126,10 +126,10 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
                 {isAuthenticated && user ? (
                   <>
                     <div className="hidden sm:block text-right">
-                      <div className="text-sm font-medium" style={{ color: '#D91A73' }}>
+                      <div className="text-sm font-medium" style={{ color: '#C599B6' }}>
                         {user.firstName} {user.lastName}
                       </div>
-                      <div className="text-xs opacity-60" style={{ color: '#D91A73' }}>
+                      <div className="text-xs opacity-60" style={{ color: '#C599B6' }}>
                         Administrator
                       </div>
                     </div>
@@ -138,14 +138,14 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
                       size="sm"
                       onClick={logout}
                       className="flex items-center space-x-2"
-                      style={{ borderColor: '#D91A73', color: '#D91A73' }}
+                      style={{ borderColor: '#C599B6', color: '#C599B6' }}
                     >
                       <LogOut className="w-4 h-4" />
                       <span className="hidden sm:inline">Đăng xuất</span>
                     </Button>
                   </>
                 ) : (
-                  <div className="text-sm" style={{ color: '#D91A73' }}>
+                  <div className="text-sm" style={{ color: '#C599B6' }}>
                     <div className="font-medium">Admin Panel</div>
                     <div className="text-xs opacity-60">Chế độ demo</div>
                   </div>
@@ -179,8 +179,8 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
                         : 'hover:bg-gray-50'
                     } ${!sidebarOpen ? 'justify-center' : ''}`}
                     style={{
-                      backgroundColor: isActive ? '#D91A73' : 'transparent',
-                      color: isActive ? 'white' : '#D91A73'
+                      backgroundColor: isActive ? '#C599B6' : 'transparent',
+                      color: isActive ? 'white' : '#C599B6'
                     }}
                     title={!sidebarOpen ? item.label : undefined}
                   >
@@ -200,8 +200,8 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
 
             {/* Footer */}
             {sidebarOpen && (
-              <div className="p-4 border-t" style={{ borderColor: '#F2D8D8' }}>
-                <div className="text-xs text-center opacity-60" style={{ color: '#D91A73' }}>
+              <div className="p-4 border-t" style={{ borderColor: '#FAD0C4' }}>
+                <div className="text-xs text-center opacity-60" style={{ color: '#C599B6' }}>
                   KatHome In Town  Admin Panel
                   <br />
                   Version 1.0.0
@@ -242,8 +242,8 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
                             : 'hover:bg-gray-50'
                         }`}
                         style={{
-                          backgroundColor: isActive ? '#D91A73' : 'transparent',
-                          color: isActive ? 'white' : '#D91A73'
+                          backgroundColor: isActive ? '#C599B6' : 'transparent',
+                          color: isActive ? 'white' : '#C599B6'
                         }}
                       >
                         <Icon className="w-5 h-5 mr-3 flex-shrink-0" />
@@ -259,8 +259,8 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
                 </nav>
 
                 {/* Footer */}
-                <div className="p-4 border-t" style={{ borderColor: '#F2D8D8' }}>
-                  <div className="text-xs text-center opacity-60" style={{ color: '#D91A73' }}>
+                <div className="p-4 border-t" style={{ borderColor: '#FAD0C4' }}>
+                  <div className="text-xs text-center opacity-60" style={{ color: '#C599B6' }}>
                     Rose Homestay Admin Panel
                     <br />
                     Version 1.0.0

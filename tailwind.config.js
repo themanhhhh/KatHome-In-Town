@@ -19,6 +19,7 @@ export default {
     },
     extend: {
       fontFamily: {
+        'sans': ['Gotu', 'sans-serif'],
         'gotu': ['Gotu', 'sans-serif'],
         'heading': ['Gotu', 'sans-serif'],
       },

@@ -18,7 +18,7 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
             <ImageWithFallback
-              src="/src/image/logo.jfif"
+              src="/logo.jfif"
               alt="KatHome In Town Logo"
               className="w-full h-full object-cover"
             />

@@ -102,10 +102,10 @@ export function Locations() {
     <section id="locations" className="py-20" style={{ backgroundColor: '#FDF7F7' }}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#E8A5B8' }}>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#82213D' }}>
             Hệ thống cơ sở KatHome In Town
           </h2>
-          <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#E8A5B8' }}>
+          <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#82213D' }}>
             Khám phá các cơ sở KatHome In Town tại những vị trí đắc địa nhất Hà Nội
           </p>
         </div>
@@ -125,7 +125,7 @@ export function Locations() {
                 />
                 <div 
                   className="absolute top-4 left-4 px-3 py-1 rounded-full text-white text-sm font-medium"
-                  style={{ backgroundColor: '#E8A5B8' }}
+                  style={{ backgroundColor: '#82213D' }}
                 >
                   {location.district}
                 </div>
@@ -135,14 +135,14 @@ export function Locations() {
                 <div className="space-y-4">
                   {/* Addresses */}
                   <div>
-                    <h3 className="font-bold text-lg mb-2" style={{ color: '#E8A5B8' }}>
+                    <h3 className="font-bold text-lg mb-2" style={{ color: '#82213D' }}>
                       Địa chỉ
                     </h3>
                     <div className="space-y-1">
                       {location.addresses.map((address, idx) => (
                         <div key={idx} className="flex items-center space-x-2 text-sm">
-                          <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: '#E8A5B8' }} />
-                          <span style={{ color: '#E8A5B8' }}>{address}</span>
+                          <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: '#82213D' }} />
+                          <span style={{ color: '#82213D' }}>{address}</span>
                         </div>
                       ))}
                     </div>
@@ -150,7 +150,7 @@ export function Locations() {
 
                   {/* Available Rooms */}
                   <div>
-                    <h4 className="font-semibold mb-2" style={{ color: '#E8A5B8' }}>
+                    <h4 className="font-semibold mb-2" style={{ color: '#82213D' }}>
                       Các phòng có sẵn
                     </h4>
                     <div className="flex flex-wrap gap-2">
@@ -158,7 +158,7 @@ export function Locations() {
                         <span 
                           key={idx}
                           className="px-3 py-1 rounded-full text-xs font-medium"
-                          style={{ backgroundColor: '#F8E8EC', color: '#E8A5B8' }}
+                          style={{ backgroundColor: '#F8E8EC', color: '#82213D' }}
                         >
                           {room}
                         </span>
@@ -168,23 +168,23 @@ export function Locations() {
 
                   {/* Amenities */}
                   <div>
-                    <h4 className="font-semibold mb-2" style={{ color: '#E8A5B8' }}>
+                    <h4 className="font-semibold mb-2" style={{ color: '#82213D' }}>
                       Tiện nghi
                     </h4>
                     <div className="grid grid-cols-2 gap-2">
                       {location.amenities.map((amenity, idx) => (
                         <div key={idx} className="flex items-center space-x-2 text-xs">
-                          <div style={{ color: '#E8A5B8' }}>
+                          <div style={{ color: '#82213D' }}>
                             {getAmenityIcon(amenity)}
                           </div>
-                          <span style={{ color: '#E8A5B8' }}>{amenity}</span>
+                          <span style={{ color: '#82213D' }}>{amenity}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   {/* Description */}
-                  <p className="text-sm opacity-80" style={{ color: '#E8A5B8' }}>
+                  <p className="text-sm opacity-80" style={{ color: '#82213D' }}>
                     {location.description}
                   </p>
                 </div>
@@ -199,8 +199,8 @@ export function Locations() {
             variant="outline" 
             className="border-2 hover:bg-white/20 px-8 py-3 font-semibold"
             style={{ 
-              borderColor: '#E8A5B8',
-              color: '#E8A5B8'
+              borderColor: '#82213D',
+              color: '#82213D'
             }}
           >
             Xem bảng giá các cơ sở

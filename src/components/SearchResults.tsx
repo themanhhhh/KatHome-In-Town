@@ -171,7 +171,7 @@ export function SearchResults({ searchData, onBackToHome, onViewRoomDetail }: Se
         {/* Filters và Sort */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-2xl mb-2" style={{ color: '#C599B6' }}>
+            <h1 className="text-2xl mb-2 font-heading" style={{ color: '#C599B6' }}>
               Các phòng có sẵn
             </h1>
             <p className="opacity-80" style={{ color: '#C599B6' }}>
@@ -235,7 +235,7 @@ export function SearchResults({ searchData, onBackToHome, onViewRoomDetail }: Se
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="text-xl" style={{ color: '#C599B6' }}>
+                          <h3 className="text-xl font-heading" style={{ color: '#C599B6' }}>
                             {room.name}
                           </h3>
                           <Badge variant="secondary" style={{ backgroundColor: '#F2A7C3', color: '#C599B6' }}>

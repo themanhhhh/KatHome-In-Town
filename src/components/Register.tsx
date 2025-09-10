@@ -132,7 +132,7 @@ export function Register({ onBack, onSwitchToLogin, onRegisterSuccess }: Registe
               <ArrowLeft className="w-4 h-4" />
               <span>Quay lại</span>
             </Button>
-            <h1 className="text-xl font-semibold" style={{ color: '#C599B6' }}>Đăng ký</h1>
+            <h1 className="text-xl font-semibold font-heading" style={{ color: '#C599B6' }}>Đăng ký</h1>
           </div>
         </div>
       </div>

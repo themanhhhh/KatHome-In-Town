@@ -98,7 +98,7 @@ export function AdminDashboard() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold" style={{ color: '#C599B6' }}>
+        <h1 className="text-3xl font-bold font-heading" style={{ color: '#C599B6' }}>
           Dashboard
         </h1>
         <p className="text-gray-600 mt-2">
@@ -180,7 +180,7 @@ export function AdminDashboard() {
                 <div key={booking.id} className="flex items-center justify-between p-4 rounded-lg bg-white/50">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium" style={{ color: '#C599B6' }}>
+                      <h4 className="font-medium font-heading" style={{ color: '#C599B6' }}>
                         {booking.guestName}
                       </h4>
                       {getStatusBadge(booking.status)}
@@ -222,7 +222,7 @@ export function AdminDashboard() {
                     <Users className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium" style={{ color: '#C599B6' }}>
+                    <h4 className="font-medium font-heading" style={{ color: '#C599B6' }}>
                       {checkin.guestName}
                     </h4>
                     <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
@@ -260,7 +260,7 @@ export function AdminDashboard() {
             <div className="p-3 rounded-full inline-flex mb-4" style={{ backgroundColor: '#C599B6' }}>
               <Star className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-2" style={{ color: '#C599B6' }}>
+            <h3 className="text-2xl font-bold mb-2 font-heading" style={{ color: '#C599B6' }}>
               {stats.averageRating}/5
             </h3>
             <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
@@ -277,7 +277,7 @@ export function AdminDashboard() {
             <div className="p-3 rounded-full inline-flex mb-4" style={{ backgroundColor: '#C599B6' }}>
               <CheckCircle className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-2" style={{ color: '#C599B6' }}>
+            <h3 className="text-2xl font-bold mb-2 font-heading" style={{ color: '#C599B6' }}>
               98%
             </h3>
             <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
@@ -294,7 +294,7 @@ export function AdminDashboard() {
             <div className="p-3 rounded-full inline-flex mb-4" style={{ backgroundColor: '#C599B6' }}>
               <XCircle className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold mb-2" style={{ color: '#C599B6' }}>
+            <h3 className="text-2xl font-bold mb-2 font-heading" style={{ color: '#C599B6' }}>
               2%
             </h3>
             <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>

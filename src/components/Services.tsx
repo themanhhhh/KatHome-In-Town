@@ -66,17 +66,17 @@ export function Services() {
     <section id="services" className="py-20 bg-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#E8A5B8' }}>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 font-heading" style={{ color: '#82213D' }}>
             Dịch vụ KatHome In Town
           </h2>
-          <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#E8A5B8' }}>
+          <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#82213D' }}>
             Trải nghiệm dịch vụ chăm sóc khách hàng tận tâm và chuyên nghiệp
           </p>
         </div>
 
         {/* Main Services */}
         <div className="mb-16">
-          <h3 className="text-2xl font-bold text-center mb-8" style={{ color: '#E8A5B8' }}>
+          <h3 className="text-2xl font-bold text-center mb-8" style={{ color: '#82213D' }}>
             Dịch vụ chính
           </h3>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -91,20 +91,20 @@ export function Services() {
                     className="inline-flex p-4 rounded-full group-hover:scale-110 transition-transform"
                     style={{ backgroundColor: '#F8E8EC' }}
                   >
-                    <div style={{ color: '#E8A5B8' }}>
+                    <div style={{ color: '#82213D' }}>
                       {service.icon}
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-bold mb-2" style={{ color: '#E8A5B8' }}>
+                    <h4 className="font-bold mb-2" style={{ color: '#82213D' }}>
                       {service.title}
                     </h4>
-                    <p className="text-sm opacity-80 mb-3" style={{ color: '#E8A5B8' }}>
+                    <p className="text-sm opacity-80 mb-3" style={{ color: '#82213D' }}>
                       {service.description}
                     </p>
                     <div 
                       className="text-sm font-semibold px-3 py-1 rounded-full inline-block"
-                      style={{ backgroundColor: '#F0D4DC', color: '#E8A5B8' }}
+                      style={{ backgroundColor: '#F0D4DC', color: '#82213D' }}
                     >
                       {service.price}
                     </div>
@@ -120,17 +120,17 @@ export function Services() {
           className="rounded-2xl p-8"
           style={{ backgroundColor: '#FDF7F7' }}
         >
-          <h3 className="text-2xl font-bold mb-8 text-center" style={{ color: '#E8A5B8' }}>
+          <h3 className="text-2xl font-bold mb-8 text-center" style={{ color: '#82213D' }}>
             Dịch vụ hỗ trợ thêm
           </h3>
           <div className="grid md:grid-cols-2 gap-6">
             {additionalServices.map((service, index) => (
               <Card key={index} className="p-6 bg-white border-0 hover:shadow-md transition-all duration-300">
                 <CardContent className="p-0">
-                  <h4 className="font-bold mb-2" style={{ color: '#E8A5B8' }}>
+                  <h4 className="font-bold mb-2" style={{ color: '#82213D' }}>
                     {service.title}
                   </h4>
-                  <p className="text-sm opacity-80" style={{ color: '#E8A5B8' }}>
+                  <p className="text-sm opacity-80" style={{ color: '#82213D' }}>
                     {service.description}
                   </p>
                 </CardContent>
@@ -141,7 +141,7 @@ export function Services() {
           <div className="text-center mt-8">
             <div 
               className="inline-flex items-center space-x-2 px-6 py-3 rounded-full"
-              style={{ backgroundColor: '#E8A5B8' }}
+              style={{ backgroundColor: '#82213D' }}
             >
               <Phone className="w-5 h-5 text-white" />
               <span className="text-white font-semibold">

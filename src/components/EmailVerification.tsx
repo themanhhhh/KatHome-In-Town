@@ -121,7 +121,7 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
               <span>Quay lại</span>
             </Button>
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-semibold" style={{ color: '#C599B6' }}>Xác thực email</h1>
+              <h1 className="text-xl font-semibold font-heading" style={{ color: '#C599B6' }}>Xác thực email</h1>
               <Badge style={{ backgroundColor: '#F2A7C3', color: '#C599B6' }}>
                 Bước 2/2
               </Badge>
@@ -238,7 +238,7 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
 
               {/* Booking Info Reminder */}
               <div className="p-4 rounded-lg bg-white/50">
-                <h4 className="font-medium mb-2" style={{ color: '#C599B6' }}>Thông tin đặt phòng</h4>
+                <h4 className="font-medium mb-2 font-heading" style={{ color: '#C599B6' }}>Thông tin đặt phòng</h4>
                 <div className="text-sm space-y-1" style={{ color: '#C599B6' }}>
                   <p><strong>Mã đặt phòng:</strong> {bookingData.bookingId}</p>
                   <p><strong>Phòng:</strong> {bookingData.roomData.name}</p>

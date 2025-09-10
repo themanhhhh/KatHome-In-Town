@@ -235,7 +235,7 @@ export function ReportsManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold" style={{ color: '#C599B6' }}>
+          <h1 className="text-3xl font-bold font-heading" style={{ color: '#C599B6' }}>
             Báo cáo & Thống kê
           </h1>
           <p className="text-gray-600 mt-2">

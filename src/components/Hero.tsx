@@ -48,16 +48,16 @@ export function Hero({ onSearch }: HeroProps) {
           {/* Left content */}
           <div className="space-y-8">
             <div className="space-y-4">
-               <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: '#E8A5B8' }}>
+               <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: '#82213D' }}>
                  <MapPin className="w-4 h-4" />
                  <span>Hà Nội, Việt Nam</span>
                </div>
                
                <div className="space-y-3">
-                 <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight" style={{ color: '#E8A5B8' }}>
+                 <h1 className="text-4xl md:text-6xl font-bold leading-tight tracking-tight font-heading" style={{ color: '#82213D' }}>
                    KatHome In Town
                  </h1>
-                 <h2 className="text-xl md:text-2xl font-semibold" style={{ color: '#B8899A' }}>
+                 <h2 className="text-xl md:text-2xl font-semibold font-heading" style={{ color: '#B8899A' }}>
                    THOẢI MÁI & RIÊNG TƯ
                  </h2>
                </div>
@@ -70,20 +70,20 @@ export function Hero({ onSearch }: HeroProps) {
               <div className="flex items-center space-x-4">
                  <div className="flex items-center space-x-1">
                    {[...Array(5)].map((_, i) => (
-                     <Star key={i} className="w-5 h-5 fill-current" style={{ color: '#E8A5B8' }} />
+                     <Star key={i} className="w-5 h-5 fill-current" style={{ color: '#82213D' }} />
                    ))}
                  </div>
-                 <span className="text-sm font-medium" style={{ color: '#E8A5B8' }}>4.9/5 (127 đánh giá)</span>
+                 <span className="text-sm font-medium" style={{ color: '#82213D' }}>4.9/5 (127 đánh giá)</span>
               </div>
             </div>
             
             {/* Quick booking form */}
             <Card className="p-6 bg-white/95 backdrop-blur-sm border-0 shadow-lg">
                <CardContent className="p-0">
-                 <h3 className="mb-4 font-bold" style={{ color: '#E8A5B8' }}>Đặt phòng nhanh</h3>
+                 <h3 className="mb-4 font-bold" style={{ color: '#82213D' }}>Đặt phòng nhanh</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                     <Label className="font-semibold" style={{ color: '#E8A5B8' }}>Ngày nhận phòng</Label>
+                     <Label className="font-semibold" style={{ color: '#82213D' }}>Ngày nhận phòng</Label>
                      <div className="relative">
                        <Input 
                          type="date" 
@@ -91,12 +91,12 @@ export function Hero({ onSearch }: HeroProps) {
                          value={checkIn}
                          onChange={(e) => setCheckIn(e.target.value)}
                        />
-                       <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#E8A5B8' }} />
+                       <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#82213D' }} />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                     <Label className="font-semibold" style={{ color: '#E8A5B8' }}>Ngày trả phòng</Label>
+                     <Label className="font-semibold" style={{ color: '#82213D' }}>Ngày trả phòng</Label>
                      <div className="relative">
                        <Input 
                          type="date" 
@@ -104,12 +104,12 @@ export function Hero({ onSearch }: HeroProps) {
                          value={checkOut}
                          onChange={(e) => setCheckOut(e.target.value)}
                        />
-                       <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#E8A5B8' }} />
+                       <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#82213D' }} />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                     <Label className="font-semibold" style={{ color: '#E8A5B8' }}>Số khách</Label>
+                     <Label className="font-semibold" style={{ color: '#82213D' }}>Số khách</Label>
                      <div className="relative">
                        <Input 
                          type="number" 
@@ -120,14 +120,14 @@ export function Hero({ onSearch }: HeroProps) {
                          value={guests}
                          onChange={(e) => setGuests(parseInt(e.target.value) || 2)}
                        />
-                       <Users className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#E8A5B8' }} />
+                       <Users className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#82213D' }} />
                     </div>
                   </div>
                   
                   <div className="flex items-end">
                      <Button 
                        className="w-full text-white hover:opacity-90 transition-opacity font-semibold"
-                       style={{ backgroundColor: '#E8A5B8' }}
+                       style={{ backgroundColor: '#82213D' }}
                        onClick={handleSearch}
                      >
                        Tìm phòng trống
@@ -149,7 +149,7 @@ export function Hero({ onSearch }: HeroProps) {
               {/* Overlay badge */}
                <div 
                  className="absolute top-6 left-6 px-4 py-2 rounded-full text-white text-sm font-semibold"
-                 style={{ backgroundColor: '#E8A5B8' }}
+                 style={{ backgroundColor: '#82213D' }}
                >
                  from 400k/4h
                </div>
@@ -158,9 +158,9 @@ export function Hero({ onSearch }: HeroProps) {
             {/* Floating elements */}
              <div 
                className="absolute -bottom-6 -left-6 p-4 rounded-xl bg-white shadow-lg"
-               style={{ borderLeft: `4px solid #E8A5B8` }}
+               style={{ borderLeft: `4px solid #82213D` }}
              >
-               <div className="text-sm font-semibold" style={{ color: '#E8A5B8' }}>Đặc biệt</div>
+               <div className="text-sm font-semibold" style={{ color: '#82213D' }}>Đặc biệt</div>
                <div className="text-xs" style={{ color: '#B8899A' }}>Giảm 20% cho khách mới</div>
              </div>
           </div>

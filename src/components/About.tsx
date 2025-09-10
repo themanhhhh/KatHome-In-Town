@@ -34,10 +34,10 @@ export function About() {
     <section id="about" className="py-20" style={{ backgroundColor: '#FFF7F3' }}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl mb-4" style={{ color: '#C599B6' }}>
+          <h2 className="text-3xl md:text-4xl mb-4 font-heading" style={{ color: '#82213d' }}>
             Về KatHome In Town 
           </h2>
-            <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#C599B6' }}>
+            <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#6b7280' }}>
              Chúng tôi tự hào mang đến cho du khách những trải nghiệm lưu trú đáng nhớ 
              tại thủ đô Hà Nội với hệ thống homestay hiện đại
             </p>
@@ -46,10 +46,10 @@ export function About() {
         <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
           <div className="space-y-8">
             <div className="space-y-6">
-              <h3 className="text-2xl" style={{ color: '#C599B6' }}>
+              <h3 className="text-2xl font-heading" style={{ color: '#82213d' }}>
                 Tại sao chọn KatHome In Town ?
               </h3>
-               <p className="text-lg leading-relaxed opacity-90" style={{ color: '#C599B6' }}>
+               <p className="text-lg leading-relaxed opacity-90" style={{ color: '#6b7280' }}>
                  KatHome In Town không chỉ là nơi nghỉ ngơi mà còn là ngôi nhà thứ hai của bạn tại Hà Nội. 
                  Với thiết kế hiện đại kết hợp phong cách địa phương, chúng tôi tạo ra không gian 
                  vừa quen thuộc vừa mới mẻ, mang đến cảm giác ấm cúng như ở nhà.
@@ -64,15 +64,15 @@ export function About() {
                       className="p-2 rounded-lg"
                       style={{ backgroundColor: '#F2A7C3' }}
                     >
-                      <div style={{ color: '#C599B6' }}>
+                      <div style={{ color: '#6b7280' }}>
                         {feature.icon}
                       </div>
                     </div>
                     <div>
-                      <h4 className="mb-2" style={{ color: '#C599B6' }}>
+                      <h4 className="mb-2" style={{ color: '#6b7280' }}>
                         {feature.title}
                       </h4>
-                      <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
+                      <p className="text-sm opacity-80" style={{ color: '#6b7280' }}>
                         {feature.description}
                       </p>
                     </div>
@@ -114,14 +114,14 @@ export function About() {
 
         <Card className="p-8 bg-white/70 border-0">
           <CardContent className="p-0">
-            <h3 className="text-xl mb-6 text-center" style={{ color: '#C599B6' }}>
+            <h3 className="text-xl mb-6 text-center" style={{ color: '#82213d' }}>
               Điểm nổi bật của KatHome In Town 
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               {highlights.map((highlight, index) => (
                 <div key={index} className="flex items-center space-x-3">
-                  <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#C599B6' }} />
-                  <span className="text-sm" style={{ color: '#C599B6' }}>
+                  <CheckCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#6b7280' }} />
+                  <span className="text-sm" style={{ color: '#6b7280' }}>
                     {highlight}
                   </span>
                 </div>

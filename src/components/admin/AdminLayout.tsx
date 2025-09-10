@@ -103,7 +103,7 @@ export function AdminLayout({ children, currentPage, onNavigate, onBackToHome }:
               </Button>
               
               <div className="flex items-center space-x-4">
-                <h1 className="text-xl font-semibold" style={{ color: '#C599B6' }}>
+                <h1 className="text-xl font-semibold font-heading" style={{ color: '#C599B6' }}>
                   KatHome In Town  Admin
                 </h1>
                 

@@ -54,7 +54,7 @@ export function Gallery() {
     <section id="gallery" className="py-20" style={{ backgroundColor: '#F2A7C3' }}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl mb-4" style={{ color: '#C599B6' }}>
+          <h2 className="text-3xl md:text-4xl mb-4 font-heading" style={{ color: '#C599B6' }}>
             Thư viện ảnh
           </h2>
            <p className="text-lg max-w-2xl mx-auto opacity-80" style={{ color: '#C599B6' }}>

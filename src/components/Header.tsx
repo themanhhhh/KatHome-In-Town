@@ -24,7 +24,7 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
             />
           </div>
           <div>
-            <h1 className="text-xl font-bold" style={{ color: '#E8A5B8' }}>
+            <h1 className="text-xl font-bold font-heading" style={{ color: '#82213D' }}>
               KatHome In Town
             </h1>
             <p className="text-xs opacity-70" style={{ color: '#B8899A' }}>Hệ thống homestay Hà Nội</p>
@@ -32,25 +32,25 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
         </div>
         
         <nav className="hidden md:flex items-center space-x-8">
-          <a href="#home" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#E8A5B8' }}>
+          <a href="#home" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#82213D' }}>
             Trang chủ
           </a>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center space-x-1 hover:opacity-75 transition-opacity font-medium" style={{ color: '#E8A5B8' }}>
+              <button className="flex items-center space-x-1 hover:opacity-75 transition-opacity font-medium" style={{ color: '#82213D' }}>
                 <span>Cơ sở</span>
                 <ChevronDown className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-72">
               <div className="p-2">
-                <div className="text-sm font-semibold mb-2 px-2" style={{ color: '#E8A5B8' }}>
+                <div className="text-sm font-semibold mb-2 px-2" style={{ color: '#82213D' }}>
                   Hệ thống cơ sở tại Hà Nội
                 </div>
                 <DropdownMenuItem className="flex items-start space-x-3 p-3 cursor-pointer">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#E8A5B8' }} />
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#82213D' }} />
                   <div>
-                    <div className="font-medium text-sm" style={{ color: '#E8A5B8' }}>Tây Hồ</div>
+                    <div className="font-medium text-sm" style={{ color: '#82213D' }}>Tây Hồ</div>
                     <div className="text-xs opacity-70" style={{ color: '#B8899A' }}>
                       6 Trịnh Công Sơn • 274 Vũ Miên<br />
                       133B Yên Phụ • 145 Âu Cơ
@@ -58,45 +58,45 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="flex items-start space-x-3 p-3 cursor-pointer">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#E8A5B8' }} />
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#82213D' }} />
                   <div>
-                    <div className="font-medium text-sm" style={{ color: '#E8A5B8' }}>Ba Đình</div>
+                    <div className="font-medium text-sm" style={{ color: '#82213D' }}>Ba Đình</div>
                     <div className="text-xs opacity-70" style={{ color: '#B8899A' }}>
                       29 Phạm Hồng Thái
                     </div>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="flex items-start space-x-3 p-3 cursor-pointer">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#E8A5B8' }} />
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#82213D' }} />
                   <div>
-                    <div className="font-medium text-sm" style={{ color: '#E8A5B8' }}>Hoàn Kiếm</div>
+                    <div className="font-medium text-sm" style={{ color: '#82213D' }}>Hoàn Kiếm</div>
                     <div className="text-xs opacity-70" style={{ color: '#B8899A' }}>
                       7A ngõ Dã Tượng
                     </div>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="flex items-start space-x-3 p-3 cursor-pointer">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#E8A5B8' }} />
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#82213D' }} />
                   <div>
-                    <div className="font-medium text-sm" style={{ color: '#E8A5B8' }}>Thanh Xuân</div>
+                    <div className="font-medium text-sm" style={{ color: '#82213D' }}>Thanh Xuân</div>
                     <div className="text-xs opacity-70" style={{ color: '#B8899A' }}>
                       29D Phương Liệt
                     </div>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="flex items-start space-x-3 p-3 cursor-pointer">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#E8A5B8' }} />
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#82213D' }} />
                   <div>
-                    <div className="font-medium text-sm" style={{ color: '#E8A5B8' }}>Đống Đa</div>
+                    <div className="font-medium text-sm" style={{ color: '#82213D' }}>Đống Đa</div>
                     <div className="text-xs opacity-70" style={{ color: '#B8899A' }}>
                       30 Vườn hoa 1-6, Hoàng Cầu
                     </div>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="flex items-start space-x-3 p-3 cursor-pointer">
-                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#E8A5B8' }} />
+                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: '#82213D' }} />
                   <div>
-                    <div className="font-medium text-sm" style={{ color: '#E8A5B8' }}>Cầu Giấy</div>
+                    <div className="font-medium text-sm" style={{ color: '#82213D' }}>Cầu Giấy</div>
                     <div className="text-xs opacity-70" style={{ color: '#B8899A' }}>
                       18 Xuân Quỳnh, Yên Hòa
                     </div>
@@ -105,7 +105,7 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="p-3 cursor-pointer">
                   <div className="w-full text-center">
-                    <span className="text-sm font-medium" style={{ color: '#E8A5B8' }}>
+                    <span className="text-sm font-medium" style={{ color: '#82213D' }}>
                       Xem bảng giá các cơ sở
                     </span>
                   </div>
@@ -113,19 +113,19 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
               </div>
             </DropdownMenuContent>
           </DropdownMenu>
-          <a href="#about" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#E8A5B8' }}>
+          <a href="#about" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#82213D' }}>
             Giới thiệu
           </a>
-          <a href="#services" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#E8A5B8' }}>
+          <a href="#services" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#82213D' }}>
             Dịch vụ
           </a>
-          <a href="#contact" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#E8A5B8' }}>
+          <a href="#contact" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#82213D' }}>
             Liên hệ
           </a>
           <button 
             onClick={onShowAdmin}
             className="hover:opacity-75 transition-opacity font-medium" 
-            style={{ color: '#E8A5B8' }}
+            style={{ color: '#82213D' }}
           >
             Admin
           </button>
@@ -133,11 +133,11 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
 
         <div className="flex items-center space-x-4">
           <div className="hidden lg:flex items-center space-x-4">
-             <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: '#E8A5B8' }}>
+             <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: '#82213D' }}>
                <Phone className="w-4 h-4" />
                <span>098 894 65 68</span>
              </div>
-             <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: '#E8A5B8' }}>
+             <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: '#82213D' }}>
                <Mail className="w-4 h-4" />
                <span>kathome.luv@gmail.com</span>
              </div>
@@ -145,7 +145,7 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
           
           {isAuthenticated && user ? (
             <div className="flex items-center space-x-3">
-              <span className="hidden md:inline text-sm font-medium" style={{ color: '#E8A5B8' }}>
+              <span className="hidden md:inline text-sm font-medium" style={{ color: '#82213D' }}>
                 Xin chào, {user.firstName}!
               </span>
               <DropdownMenu>
@@ -154,7 +154,7 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
                     variant="outline" 
                     size="sm"
                     className="flex items-center space-x-2 font-medium"
-                    style={{ borderColor: '#E8A5B8', color: '#E8A5B8' }}
+                    style={{ borderColor: '#82213D', color: '#82213D' }}
                   >
                     <User className="w-4 h-4" />
                     <span className="hidden md:inline">{user.firstName}</span>
@@ -191,7 +191,7 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
                   size="sm"
                   onClick={onShowLogin}
                   className="font-medium"
-                  style={{ color: '#E8A5B8' }}
+                  style={{ color: '#82213D' }}
                 >
                   Đăng nhập
                 </Button>
@@ -199,14 +199,14 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
                   size="sm"
                   onClick={onShowRegister}
                   className="text-white border-0 font-medium"
-                  style={{ backgroundColor: '#E8A5B8' }}
+                  style={{ backgroundColor: '#82213D' }}
                 >
                   Đăng ký
                 </Button>
             </div>
           )}
           
-           <Button variant="ghost" size="icon" className="md:hidden" style={{ color: '#E8A5B8' }}>
+           <Button variant="ghost" size="icon" className="md:hidden" style={{ color: '#82213D' }}>
              <Menu className="w-5 h-5" />
            </Button>
         </div>

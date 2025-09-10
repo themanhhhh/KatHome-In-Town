@@ -203,7 +203,6 @@ function AppContent() {
           <Hero onSearch={handleSearch} />
           <About />
           <Services />
-          <Locations />
           <Contact />
       </main>
       <Footer />

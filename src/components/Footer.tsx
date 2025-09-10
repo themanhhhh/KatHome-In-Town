@@ -15,7 +15,7 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <h3 className="text-xl text-white">KatHome In Town </h3>
+            <h3 className="text-xl text-white font-heading">KatHome In Town </h3>
              <p className="text-white/80 text-sm leading-relaxed">
                Hệ thống homestay hiện đại tại Hà Nội với thiết kế ấm cúng.
                THOẢI MÁI & RIÊNG TƯ - Nơi lý tưởng để thư giãn.

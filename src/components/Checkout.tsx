@@ -179,7 +179,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               <span>Quay lại</span>
             </Button>
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-semibold" style={{ color: '#C599B6' }}>Thanh toán</h1>
+              <h1 className="text-xl font-semibold font-heading" style={{ color: '#C599B6' }}>Thanh toán</h1>
               <Badge style={{ backgroundColor: '#F2A7C3', color: '#C599B6' }}>
                 Bước 1/2
               </Badge>
@@ -449,7 +449,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   {formData.paymentMethod === "bank-transfer" && (
                     <div className="p-4 rounded-lg bg-white/50">
                       <div className="space-y-2">
-                        <h4 style={{ color: '#C599B6' }}>Thông tin chuyển khoản:</h4>
+                        <h4 className="font-heading" style={{ color: '#C599B6' }}>Thông tin chuyển khoản:</h4>
                         <div className="text-sm space-y-1" style={{ color: '#C599B6' }}>
                           <p><strong>Ngân hàng:</strong> Vietcombank</p>
                           <p><strong>Số tài khoản:</strong> 0123456789</p>
@@ -510,7 +510,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                       />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold" style={{ color: '#C599B6' }}>{roomData.name}</h3>
+                      <h3 className="font-semibold font-heading" style={{ color: '#C599B6' }}>{roomData.name}</h3>
                       <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>{roomData.type}</p>
                       <div className="flex items-center space-x-4 mt-2 text-xs" style={{ color: '#C599B6' }}>
                         <div className="flex items-center space-x-1">

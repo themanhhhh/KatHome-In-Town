@@ -105,7 +105,7 @@ export function Login({ onBack, onSwitchToRegister, onLoginSuccess }: LoginProps
               <ArrowLeft className="w-4 h-4" />
               <span>Quay lại</span>
             </Button>
-            <h1 className="text-xl font-semibold" style={{ color: '#C599B6' }}>Đăng nhập</h1>
+            <h1 className="text-xl font-semibold font-heading" style={{ color: '#C599B6' }}>Đăng nhập</h1>
           </div>
         </div>
       </div>

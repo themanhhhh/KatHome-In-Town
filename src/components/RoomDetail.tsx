@@ -281,7 +281,7 @@ export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, o
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <div className="flex items-center space-x-2 mb-2">
-                    <h1 className="text-3xl" style={{ color: '#C599B6' }}>
+                    <h1 className="text-3xl font-heading" style={{ color: '#C599B6' }}>
                       {room.name}
                     </h1>
                     <Badge style={{ backgroundColor: '#F2A7C3', color: '#C599B6' }}>

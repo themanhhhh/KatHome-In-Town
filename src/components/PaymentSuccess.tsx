@@ -94,7 +94,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
         >
           <CheckCircle className="w-10 h-10 text-white" />
         </div>
-        <h1 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#C599B6' }}>
+        <h1 className="text-3xl md:text-4xl font-bold mb-4 font-heading" style={{ color: '#C599B6' }}>
           Đặt phòng thành công!
         </h1>
         <p className="text-lg opacity-80 max-w-2xl mx-auto px-4" style={{ color: '#C599B6' }}>
@@ -163,7 +163,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
               <CardContent className="space-y-6">
                 {/* Room Info */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-2" style={{ color: '#C599B6' }}>
+                  <h3 className="font-semibold text-lg mb-2 font-heading" style={{ color: '#C599B6' }}>
                     {bookingData.roomData.name}
                   </h3>
                   <p className="text-sm opacity-80 mb-3" style={{ color: '#C599B6' }}>
@@ -348,7 +348,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium mb-2" style={{ color: '#C599B6' }}>Chính sách nhận/trả phòng</h4>
+                    <h4 className="font-medium mb-2 font-heading" style={{ color: '#C599B6' }}>Chính sách nhận/trả phòng</h4>
                     <ul className="text-sm space-y-1 opacity-80" style={{ color: '#C599B6' }}>
                       <li>• Nhận phòng: 14:00 - 22:00</li>
                       <li>• Trả phòng: 06:00 - 12:00</li>
@@ -357,7 +357,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
                   </div>
                   
                   <div>
-                    <h4 className="font-medium mb-2" style={{ color: '#C599B6' }}>Chính sách hủy phòng</h4>
+                    <h4 className="font-medium mb-2 font-heading" style={{ color: '#C599B6' }}>Chính sách hủy phòng</h4>
                     <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
                       Hủy miễn phí trước 24 tiếng. Sau thời gian này sẽ tính phí 50% tổng giá trị đặt phòng.
                     </p>
@@ -366,7 +366,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
 
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-medium mb-2" style={{ color: '#C599B6' }}>Liên hệ KatHome In Town </h4>
+                    <h4 className="font-medium mb-2 font-heading" style={{ color: '#C599B6' }}>Liên hệ KatHome In Town </h4>
                     <div className="space-y-2 text-sm" style={{ color: '#C599B6' }}>
                       <div className="flex items-center space-x-2">
                         <Phone className="w-3 h-3" />
@@ -384,7 +384,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
                   </div>
 
                   <div>
-                    <h4 className="font-medium mb-2" style={{ color: '#C599B6' }}>Đánh giá trải nghiệm</h4>
+                    <h4 className="font-medium mb-2 font-heading" style={{ color: '#C599B6' }}>Đánh giá trải nghiệm</h4>
                     <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
                       Sau khi kết thúc kỳ nghỉ, chúng tôi sẽ gửi email để bạn chia sẻ trải nghiệm. 
                       Ý kiến của bạn rất quan trọng với chúng tôi!
@@ -402,7 +402,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
                 <Star key={i} className="w-6 h-6 fill-current" style={{ color: '#C599B6' }} />
               ))}
             </div>
-            <h2 className="text-2xl font-semibold mb-4" style={{ color: '#C599B6' }}>
+            <h2 className="text-2xl font-semibold mb-4 font-heading" style={{ color: '#C599B6' }}>
               Cảm ơn bạn đã chọn KatHome In Town !
             </h2>
             <p className="text-lg opacity-80 max-w-2xl mx-auto" style={{ color: '#C599B6' }}>

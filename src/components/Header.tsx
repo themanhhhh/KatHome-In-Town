@@ -42,7 +42,7 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
                 <ChevronDown className="w-4 h-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-72">
+            <DropdownMenuContent align="start" className="w-72 bg-white border shadow-lg" style={{ backgroundColor: '#ffffff' }}>
               <div className="p-2">
                 <div className="text-sm font-semibold mb-2 px-2" style={{ color: '#82213D' }}>
                   Hệ thống cơ sở tại Hà Nội
@@ -160,7 +160,7 @@ export function Header({ onShowLogin, onShowRegister, onShowAdmin }: HeaderProps
                     <span className="hidden md:inline">{user.firstName}</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48 bg-white border shadow-lg">
                   <DropdownMenuItem className="flex items-center space-x-2">
                     <User className="w-4 h-4" />
                     <span>Thông tin cá nhân</span>

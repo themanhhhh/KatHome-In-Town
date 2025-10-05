@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Header } from "../components/header/header";
+import { Footer } from "../components/footer/footer";
 import { PaymentSuccess } from "../components/paymentsuccess/PaymentSuccess";
 
 export default function PaymentSuccessPage() {
@@ -61,14 +63,31 @@ export default function PaymentSuccessPage() {
   };
 
   if (!bookingData) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: '#3D0301' }}></div>
+            <p style={{ color: '#3D0301' }}>Đang tải thông tin đặt phòng...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
   }
 
   return (
-    <PaymentSuccess 
-      bookingData={bookingData}
-      onBackToHome={handleBackToHome}
-    />
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1">
+        <PaymentSuccess 
+          bookingData={bookingData}
+          onBackToHome={handleBackToHome}
+        />
+      </main>
+      <Footer />
+    </div>
   );
 }
 

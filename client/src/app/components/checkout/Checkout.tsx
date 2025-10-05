@@ -199,23 +199,23 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: '#fef5f6' }}>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#FAD0C4' }}>
+      <div className="sticky top-0 z-10 border-b" style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderColor: '#F8E8EC' }}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
             <Button 
               variant="ghost" 
               onClick={onBack}
               className="flex items-center space-x-2"
-              style={{ color: '#C599B6' }}
+              style={{ color: '#3D0301' }}
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Quay lại</span>
             </Button>
             <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-semibold font-heading" style={{ color: '#C599B6' }}>Thanh toán</h1>
-              <Badge style={{ backgroundColor: '#F2A7C3', color: '#C599B6' }}>
+              <h1 className="text-xl font-semibold font-heading" style={{ color: '#3D0301' }}>Thanh toán</h1>
+              <Badge style={{ backgroundColor: 'rgba(61, 3, 1, 0.1)', color: '#3D0301' }}>
                 Bước 1/2
               </Badge>
             </div>
@@ -231,7 +231,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               {/* Guest Information */}
               <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2" style={{ color: '#C599B6' }}>
+                  <CardTitle className="flex items-center space-x-2" style={{ color: '#3D0301' }}>
                     <User className="w-5 h-5" />
                     <span>Thông tin khách hàng</span>
                   </CardTitle>
@@ -239,12 +239,13 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label style={{ color: '#C599B6' }}>Họ *</Label>
+                      <Label style={{ color: '#3D0301' }}>Họ *</Label>
                       <Input
                         value={formData.firstName}
                         onChange={(e) => handleInputChange('firstName', e.target.value)}
                         placeholder="Nguyễn"
                         className={errors.firstName ? 'border-red-500' : ''}
+                        style={{ color: '#3D0301' }}
                       />
                       {errors.firstName && (
                         <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -254,12 +255,13 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label style={{ color: '#C599B6' }}>Tên *</Label>
+                      <Label style={{ color: '#3D0301' }}>Tên *</Label>
                       <Input
                         value={formData.lastName}
                         onChange={(e) => handleInputChange('lastName', e.target.value)}
                         placeholder="Văn A"
                         className={errors.lastName ? 'border-red-500' : ''}
+                        style={{ color: '#3D0301' }}
                       />
                       {errors.lastName && (
                         <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -271,7 +273,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   </div>
 
                   <div className="space-y-2">
-                    <Label style={{ color: '#C599B6' }}>Email *</Label>
+                    <Label style={{ color: '#3D0301' }}>Email *</Label>
                     <div className="relative">
                       <Input
                         type="email"
@@ -279,8 +281,9 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="example@email.com"
                         className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
+                        style={{ color: '#3D0301' }}
                       />
-                      <Mail className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
+                      <Mail className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#3D0301' }} />
                     </div>
                     {errors.email && (
                       <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -291,15 +294,16 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   </div>
 
                   <div className="space-y-2">
-                    <Label style={{ color: '#C599B6' }}>Số điện thoại *</Label>
+                    <Label style={{ color: '#3D0301' }}>Số điện thoại *</Label>
                     <div className="relative">
                       <Input
                         value={formData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
                         placeholder="0123456789"
                         className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
+                        style={{ color: '#3D0301' }}
                       />
-                      <Phone className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
+                      <Phone className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#3D0301' }} />
                     </div>
                     {errors.phone && (
                       <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -310,15 +314,16 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   </div>
 
                   <div className="space-y-2">
-                    <Label style={{ color: '#C599B6' }}>Địa chỉ *</Label>
+                    <Label style={{ color: '#3D0301' }}>Địa chỉ *</Label>
                     <div className="relative">
                       <Input
                         value={formData.address}
                         onChange={(e) => handleInputChange('address', e.target.value)}
                         placeholder="123 Đường ABC, Quận/Huyện"
                         className={`pl-10 ${errors.address ? 'border-red-500' : ''}`}
+                        style={{ color: '#3D0301' }}
                       />
-                      <MapPin className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#C599B6' }} />
+                      <MapPin className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#3D0301' }} />
                     </div>
                     {errors.address && (
                       <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -330,9 +335,9 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label style={{ color: '#C599B6' }}>Thành phố *</Label>
+                      <Label style={{ color: '#3D0301' }}>Thành phố *</Label>
                       <Select value={formData.city} onValueChange={(value: string) => handleInputChange('city', value)}>
-                        <SelectTrigger className={errors.city ? 'border-red-500' : ''}>
+                        <SelectTrigger className={errors.city ? 'border-red-500' : ''} style={{ color: '#3D0301' }}>
                           <SelectValue placeholder="Chọn thành phố" />
                         </SelectTrigger>
                         <SelectContent>
@@ -353,22 +358,24 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label style={{ color: '#C599B6' }}>Mã bưu điện</Label>
+                      <Label style={{ color: '#3D0301' }}>Mã bưu điện</Label>
                       <Input
                         value={formData.zipCode}
                         onChange={(e) => handleInputChange('zipCode', e.target.value)}
                         placeholder="70000"
+                        style={{ color: '#3D0301' }}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label style={{ color: '#C599B6' }}>Yêu cầu đặc biệt</Label>
+                    <Label style={{ color: '#3D0301' }}>Yêu cầu đặc biệt</Label>
                     <Textarea
                       value={formData.specialRequests}
                       onChange={(e) => handleInputChange('specialRequests', e.target.value)}
                       placeholder="Ví dụ: Tầng cao, view đẹp, giường đôi..."
                       rows={3}
+                      style={{ color: '#3D0301' }}
                     />
                   </div>
                 </CardContent>
@@ -377,16 +384,16 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               {/* Payment Information */}
               <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
                 <CardHeader>
-                  <CardTitle className="flex items-center space-x-2" style={{ color: '#C599B6' }}>
+                  <CardTitle className="flex items-center space-x-2" style={{ color: '#3D0301' }}>
                     <CreditCard className="w-5 h-5" />
                     <span>Thông tin thanh toán</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label style={{ color: '#C599B6' }}>Phương thức thanh toán *</Label>
+                    <Label style={{ color: '#3D0301' }}>Phương thức thanh toán *</Label>
                     <Select value={formData.paymentMethod} onValueChange={(value: string) => handleInputChange('paymentMethod', value)}>
-                      <SelectTrigger className={errors.paymentMethod ? 'border-red-500' : ''}>
+                      <SelectTrigger className={errors.paymentMethod ? 'border-red-500' : ''} style={{ color: '#3D0301' }}>
                         <SelectValue placeholder="Chọn phương thức thanh toán" />
                       </SelectTrigger>
                       <SelectContent>
@@ -406,7 +413,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   {formData.paymentMethod === "card" && (
                     <div className="space-y-4 p-4 rounded-lg bg-white/50">
                       <div className="space-y-2">
-                        <Label style={{ color: '#C599B6' }}>Số thẻ *</Label>
+                        <Label style={{ color: '#3D0301' }}>Số thẻ *</Label>
                         <Input
                           value={formData.cardNumber}
                           onChange={(e) => {
@@ -416,6 +423,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                           placeholder="1234 5678 9012 3456"
                           maxLength={19}
                           className={errors.cardNumber ? 'border-red-500' : ''}
+                          style={{ color: '#3D0301' }}
                         />
                         {errors.cardNumber && (
                           <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -427,7 +435,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label style={{ color: '#C599B6' }}>Ngày hết hạn *</Label>
+                          <Label style={{ color: '#3D0301' }}>Ngày hết hạn *</Label>
                           <Input
                             value={formData.expiryDate}
                             onChange={(e) => {
@@ -437,6 +445,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                             placeholder="MM/YY"
                             maxLength={5}
                             className={errors.expiryDate ? 'border-red-500' : ''}
+                            style={{ color: '#3D0301' }}
                           />
                           {errors.expiryDate && (
                             <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -446,13 +455,14 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                           )}
                         </div>
                         <div className="space-y-2">
-                          <Label style={{ color: '#C599B6' }}>CVV *</Label>
+                          <Label style={{ color: '#3D0301' }}>CVV *</Label>
                           <Input
                             value={formData.cvv}
                             onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, ''))}
                             placeholder="123"
                             maxLength={4}
                             className={errors.cvv ? 'border-red-500' : ''}
+                            style={{ color: '#3D0301' }}
                           />
                           {errors.cvv && (
                             <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -464,12 +474,13 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                       </div>
 
                       <div className="space-y-2">
-                        <Label style={{ color: '#C599B6' }}>Tên trên thẻ *</Label>
+                        <Label style={{ color: '#3D0301' }}>Tên trên thẻ *</Label>
                         <Input
                           value={formData.cardName}
                           onChange={(e) => handleInputChange('cardName', e.target.value.toUpperCase())}
                           placeholder="NGUYEN VAN A"
                           className={errors.cardName ? 'border-red-500' : ''}
+                          style={{ color: '#3D0301' }}
                         />
                         {errors.cardName && (
                           <p className="text-sm text-red-500 flex items-center space-x-1">
@@ -484,8 +495,8 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   {formData.paymentMethod === "bank-transfer" && (
                     <div className="p-4 rounded-lg bg-white/50">
                       <div className="space-y-2">
-                        <h4 className="font-heading" style={{ color: '#C599B6' }}>Thông tin chuyển khoản:</h4>
-                        <div className="text-sm space-y-1" style={{ color: '#C599B6' }}>
+                        <h4 className="font-heading" style={{ color: '#3D0301' }}>Thông tin chuyển khoản:</h4>
+                        <div className="text-sm space-y-1" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
                           <p><strong>Ngân hàng:</strong> Vietcombank</p>
                           <p><strong>Số tài khoản:</strong> 0123456789</p>
                           <p><strong>Tên tài khoản:</strong> KatHome In Town </p>
@@ -497,7 +508,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                   {formData.paymentMethod === "cash" && (
                     <div className="p-4 rounded-lg bg-white/50">
-                      <p className="text-sm" style={{ color: '#C599B6' }}>
+                      <p className="text-sm" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
                         Bạn sẽ thanh toán trực tiếp tại homestay khi nhận phòng.
                       </p>
                     </div>
@@ -510,7 +521,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                 type="submit"
                 disabled={isProcessing}
                 className="w-full text-white py-3"
-                style={{ backgroundColor: '#C599B6' }}
+                style={{ backgroundColor: '#3D0301' }}
               >
                 {isProcessing ? (
                   <div className="flex items-center space-x-2">
@@ -532,7 +543,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
             <div className="sticky top-24">
               <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
                 <CardHeader>
-                  <CardTitle style={{ color: '#C599B6' }}>Tóm tắt đặt phòng</CardTitle>
+                  <CardTitle style={{ color: '#3D0301' }}>Tóm tắt đặt phòng</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Room Info */}
@@ -545,9 +556,9 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                       />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold font-heading" style={{ color: '#C599B6' }}>{roomData.name}</h3>
-                      <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>{roomData.type}</p>
-                      <div className="flex items-center space-x-4 mt-2 text-xs" style={{ color: '#C599B6' }}>
+                      <h3 className="font-semibold font-heading" style={{ color: '#3D0301' }}>{roomData.name}</h3>
+                      <p className="text-sm opacity-80" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>{roomData.type}</p>
+                      <div className="flex items-center space-x-4 mt-2 text-xs" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
                         <div className="flex items-center space-x-1">
                           <Users className="w-3 h-3" />
                           <span>{roomData.maxGuests} khách</span>
@@ -565,15 +576,15 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   {/* Booking Details */}
                   <div className="space-y-3">
                     <div className="flex items-center space-x-3">
-                      <Calendar className="w-4 h-4" style={{ color: '#C599B6' }} />
-                      <div className="text-sm" style={{ color: '#C599B6' }}>
+                      <Calendar className="w-4 h-4" style={{ color: '#3D0301' }} />
+                      <div className="text-sm" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
                         <div>Nhận phòng: {formatDate(searchData.checkIn)}</div>
                         <div>Trả phòng: {formatDate(searchData.checkOut)}</div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Users className="w-4 h-4" style={{ color: '#C599B6' }} />
-                      <span className="text-sm" style={{ color: '#C599B6' }}>
+                      <Users className="w-4 h-4" style={{ color: '#3D0301' }} />
+                      <span className="text-sm" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
                         {searchData.guests} khách, {calculateNights()} đêm
                       </span>
                     </div>
@@ -583,20 +594,20 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                   {/* Price Breakdown */}
                   <div className="space-y-3">
-                    <div className="flex justify-between text-sm" style={{ color: '#C599B6' }}>
+                    <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
                       <span>{formatPrice(roomData.price)} x {calculateNights()} đêm</span>
                       <span>{formatPrice(roomData.price * calculateNights())}</span>
                     </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#C599B6' }}>
+                    <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
                       <span>Phí dịch vụ (5%)</span>
                       <span>{formatPrice(roomData.price * calculateNights() * 0.05)}</span>
                     </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#C599B6' }}>
+                    <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
                       <span>Thuế (10%)</span>
                       <span>{formatPrice(roomData.price * calculateNights() * 0.1)}</span>
                     </div>
                     <Separator />
-                    <div className="flex justify-between font-semibold text-lg" style={{ color: '#C599B6' }}>
+                    <div className="flex justify-between font-semibold text-lg" style={{ color: '#3D0301' }}>
                       <span>Tổng cộng</span>
                       <span>{formatPrice(getTotalPrice())}</span>
                     </div>
@@ -606,15 +617,15 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                   {/* Security Notice */}
                   <div className="flex items-start space-x-2 p-3 rounded-lg bg-white/50">
-                    <Shield className="w-4 h-4 mt-0.5" style={{ color: '#C599B6' }} />
-                    <div className="text-xs" style={{ color: '#C599B6' }}>
+                    <Shield className="w-4 h-4 mt-0.5" style={{ color: '#3D0301' }} />
+                    <div className="text-xs" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
                       <p className="font-medium">Thanh toán an toàn</p>
                       <p className="opacity-80">Thông tin của bạn được bảo mật với công nghệ mã hóa SSL</p>
                     </div>
                   </div>
 
                   {/* Cancellation Policy */}
-                  <div className="text-xs space-y-2" style={{ color: '#C599B6' }}>
+                  <div className="text-xs space-y-2" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
                     <div className="flex items-center space-x-2">
                       <Clock className="w-3 h-3" />
                       <span className="font-medium">Chính sách hủy phòng</span>

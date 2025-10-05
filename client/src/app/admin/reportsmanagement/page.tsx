@@ -1,0 +1,528 @@
+"use client";
+
+import React, { useState } from "react";
+import { 
+  Search,
+  Filter,
+  Calendar,
+  Download,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Bed,
+  Star,
+  BarChart3,
+  PieChart,
+  FileText,
+  Eye,
+  RefreshCw
+} from "lucide-react";
+
+import Style from "../../styles/reportsmanagement.module.css";
+
+interface ReportData {
+  id: number;
+  title: string;
+  type: 'revenue' | 'bookings' | 'occupancy' | 'customer' | 'rooms';
+  period: string;
+  createdDate: string;
+  status: 'completed' | 'processing' | 'failed';
+  size: string;
+  description: string;
+  data: {
+    value: number;
+    change: number;
+    trend: 'up' | 'down' | 'stable';
+  };
+}
+
+const ReportsManagementPage = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [periodFilter, setPeriodFilter] = useState("all");
+  const [selectedReports, setSelectedReports] = useState<number[]>([]);
+
+  // Mock data - trong thực tế sẽ fetch từ API
+  const [reports] = useState<ReportData[]>([
+    {
+      id: 1,
+      title: "Báo cáo doanh thu tháng 12/2024",
+      type: "revenue",
+      period: "monthly",
+      createdDate: "2024-12-25",
+      status: "completed",
+      size: "2.3 MB",
+      description: "Tổng hợp doanh thu, chi phí và lợi nhuận tháng 12",
+      data: {
+        value: 485200000,
+        change: 12.5,
+        trend: "up"
+      }
+    },
+    {
+      id: 2,
+      title: "Thống kê đặt phòng quý 4/2024",
+      type: "bookings",
+      period: "quarterly",
+      createdDate: "2024-12-20",
+      status: "completed",
+      size: "1.8 MB",
+      description: "Phân tích xu hướng đặt phòng và tỷ lệ hủy",
+      data: {
+        value: 342,
+        change: 8.3,
+        trend: "up"
+      }
+    },
+    {
+      id: 3,
+      title: "Báo cáo tỷ lệ lấp đầy năm 2024",
+      type: "occupancy",
+      period: "yearly",
+      createdDate: "2024-12-15",
+      status: "processing",
+      size: "Đang xử lý...",
+      description: "Phân tích tỷ lệ lấp đầy theo từng tháng và loại phòng",
+      data: {
+        value: 78.5,
+        change: -2.1,
+        trend: "down"
+      }
+    },
+    {
+      id: 4,
+      title: "Phân tích khách hàng VIP",
+      type: "customer",
+      period: "monthly",
+      createdDate: "2024-12-10",
+      status: "completed",
+      size: "1.2 MB",
+      description: "Danh sách và hành vi khách hàng có giá trị cao",
+      data: {
+        value: 45,
+        change: 15.2,
+        trend: "up"
+      }
+    },
+    {
+      id: 5,
+      title: "Hiệu suất phòng theo loại",
+      type: "rooms",
+      period: "quarterly",
+      createdDate: "2024-12-05",
+      status: "failed",
+      size: "0 MB",
+      description: "So sánh doanh thu và tỷ lệ đặt phòng theo từng loại",
+      data: {
+        value: 0,
+        change: 0,
+        trend: "stable"
+      }
+    }
+  ]);
+
+  // Quick stats data
+  const quickStats = {
+    totalReports: reports.length,
+    completedReports: reports.filter(r => r.status === 'completed').length,
+    processingReports: reports.filter(r => r.status === 'processing').length,
+    totalRevenue: 485200000,
+    totalBookings: 342,
+    occupancyRate: 78.5,
+    customerSatisfaction: 4.8
+  };
+
+  // Filter functions
+  const filteredReports = reports.filter(report => {
+    const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         report.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === "all" || report.type === typeFilter;
+    const matchesPeriod = periodFilter === "all" || report.period === periodFilter;
+    
+    return matchesSearch && matchesType && matchesPeriod;
+  });
+
+  // Selection functions
+  const handleSelectAll = () => {
+    if (selectedReports.length === filteredReports.length) {
+      setSelectedReports([]);
+    } else {
+      setSelectedReports(filteredReports.map(report => report.id));
+    }
+  };
+
+  const handleSelectReport = (reportId: number) => {
+    setSelectedReports(prev => 
+      prev.includes(reportId) 
+        ? prev.filter(id => id !== reportId)
+        : [...prev, reportId]
+    );
+  };
+
+  // Utility functions
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(price);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN');
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <span className={`${Style.badge} ${Style.badgeCompleted}`}>Hoàn thành</span>;
+      case 'processing':
+        return <span className={`${Style.badge} ${Style.badgeProcessing}`}>Đang xử lý</span>;
+      case 'failed':
+        return <span className={`${Style.badge} ${Style.badgeFailed}`}>Lỗi</span>;
+      default:
+        return <span className={Style.badge}>{status}</span>;
+    }
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'revenue':
+        return <DollarSign className="w-4 h-4" />;
+      case 'bookings':
+        return <Calendar className="w-4 h-4" />;
+      case 'occupancy':
+        return <Bed className="w-4 h-4" />;
+      case 'customer':
+        return <Users className="w-4 h-4" />;
+      case 'rooms':
+        return <Star className="w-4 h-4" />;
+      default:
+        return <FileText className="w-4 h-4" />;
+    }
+  };
+
+  const getTypeName = (type: string) => {
+    switch (type) {
+      case 'revenue':
+        return 'Doanh thu';
+      case 'bookings':
+        return 'Đặt phòng';
+      case 'occupancy':
+        return 'Lấp đầy';
+      case 'customer':
+        return 'Khách hàng';
+      case 'rooms':
+        return 'Phòng';
+      default:
+        return type;
+    }
+  };
+
+  const getTrendIcon = (trend: string) => {
+    if (trend === 'up') {
+      return <TrendingUp className="w-3 h-3 text-green-500" />;
+    } else if (trend === 'down') {
+      return <TrendingDown className="w-3 h-3 text-red-500" />;
+    }
+    return null;
+  };
+
+  return (
+    <div className={Style.reportsManagement}>
+      {/* Header */}
+      <div className={Style.header}>
+        <div className={Style.headerContent}>
+          <div className={Style.headerInfo}>
+            <h1>Báo cáo & Thống kê</h1>
+            <p>Tạo và quản lý các báo cáo kinh doanh của KatHome In Town</p>
+          </div>
+          <div className={Style.headerActions}>
+            <button className={Style.refreshButton}>
+              <RefreshCw className="w-4 h-4" />
+              <span>Làm mới</span>
+            </button>
+            <button className={Style.createButton}>
+              <FileText className="w-4 h-4" />
+              <span>Tạo báo cáo</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Stats Overview */}
+      <div className={Style.quickStatsGrid}>
+        <div className={Style.statCard}>
+          <div className={Style.statContent}>
+            <div className={`${Style.statIcon} ${Style.statIconBlue}`}>
+              <BarChart3 className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className={Style.statInfo}>
+              <div className={Style.statValue}>{quickStats.totalReports}</div>
+              <div className={Style.statLabel}>Tổng báo cáo</div>
+            </div>
+          </div>
+        </div>
+
+        <div className={Style.statCard}>
+          <div className={Style.statContent}>
+            <div className={`${Style.statIcon} ${Style.statIconGreen}`}>
+              <DollarSign className="w-5 h-5 text-green-600" />
+            </div>
+            <div className={Style.statInfo}>
+              <div className={Style.statValueLarge}>{formatPrice(quickStats.totalRevenue)}</div>
+              <div className={Style.statLabel}>Doanh thu tháng</div>
+            </div>
+          </div>
+        </div>
+
+        <div className={Style.statCard}>
+          <div className={Style.statContent}>
+            <div className={`${Style.statIcon} ${Style.statIconPurple}`}>
+              <Calendar className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className={Style.statInfo}>
+              <div className={Style.statValue}>{quickStats.totalBookings}</div>
+              <div className={Style.statLabel}>Booking tháng</div>
+            </div>
+          </div>
+        </div>
+
+        <div className={Style.statCard}>
+          <div className={Style.statContent}>
+            <div className={`${Style.statIcon} ${Style.statIconOrange}`}>
+              <Bed className="w-5 h-5 text-orange-600" />
+            </div>
+            <div className={Style.statInfo}>
+              <div className={Style.statValue}>{quickStats.occupancyRate}%</div>
+              <div className={Style.statLabel}>Tỷ lệ lấp đầy</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className={Style.filtersCard}>
+        <div className={Style.filtersContent}>
+          <div className={Style.filtersRow}>
+            <div className={Style.searchContainer}>
+              <Search className={Style.searchIcon} />
+              <input
+                type="text"
+                placeholder="Tìm theo tên báo cáo, mô tả..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={Style.searchInput}
+              />
+            </div>
+            
+            <div className={Style.filterControls}>
+              <div className={Style.filterGroup}>
+                <Filter className={Style.filterIcon} />
+                <select 
+                  value={typeFilter} 
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                  className={Style.selectTrigger}
+                >
+                  <option value="all">Tất cả</option>
+                  <option value="revenue">Doanh thu</option>
+                  <option value="bookings">Đặt phòng</option>
+                  <option value="occupancy">Lấp đầy</option>
+                  <option value="customer">Khách hàng</option>
+                  <option value="rooms">Phòng</option>
+                </select>
+              </div>
+              
+              <select 
+                value={periodFilter} 
+                onChange={(e) => setPeriodFilter(e.target.value)}
+                className={`${Style.selectTrigger} ${Style.selectTriggerSmall}`}
+              >
+                <option value="all">Tất cả</option>
+                <option value="daily">Hàng ngày</option>
+                <option value="weekly">Hàng tuần</option>
+                <option value="monthly">Hàng tháng</option>
+                <option value="quarterly">Hàng quý</option>
+                <option value="yearly">Hàng năm</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Reports Grid */}
+      <div className={Style.reportsSection}>
+        {/* Header with bulk actions */}
+        <div className={Style.sectionHeader}>
+          <h2 className={Style.sectionTitle}>
+            Danh sách báo cáo ({filteredReports.length})
+          </h2>
+          {selectedReports.length > 0 && (
+            <div className={Style.bulkActions}>
+              <span className={Style.bulkText}>
+                Đã chọn {selectedReports.length} báo cáo
+              </span>
+              <button className={Style.bulkButton}>
+                <Download className="w-4 h-4" />
+                <span>Tải xuống hàng loạt</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Select All */}
+        <div className={Style.selectAllCard}>
+          <input
+            type="checkbox"
+            checked={selectedReports.length === filteredReports.length && filteredReports.length > 0}
+            onChange={handleSelectAll}
+            className={Style.checkbox}
+          />
+          <span className={Style.selectAllText}>
+            Chọn tất cả báo cáo
+          </span>
+        </div>
+
+        {/* Reports Cards */}
+        <div className={Style.reportsGrid}>
+          {filteredReports.map((report) => (
+            <div key={report.id} className={Style.reportCard}>
+              <div className={Style.reportContent}>
+                {/* Header with checkbox and type */}
+                <div className={Style.reportHeader}>
+                  <div className={Style.reportHeaderLeft}>
+                    <input
+                      type="checkbox"
+                      checked={selectedReports.includes(report.id)}
+                      onChange={() => handleSelectReport(report.id)}
+                      className={`${Style.checkbox} ${Style.reportCheckbox}`}
+                    />
+                    <div className={Style.reportInfo}>
+                      <h3 className={Style.reportTitle}>
+                        {report.title}
+                      </h3>
+                      <p className={Style.reportDescription}>
+                        {report.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={Style.reportHeaderRight}>
+                    {getStatusBadge(report.status)}
+                    <div className={Style.reportType}>
+                      {getTypeIcon(report.type)}
+                      <span>{getTypeName(report.type)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Main data section */}
+                {report.status === 'completed' && (
+                  <div className={Style.reportDataSection}>
+                    <div className={Style.reportDataContent}>
+                      <div className={Style.reportDataInfo}>
+                        <div className={Style.reportDataValue}>
+                          {report.type === 'revenue' && formatPrice(report.data.value)}
+                          {report.type === 'bookings' && `${report.data.value} booking`}
+                          {report.type === 'occupancy' && `${report.data.value}%`}
+                          {report.type === 'customer' && `${report.data.value} khách VIP`}
+                          {report.type === 'rooms' && `${report.data.value} phòng`}
+                        </div>
+                        <div className={Style.reportDataTrend}>
+                          {getTrendIcon(report.data.trend)}
+                          <span className={`${Style.trendText} ${
+                            report.data.trend === 'up' ? Style.trendUp : 
+                            report.data.trend === 'down' ? Style.trendDown : Style.trendStable
+                          }`}>
+                            {report.data.change > 0 ? '+' : ''}{report.data.change}% so với kỳ trước
+                          </span>
+                        </div>
+                      </div>
+                      <div className={Style.reportDataChart}>
+                        <PieChart className={Style.chartIcon} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {report.status === 'processing' && (
+                  <div className={Style.processingSection}>
+                    <RefreshCw className={Style.processingIcon} />
+                    <div className={Style.processingInfo}>
+                      <div className={Style.processingTitle}>Đang xử lý báo cáo...</div>
+                      <div className={Style.processingSubtitle}>Vui lòng chờ trong giây lát</div>
+                    </div>
+                  </div>
+                )}
+
+                {report.status === 'failed' && (
+                  <div className={Style.errorSection}>
+                    <div className={Style.errorIcon}>
+                      !
+                    </div>
+                    <div className={Style.errorInfo}>
+                      <div className={Style.errorTitle}>Xử lý thất bại</div>
+                      <div className={Style.errorSubtitle}>Có lỗi xảy ra khi tạo báo cáo</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer with metadata and actions */}
+                <div className={Style.reportFooter}>
+                  <div className={Style.reportMetadata}>
+                    <div className={Style.metadataItem}>
+                      <Calendar className={Style.metadataIcon} />
+                      <span>{formatDate(report.createdDate)}</span>
+                    </div>
+                    <span className={Style.periodBadge}>
+                      {report.period === 'daily' && 'Hàng ngày'}
+                      {report.period === 'weekly' && 'Hàng tuần'}
+                      {report.period === 'monthly' && 'Hàng tháng'}
+                      {report.period === 'quarterly' && 'Hàng quý'}
+                      {report.period === 'yearly' && 'Hàng năm'}
+                    </span>
+                    <span className={Style.fileSize}>{report.size}</span>
+                  </div>
+                  
+                  <div className={Style.reportActions}>
+                    <button className={Style.actionButton}>
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    {report.status === 'completed' && (
+                      <button className={Style.actionButton}>
+                        <Download className="w-4 h-4" />
+                      </button>
+                    )}
+                    {report.status === 'failed' && (
+                      <button className={Style.actionButton}>
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Empty state */}
+        {filteredReports.length === 0 && (
+          <div className={Style.emptyState}>
+            <FileText className={Style.emptyIcon} />
+            <h3 className={Style.emptyTitle}>
+              Không tìm thấy báo cáo nào
+            </h3>
+            <p className={Style.emptyDescription}>
+              Thử thay đổi bộ lọc hoặc tạo báo cáo mới
+            </p>
+            <button className={Style.emptyButton}>
+              <FileText className="w-4 h-4" />
+              Tạo báo cáo đầu tiên
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ReportsManagementPage;

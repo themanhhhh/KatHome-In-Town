@@ -2,14 +2,13 @@ import nodemailer from 'nodemailer';
 
 export class EmailService {
   private static transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false, // true for 465, false for other ports
+    service: 'gmail',
     auth: {
-      user: process.env.SMTP_USER || 'your-email@gmail.com',
-      pass: process.env.SMTP_PASS || 'your-app-password',
+      user: 'lunarofmoon@gmail.com',
+      pass: 'idektxbqqwdavxou',
     },
   });
+  
 
   /**
    * Gửi mã xác thực email
@@ -29,7 +28,7 @@ export class EmailService {
 
     try {
       const mailOptions = {
-        from: `"KatHome In Town" <${process.env.SMTP_USER || 'noreply@kathome.com'}>`,
+        from: `"KatHome In Town" <${process.env.SMTP_USER}>`,
         to: email,
         subject: 'Mã xác thực đăng ký - KatHome In Town',
         html: `
@@ -90,7 +89,7 @@ export class EmailService {
   static async sendWelcomeEmail(email: string, name: string) {
     try {
       const mailOptions = {
-        from: `"KatHome In Town" <${process.env.SMTP_USER || 'noreply@kathome.com'}>`,
+        from: `"KatHome In Town" <${process.env.SMTP_USER}>`,
         to: email,
         subject: 'Chào mừng đến với KatHome In Town! 🎉',
         html: `
@@ -156,7 +155,7 @@ export class EmailService {
     
     try {
       const mailOptions = {
-        from: `"KatHome In Town" <${process.env.SMTP_USER || 'noreply@kathome.com'}>`,
+        from: `"KatHome In Town" <${process.env.SMTP_USER}>`,
         to: email,
         subject: 'Đặt lại mật khẩu - KatHome In Town',
         html: `
@@ -209,4 +208,3 @@ export class EmailService {
     }
   }
 }
-

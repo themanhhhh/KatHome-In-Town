@@ -124,6 +124,29 @@ export const phongApi = {
   delete: (id: string) => api.delete(`phong/${id}`),
 };
 
+// Availability
+export interface AvailabilityRoom {
+  maPhong: string;
+  moTa: string;
+  hangPhong?: {
+    tenHangPhong: string;
+    sucChua: number;
+  };
+  coSo?: unknown;
+}
+
+export const availabilityApi = {
+  search: (params: { checkIn: string; checkOut: string; guests?: number; coSoId?: string }) => {
+    const query = new URLSearchParams({
+      checkIn: params.checkIn,
+      checkOut: params.checkOut,
+      ...(params.guests !== undefined ? { guests: String(params.guests) } : {}),
+      ...(params.coSoId ? { coSoId: params.coSoId } : {}),
+    }).toString();
+    return api.get<AvailabilityRoom[]>(`availability?${query}`);
+  },
+};
+
 // Khách hàng
 export const khachHangApi = {
   getAll: () => api.get('khachhang'),

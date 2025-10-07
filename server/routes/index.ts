@@ -55,6 +55,7 @@ router.get('/phong/:id', PhongController.getById);
 router.post('/phong', PhongController.create);
 router.put('/phong/:id', PhongController.update);
 router.delete('/phong/:id', PhongController.delete);
+router.get('/availability', PhongController.searchAvailability);
 
 // KhachHang routes
 router.get('/khachhang', KhachHangController.getAll);

@@ -3,10 +3,12 @@ import { AppDataSource } from './data/datasource';
 import express from 'express';
 import cors from 'cors';
 import apiRoutes from './routes';
+import dotenv from 'dotenv';
 
 const app = express();
 const port = 3001;
 
+dotenv.config();
 // Middleware
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3003'],

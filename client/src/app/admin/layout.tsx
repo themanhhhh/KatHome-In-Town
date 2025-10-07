@@ -67,13 +67,57 @@ const menuItems = [
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
 
-  // Mock user data - in real app this would come from auth context
-  const user = {
-    firstName: "Admin",
-    lastName: "User",
-    isAuthenticated: true
-  };
+  // Thông tin user (đơn giản để hiển thị UI). Quyền thực sự dựa trên API /auth/me
+  const [user, setUser] = useState<{ firstName?: string; lastName?: string; isAuthenticated: boolean; vaiTro?: string }>({ isAuthenticated: false });
+
+  // Guard kiểm tra quyền admin
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        if (!token) {
+          setAuthorized(false);
+          window.location.href = '/login';
+          return;
+        }
+
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
+
+        if (!res.ok) {
+          setAuthorized(false);
+          window.location.href = '/login';
+          return;
+        }
+
+        const data = await res.json();
+        const vaiTro = data?.user?.vaiTro;
+        if (vaiTro !== 'admin') {
+          setAuthorized(false);
+          window.location.href = '/';
+          return;
+        }
+
+        const name = data?.user?.taiKhoan || 'Admin User';
+        const [firstName, ...rest] = String(name).split(' ');
+        setUser({ firstName, lastName: rest.join(' '), isAuthenticated: true, vaiTro });
+        setAuthorized(true);
+      } catch {
+        setAuthorized(false);
+        window.location.href = '/login';
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   // Open sidebar by default on desktop
   useEffect(() => {
@@ -117,6 +161,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       setCurrentPage(currentItem.id);
     }
   }, []);
+
+  if (authorized === null) {
+    return (
+      <div className={Style.adminLayout}>
+        <div className={Style.mainContainer}>
+          <div className={Style.mainContent}>
+            <main className={Style.contentArea}>Đang kiểm tra quyền truy cập...</main>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (authorized === false) {
+    return null; // đã redirect ở trên
+  }
 
   return (
     <div className={Style.adminLayout}>

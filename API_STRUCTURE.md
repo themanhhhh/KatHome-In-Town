@@ -163,6 +163,15 @@ NEXT_PUBLIC_API_URL=http://localhost:3000
 - `POST /api/phong`
 - `PUT /api/phong/:id`
 - `DELETE /api/phong/:id`
+  
+#### Tìm phòng trống
+- `GET /api/availability?checkIn=YYYY-MM-DD&checkOut=YYYY-MM-DD&guests=2&coSoId=...`
+  - Params:
+    - `checkIn` (bắt buộc): ngày nhận phòng
+    - `checkOut` (bắt buộc): ngày trả phòng (phải sau checkIn)
+    - `guests` (tùy chọn): số khách yêu cầu, lọc theo `sucChua` của `HangPhong`
+    - `coSoId` (tùy chọn): lọc theo cơ sở
+  - Trả về: danh sách `Phong` còn trống trong khoảng ngày, bao gồm quan hệ `hangPhong`, `coSo`
 
 ### 5. Khách hàng (KhachHang)
 - `GET /api/khachhang`

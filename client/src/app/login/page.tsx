@@ -2,8 +2,6 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Header } from "../components/header/header";
-import { Footer } from "../components/footer/footer";
 import { Login } from "../components/login/Login";
 
 export default function LoginPage() {
@@ -24,15 +22,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
       <main className="flex-1">
         <Login 
           onBack={handleBack}
           onSwitchToRegister={handleSwitchToRegister}
           onLoginSuccess={handleLoginSuccess}
         />
-      </main>
-      <Footer />
+      </main> 
     </div>
   );
 }

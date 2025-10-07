@@ -24,7 +24,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
       <main className="flex-1">
         <Register 
           onBack={handleBack}
@@ -32,7 +31,6 @@ export default function RegisterPage() {
           onRegisterSuccess={handleRegisterSuccess}
         />
       </main>
-      <Footer />
     </div>
   );
 }

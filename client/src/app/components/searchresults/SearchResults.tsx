@@ -1,6 +1,5 @@
 'use client';
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../card/card";
 import { Badge } from "../badge/badge";
@@ -16,6 +15,7 @@ import {
   Filter
 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { AvailabilityRoom, availabilityApi } from "@/lib/api";
 
 interface SearchResultsProps {
   searchData: {
@@ -29,82 +29,77 @@ interface SearchResultsProps {
 
 export function SearchResults({ searchData, onBackToHome, onViewRoomDetail }: SearchResultsProps) {
   const [showFilters, setShowFilters] = useState(false);
+  interface UiRoom {
+    id: number;
+    name: string;
+    type: string;
+    price: number;
+    originalPrice: number;
+    image: string;
+    maxGuests: number;
+    beds: number;
+    bathrooms: number;
+    size: number;
+    amenities: string[];
+    rating: number;
+    reviews: number;
+    description: string;
+    available: boolean;
+    isPopular: boolean;
+    _maPhong: string;
+  }
 
-    // Mock data cho các phòng thực tế của KatHome In Town
-    const rooms = [
-      {
-        id: 1,
-        name: "Annie",
-        type: "Căn hộ cao cấp",
-        price: 500000,
-        originalPrice: 550000,
-        image: "https://images.unsplash.com/photo-1675621926040-b514257d5941?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb3p5JTIwaG9tZXN0YXklMjBiZWRyb29tJTIwaW50ZXJpb3J8ZW58MXx8fHwxNzU3NDQxMzQ1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-        maxGuests: 2,
-        beds: 1,
-        bathrooms: 1,
-        size: 50,
-        amenities: ["Home Cinema", "Bếp Master Chef", "Romantic Bath", "Self check-in", "Wifi tốc độ cao"],
-        rating: 4.9,
-        reviews: 127,
-        description: "Căn hộ Annie với thiết kế hiện đại, không gian riêng tư và đầy đủ tiện nghi cao cấp.",
-        available: true,
-        isPopular: true
-      },
-      {
-        id: 2,
-        name: "Yume",
-        type: "Căn hộ gia đình",
-        price: 500000,
-        originalPrice: 550000,
-        image: "https://images.unsplash.com/photo-1659177567968-220c704d58a3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdGFuZGFyZCUyMGhvdGVsJTIwcm9vbXxlbnwxfHx8fDE3NTc0NDY0ODR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-        maxGuests: 6,
-        beds: 2,
-        bathrooms: 1,
-        size: 65,
-        amenities: ["Home Cinema", "Bếp Master Chef", "Romantic Bath", "Self check-in", "Wifi tốc độ cao", "Khu vực sinh hoạt"],
-        rating: 4.8,
-        reviews: 89,
-        description: "Căn hộ Yume rộng rãi, phù hợp cho gia đình và nhóm bạn với không gian sống thoáng đãng.",
-        available: true,
-        isPopular: true
-      },
-      {
-        id: 3,
-        name: "Sora",
-        type: "Căn hộ view đẹp",
-        price: 400000,
-        originalPrice: 450000,
-        image: "https://images.unsplash.com/photo-1606202598125-e2077bb5ebcc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxiZWF1dGlmdWwlMjBsaXZpbmclMjByb29tJTIwaG9tZXN0YXl8ZW58MXx8fHwxNzU3NDQxMzQ1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-        maxGuests: 6,
-        beds: 2,
-        bathrooms: 1,
-        size: 45,
-        amenities: ["Home Cinema", "Bếp Master Chef", "Romantic Bath", "Self check-in", "Wifi tốc độ cao"],
-        rating: 4.7,
-        reviews: 156,
-        description: "Căn hộ Sora với tầm nhìn tuyệt đẹp và thiết kế hiện đại, lý tưởng cho kỳ nghỉ dưỡng.",
-        available: true,
-        isPopular: false
-      },
-      {
-        id: 4,
-        name: "Aika",
-        type: "Căn hộ ấm cúng",
-        price: 400000,
-        originalPrice: 450000,
-        image: "https://images.unsplash.com/photo-1731336478850-6bce7235e320?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZWx1eGUlMjBob3RlbCUyMHJvb20lMjBiZWR8ZW58MXx8fHwxNzU3NDQ2NDgxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-        maxGuests: 2,
-        beds: 1,
-        bathrooms: 1,
-        size: 65,
-        amenities: ["Home Cinema", "Bếp Master Chef", "Romantic Bath", "Self check-in", "Wifi tốc độ cao", "Không gian riêng tư"],
-        rating: 4.9,
-        reviews: 203,
-        description: "Căn hộ Aika với thiết kế tinh tế, không gian ấm cúng như chính ngôi nhà của bạn.",
-        available: true,
-        isPopular: true
+  const [rooms, setRooms] = useState<UiRoom[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchAvailability() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data: AvailabilityRoom[] = await availabilityApi.search({
+          checkIn: searchData.checkIn,
+          checkOut: searchData.checkOut,
+          guests: searchData.guests,
+        });
+        if (!isMounted) return;
+        const mapped: UiRoom[] = (data || []).map((r: AvailabilityRoom, idx: number) => ({
+          id: idx + 1, // frontend id for navigation; backend has r.maPhong (string)
+          name: r.moTa ? r.moTa : `Phòng ${r.maPhong}`,
+          type: r.hangPhong?.tenHangPhong || 'Phòng',
+          price: 0,
+          originalPrice: 0,
+          image: '/window.svg',
+          maxGuests: r.hangPhong?.sucChua ?? 2,
+          beds: 1,
+          bathrooms: 1,
+          size: 30,
+          amenities: [],
+          rating: 4.7,
+          reviews: 0,
+          description: r.moTa || 'Phòng còn trống',
+          available: true,
+          isPopular: false,
+          _maPhong: r.maPhong,
+        }));
+        setRooms(mapped);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Không thể tải danh sách phòng';
+        setError(message);
+        setRooms([]);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-    ];
+    }
+    if (searchData.checkIn && searchData.checkOut) {
+      fetchAvailability();
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [searchData.checkIn, searchData.checkOut, searchData.guests]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -136,7 +131,7 @@ export function SearchResults({ searchData, onBackToHome, onViewRoomDetail }: Se
             </Button>
             
             <div className="text-sm" style={{ color: '#3D0301' }}>
-              {rooms.length} phòng có sẵn
+              {loading ? 'Đang tải...' : `${rooms.length} phòng có sẵn`}
             </div>
           </div>
 
@@ -172,7 +167,7 @@ export function SearchResults({ searchData, onBackToHome, onViewRoomDetail }: Se
               Các phòng có sẵn
             </h1>
             <p className="opacity-80" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
-              Tìm thấy {rooms.length} phòng phù hợp với yêu cầu của bạn
+              {loading ? 'Đang tải kết quả...' : `Tìm thấy ${rooms.length} phòng phù hợp với yêu cầu của bạn`}
             </p>
           </div>
           
@@ -202,6 +197,9 @@ export function SearchResults({ searchData, onBackToHome, onViewRoomDetail }: Se
         </div>
 
         {/* Danh sách phòng */}
+        {error && (
+          <div className="mb-6 text-sm" style={{ color: '#B00020' }}>{error}</div>
+        )}
         <div className="space-y-6">
           {rooms.map((room) => (
             <Card key={room.id} className="overflow-hidden hover:shadow-lg transition-shadow border-0" style={{ backgroundColor: '#FAD0C4' }}>
@@ -284,7 +282,7 @@ export function SearchResults({ searchData, onBackToHome, onViewRoomDetail }: Se
                     {/* Tiện nghi */}
                     <div className="mb-6">
                       <div className="flex flex-wrap gap-2">
-                        {room.amenities.slice(0, 5).map((amenity, index) => (
+                        {room.amenities.slice(0, 5).map((amenity: string, index: number) => (
                           <Badge 
                             key={index} 
                             variant="outline" 
@@ -352,7 +350,7 @@ export function SearchResults({ searchData, onBackToHome, onViewRoomDetail }: Se
             </Card>
           ))}
         </div>
-
+        
         {/* Pagination */}
         <div className="flex justify-center mt-12">
           <div className="flex items-center space-x-2">

@@ -19,137 +19,45 @@ import {
   Wifi,
   Wind,
   Tv,
-  Home
+  Home,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 
 import Style from "../../styles/roomsmanagement.module.css";
+import { useApi } from "../../../hooks/useApi";
+import { phongApi, hangPhongApi } from "../../../lib/api";
+import { ApiRoom, ApiRoomType } from "../../../types/api";
+import { ImageUpload } from "../../components/image-upload";
 
-interface Room {
-  id: number;
-  name: string;
-  type: string;
-  price: number;
-  originalPrice: number;
-  maxGuests: number;
-  beds: number;
-  bathrooms: number;
-  size: number;
-  amenities: string[];
-  rating: number;
-  reviews: number;
-  status: 'available' | 'occupied' | 'maintenance' | 'cleaning';
-  description: string;
-  totalBookings: number;
-  revenue: number;
-}
+// Using ApiRoom type from types/api.ts
 
 const RoomsManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [selectedRooms, setSelectedRooms] = useState<number[]>([]);
+  const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState<Set<string>>(new Set());
 
-  // Mock data - trong thực tế sẽ fetch từ API
-  const [rooms] = useState<Room[]>([
-    {
-      id: 1,
-      name: "Phòng Deluxe với Ban công",
-      type: "Deluxe",
-      price: 1200000,
-      originalPrice: 1500000,
-      maxGuests: 2,
-      beds: 1,
-      bathrooms: 1,
-      size: 35,
-      amenities: ["Wifi", "Điều hòa", "Tivi", "Ban công"],
-      rating: 4.8,
-      reviews: 124,
-      status: "available",
-      description: "Phòng sang trọng với ban công riêng và tầm nhìn đẹp",
-      totalBookings: 45,
-      revenue: 54000000
-    },
-    {
-      id: 2,
-      name: "Phòng Superior",
-      type: "Superior",
-      price: 900000,
-      originalPrice: 1100000,
-      maxGuests: 2,
-      beds: 1,
-      bathrooms: 1,
-      size: 28,
-      amenities: ["Wifi", "Điều hòa", "Tivi"],
-      rating: 4.5,
-      reviews: 89,
-      status: "occupied",
-      description: "Phòng tiện nghi với không gian thoải mái",
-      totalBookings: 38,
-      revenue: 34200000
-    },
-    {
-      id: 3,
-      name: "Phòng Standard",
-      type: "Standard",
-      price: 600000,
-      originalPrice: 750000,
-      maxGuests: 2,
-      beds: 1,
-      bathrooms: 1,
-      size: 22,
-      amenities: ["Wifi", "Điều hòa"],
-      rating: 4.2,
-      reviews: 67,
-      status: "available",
-      description: "Phòng cơ bản với đầy đủ tiện nghi cần thiết",
-      totalBookings: 32,
-      revenue: 19200000
-    },
-    {
-      id: 4,
-      name: "Suite Gia đình",
-      type: "Suite",
-      price: 2000000,
-      originalPrice: 2400000,
-      maxGuests: 4,
-      beds: 2,
-      bathrooms: 2,
-      size: 55,
-      amenities: ["Wifi", "Điều hòa", "Tivi", "Bếp nhỏ", "Ban công", "Phòng khách"],
-      rating: 4.9,
-      reviews: 156,
-      status: "maintenance",
-      description: "Suite rộng rãi dành cho gia đình với đầy đủ tiện nghi",
-      totalBookings: 28,
-      revenue: 56000000
-    },
-    {
-      id: 5,
-      name: "Phòng VIP",
-      type: "VIP",
-      price: 1800000,
-      originalPrice: 2200000,
-      maxGuests: 2,
-      beds: 1,
-      bathrooms: 1,
-      size: 45,
-      amenities: ["Wifi", "Điều hòa", "Tivi", "Ban công", "Minibar", "Jacuzzi"],
-      rating: 4.7,
-      reviews: 98,
-      status: "cleaning",
-      description: "Phòng VIP cao cấp với jacuzzi riêng",
-      totalBookings: 22,
-      revenue: 39600000
-    }
-  ]);
+  // Fetch data from API
+  const { data: rooms = [], loading: roomsLoading, error: roomsError, refetch: refetchRooms } = useApi<ApiRoom[]>(
+    () => phongApi.getAll(),
+    []
+  );
+
+  const { data: roomTypes = [] } = useApi<ApiRoomType[]>(
+    () => hangPhongApi.getAll(),
+    []
+  );
+
 
   // Filter functions
-  const filteredRooms = rooms.filter(room => {
-    const matchesSearch = room.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         room.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         room.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || room.status === statusFilter;
-    const matchesType = typeFilter === "all" || room.type === typeFilter;
+  const filteredRooms = (rooms || []).filter(room => {
+    const matchesSearch = room.moTa.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (room.hangPhong?.tenHangPhong || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (room.coSo?.tenCoSo || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || room.trangThai === statusFilter;
+    const matchesType = typeFilter === "all" || room.hangPhong?.tenHangPhong === typeFilter;
     
     return matchesSearch && matchesStatus && matchesType;
   });
@@ -159,16 +67,31 @@ const RoomsManagementPage = () => {
     if (selectedRooms.length === filteredRooms.length) {
       setSelectedRooms([]);
     } else {
-      setSelectedRooms(filteredRooms.map(room => room.id));
+      setSelectedRooms(filteredRooms.map(room => room.maPhong));
     }
   };
 
-  const handleSelectRoom = (roomId: number) => {
+  const handleSelectRoom = (roomId: string) => {
     setSelectedRooms(prev => 
       prev.includes(roomId) 
         ? prev.filter(id => id !== roomId)
         : [...prev, roomId]
     );
+  };
+
+  const handleImageUpload = async (roomId: string, file: File) => {
+    setUploadingImages(prev => new Set(prev).add(roomId));
+    try {
+      await phongApi.uploadImage(roomId, file);
+      // Refresh rooms data to get updated image URL
+      await refetchRooms();
+    } finally {
+      setUploadingImages(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(roomId);
+        return newSet;
+      });
+    }
   };
 
   // Utility functions
@@ -193,6 +116,34 @@ const RoomsManagementPage = () => {
         return <span className={Style.badge}>{status}</span>;
     }
   };
+
+  // Loading and error states
+  if (roomsLoading) {
+    return (
+      <div className={Style.roomsManagement}>
+        <div className={Style.loadingContainer}>
+          <RefreshCw className={Style.loadingIcon} />
+          <p>Đang tải dữ liệu phòng...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roomsError) {
+    return (
+      <div className={Style.roomsManagement}>
+        <div className={Style.errorContainer}>
+          <AlertCircle className={Style.errorIcon} />
+          <h3>Lỗi tải dữ liệu</h3>
+          <p>{roomsError}</p>
+          <button onClick={refetchRooms} className={Style.retryButton}>
+            <RefreshCw className="w-4 h-4" />
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const getAmenityIcon = (amenity: string) => {
     switch (amenity.toLowerCase()) {
@@ -266,11 +217,11 @@ const RoomsManagementPage = () => {
                 className={`${Style.selectTrigger} ${Style.selectTriggerSmall}`}
               >
                 <option value="all">Tất cả</option>
-                <option value="Standard">Standard</option>
-                <option value="Superior">Superior</option>
-                <option value="Deluxe">Deluxe</option>
-                <option value="Suite">Suite</option>
-                <option value="VIP">VIP</option>
+                {(roomTypes || []).map((type) => (
+                  <option key={type.maHangPhong} value={type.tenHangPhong}>
+                    {type.tenHangPhong}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -282,7 +233,7 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {rooms.length}
+              {(rooms || []).length}
             </div>
             <div className={Style.statLabel}>
               Tổng phòng
@@ -293,7 +244,7 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {rooms.filter(r => r.status === 'available').length}
+              {(rooms || []).filter(r => r.trangThai === 'available').length}
             </div>
             <div className={Style.statLabel}>
               Có sẵn
@@ -304,7 +255,7 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {rooms.filter(r => r.status === 'occupied').length}
+              {(rooms || []).filter(r => r.trangThai === 'occupied').length}
             </div>
             <div className={Style.statLabel}>
               Đã thuê
@@ -315,7 +266,7 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {formatPrice(rooms.reduce((sum, r) => sum + r.revenue, 0))}
+              {formatPrice(0)}
             </div>
             <div className={Style.statLabel}>
               Tổng doanh thu
@@ -357,6 +308,7 @@ const RoomsManagementPage = () => {
                     />
                   </th>
                   <th className={Style.tableHeadCell}>Phòng</th>
+                  <th className={Style.tableHeadCell}>Hình ảnh</th>
                   <th className={Style.tableHeadCell}>Giá & Loại</th>
                   <th className={Style.tableHeadCell}>Chi tiết</th>
                   <th className={Style.tableHeadCell}>Tiện nghi</th>
@@ -368,37 +320,43 @@ const RoomsManagementPage = () => {
               </thead>
               <tbody>
                 {filteredRooms.map((room) => (
-                  <tr key={room.id} className={Style.tableRow}>
+                  <tr key={room.maPhong} className={Style.tableRow}>
                     <td className={Style.tableCell}>
                       <input
                         type="checkbox"
-                        checked={selectedRooms.includes(room.id)}
-                        onChange={() => handleSelectRoom(room.id)}
+                        checked={selectedRooms.includes(room.maPhong)}
+                        onChange={() => handleSelectRoom(room.maPhong)}
                         className={Style.checkbox}
                       />
                     </td>
                     <td className={Style.tableCell}>
                       <div>
                         <div className={Style.roomName}>
-                          {room.name}
+                          {room.moTa}
                         </div>
                         <div className={Style.roomId}>
-                          ID: {room.id}
+                          ID: {room.maPhong}
                         </div>
+                      </div>
+                    </td>
+                    <td className={Style.tableCell}>
+                      <div className="w-20 h-20">
+                        <ImageUpload
+                          onImageUpload={(file) => handleImageUpload(room.maPhong, file)}
+                          currentImageUrl={room.hinhAnh}
+                          entityType="room"
+                          entityId={room.maPhong}
+                          className="w-full h-full"
+                        />
                       </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.priceInfo}>
                         <div className={Style.currentPrice}>
-                          {formatPrice(room.price)}
+                          Chưa có giá
                         </div>
-                        {room.originalPrice > room.price && (
-                          <div className={Style.originalPrice}>
-                            {formatPrice(room.originalPrice)}
-                          </div>
-                        )}
                         <span className={Style.roomType}>
-                          {room.type}
+                          {room.hangPhong?.tenHangPhong || 'Chưa phân loại'}
                         </span>
                       </div>
                     </td>
@@ -406,35 +364,30 @@ const RoomsManagementPage = () => {
                       <div className={Style.roomDetails}>
                         <div className={Style.detailItem}>
                           <Users className={Style.detailIcon} />
-                          <span>{room.maxGuests} khách</span>
+                          <span>{room.hangPhong?.sucChua || 0} khách</span>
                         </div>
                         <div className={Style.detailItem}>
                           <Bed className={Style.detailIcon} />
-                          <span>{room.beds} giường</span>
+                          <span>1 giường</span>
                         </div>
                         <div className={Style.detailItem}>
                           <Bath className={Style.detailIcon} />
-                          <span>{room.bathrooms} phòng tắm</span>
+                          <span>1 phòng tắm</span>
                         </div>
                         <div className={Style.detailItem}>
                           <Maximize2 className={Style.detailIcon} />
-                          <span>{room.size}m²</span>
+                          <span>25m²</span>
                         </div>
                       </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.amenitiesList}>
-                        {room.amenities.slice(0, 3).map((amenity, index) => (
+                        {['Wifi', 'Điều hòa'].slice(0, 3).map((amenity, index) => (
                           <div key={index} className={Style.amenityItem}>
                             {getAmenityIcon(amenity)}
                             <span>{amenity}</span>
                           </div>
                         ))}
-                        {room.amenities.length > 3 && (
-                          <span className={Style.amenityMore}>
-                            +{room.amenities.length - 3} khác
-                          </span>
-                        )}
                       </div>
                     </td>
                     <td className={Style.tableCell}>
@@ -442,11 +395,11 @@ const RoomsManagementPage = () => {
                         <div className={Style.ratingValue}>
                           <Star className={Style.starIcon} />
                           <span className={Style.ratingNumber}>
-                            {room.rating}
+                            4.5
                           </span>
                         </div>
                         <div className={Style.reviewCount}>
-                          {room.reviews} đánh giá
+                          0 đánh giá
                         </div>
                       </div>
                     </td>
@@ -455,19 +408,19 @@ const RoomsManagementPage = () => {
                         <div className={Style.statItem}>
                           <Calendar className={Style.statIcon} />
                           <span className={Style.statText}>
-                            {room.totalBookings} booking
+                            0 booking
                           </span>
                         </div>
                         <div className={Style.statItem}>
                           <DollarSign className={Style.statIcon} />
                           <span className={Style.statText}>
-                            {formatPrice(room.revenue)}
+                            {formatPrice(0)}
                           </span>
                         </div>
                       </div>
                     </td>
                     <td className={Style.tableCell}>
-                      {getStatusBadge(room.status)}
+                      {getStatusBadge(room.trangThai)}
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.actions}>

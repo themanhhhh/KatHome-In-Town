@@ -15,6 +15,9 @@ export class CoSo {
   @Column({ length: 15 })
   sdt!: string;
 
+  @Column({ nullable: true })
+  hinhAnh?: string;
+
   @OneToMany(() => Phong, (phong) => phong.coSo)
   phong!: Phong[];
 }

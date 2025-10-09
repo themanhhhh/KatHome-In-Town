@@ -14,107 +14,29 @@ import {
   Download,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 
 import Style from "../../styles/bookingsmanagement.module.css";
+import { useApi } from "../../../hooks/useApi";
+import { donDatPhongApi } from "../../../lib/api";
+import { ApiBooking } from "../../../types/api";
 
-interface Booking {
-  id: string;
-  guestName: string;
-  email: string;
-  phone: string;
-  room: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  total: number;
-  status: 'confirmed' | 'pending' | 'cancelled' | 'completed';
-  paymentMethod: string;
-  bookingDate: string;
-  specialRequests?: string;
-}
+// Using ApiBooking type from types/api.ts
 
 const BookingsManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
 
-  // Mock data - trong thực tế sẽ fetch từ API
-  const [bookings] = useState<Booking[]>([
-    {
-      id: "BK1735123456",
-      guestName: "Nguyễn Văn A",
-      email: "nguyenvana@email.com",
-      phone: "0987654321",
-      room: "Phòng Deluxe với Ban công",
-      checkIn: "2024-12-28",
-      checkOut: "2024-12-30",
-      guests: 2,
-      total: 2400000,
-      status: "confirmed",
-      paymentMethod: "Thẻ tín dụng",
-      bookingDate: "2024-12-20",
-      specialRequests: "Tầng cao, view đẹp"
-    },
-    {
-      id: "BK1735123457",
-      guestName: "Trần Thị B",
-      email: "tranthib@email.com",
-      phone: "0976543210",
-      room: "Phòng Superior",
-      checkIn: "2024-12-29",
-      checkOut: "2024-12-31",
-      guests: 4,
-      total: 1800000,
-      status: "pending",
-      paymentMethod: "Chuyển khoản",
-      bookingDate: "2024-12-21"
-    },
-    {
-      id: "BK1735123458",
-      guestName: "Lê Văn C",
-      email: "levanc@email.com",
-      phone: "0965432109",
-      room: "Phòng Standard",
-      checkIn: "2024-12-30",
-      checkOut: "2025-01-02",
-      guests: 2,
-      total: 2100000,
-      status: "confirmed",
-      paymentMethod: "Thanh toán tại chỗ",
-      bookingDate: "2024-12-22"
-    },
-    {
-      id: "BK1735123459",
-      guestName: "Phạm Thị D",
-      email: "phamthid@email.com",
-      phone: "0954321098",
-      room: "Phòng Deluxe",
-      checkIn: "2024-12-25",
-      checkOut: "2024-12-27",
-      guests: 3,
-      total: 1600000,
-      status: "completed",
-      paymentMethod: "Thẻ tín dụng",
-      bookingDate: "2024-12-15",
-      specialRequests: "Giường đôi"
-    },
-    {
-      id: "BK1735123460",
-      guestName: "Hoàng Văn E",
-      email: "hoangvane@email.com",
-      phone: "0943210987",
-      room: "Phòng Superior",
-      checkIn: "2024-12-26",
-      checkOut: "2024-12-28",
-      guests: 2,
-      total: 1200000,
-      status: "cancelled",
-      paymentMethod: "Chuyển khoản",
-      bookingDate: "2024-12-18"
-    }
-  ]);
+  // Fetch data from API
+  const { data: bookings = [], loading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useApi<ApiBooking[]>(
+    () => donDatPhongApi.getAll(),
+    []
+  );
+
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -157,11 +79,15 @@ const BookingsManagementPage = () => {
     }
   };
 
-  const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = booking.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         booking.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
+  const filteredBookings = (bookings || []).filter(booking => {
+    const guestName = booking.khachHang?.tenKhachHang || '';
+    const email = booking.khachHang?.email || '';
+    const bookingId = booking.maDonDatPhong || '';
+    
+    const matchesSearch = guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || booking.trangThai === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -177,9 +103,37 @@ const BookingsManagementPage = () => {
     if (selectedBookings.length === filteredBookings.length) {
       setSelectedBookings([]);
     } else {
-      setSelectedBookings(filteredBookings.map(booking => booking.id));
+      setSelectedBookings(filteredBookings.map(booking => booking.maDonDatPhong));
     }
   };
+
+  // Loading and error states
+  if (bookingsLoading) {
+    return (
+      <div className={Style.bookingsManagement}>
+        <div className={Style.loadingContainer}>
+          <RefreshCw className={Style.loadingIcon} />
+          <p>Đang tải dữ liệu đặt phòng...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookingsError) {
+    return (
+      <div className={Style.bookingsManagement}>
+        <div className={Style.errorContainer}>
+          <AlertCircle className={Style.errorIcon} />
+          <h3>Lỗi tải dữ liệu</h3>
+          <p>{bookingsError}</p>
+          <button onClick={refetchBookings} className={Style.retryButton}>
+            <RefreshCw className="w-4 h-4" />
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={Style.bookingsManagement}>
@@ -244,7 +198,7 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {bookings.length}
+              {(bookings || []).length}
             </div>
             <div className={Style.statLabel}>
               Tổng booking
@@ -255,7 +209,7 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {bookings.filter(b => b.status === 'pending').length}
+              {(bookings || []).filter(b => b.trangThai === 'pending').length}
             </div>
             <div className={Style.statLabel}>
               Chờ xác nhận
@@ -266,7 +220,7 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {bookings.filter(b => b.status === 'confirmed').length}
+              {(bookings || []).filter(b => b.trangThai === 'confirmed').length}
             </div>
             <div className={Style.statLabel}>
               Đã xác nhận
@@ -277,7 +231,7 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {formatPrice(bookings.reduce((sum, b) => sum + b.total, 0))}
+              {formatPrice((bookings || []).reduce((sum, b) => sum + b.tongTien, 0))}
             </div>
             <div className={Style.statLabel}>
               Tổng doanh thu
@@ -329,69 +283,69 @@ const BookingsManagementPage = () => {
               </thead>
               <tbody>
                 {filteredBookings.map((booking) => (
-                  <tr key={booking.id} className={Style.tableRow}>
+                  <tr key={booking.maDonDatPhong} className={Style.tableRow}>
                     <td className={Style.tableCell}>
                       <input
                         type="checkbox"
-                        checked={selectedBookings.includes(booking.id)}
-                        onChange={() => handleSelectBooking(booking.id)}
+                        checked={selectedBookings.includes(booking.maDonDatPhong)}
+                        onChange={() => handleSelectBooking(booking.maDonDatPhong)}
                         className={Style.checkbox}
                       />
                     </td>
                     <td className={Style.tableCell}>
                       <div>
                         <div className={Style.bookingId}>
-                          {booking.id}
+                          {booking.maDonDatPhong}
                         </div>
                         <div className={Style.bookingDate}>
-                          {formatDate(booking.bookingDate)}
+                          {formatDate(booking.ngayDat)}
                         </div>
                       </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div>
                         <div className={Style.guestName}>
-                          {booking.guestName}
+                          {booking.khachHang?.tenKhachHang || 'N/A'}
                         </div>
                         <div className={Style.contactInfo}>
                           <Mail className={Style.contactIcon} />
-                          <span>{booking.email}</span>
+                          <span>{booking.khachHang?.email || 'N/A'}</span>
                         </div>
                         <div className={Style.contactInfo}>
                           <Phone className={Style.contactIcon} />
-                          <span>{booking.phone}</span>
+                          <span>{booking.khachHang?.soDienThoai || 'N/A'}</span>
                         </div>
                       </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div>
                         <div className={Style.roomName}>
-                          {booking.room}
+                          {booking.phong?.moTa || 'N/A'}
                         </div>
                         <div className={Style.guestCount}>
                           <Users className={Style.contactIcon} />
-                          <span>{booking.guests} khách</span>
+                          <span>{booking.soLuongKhach || 0} khách</span>
                         </div>
                       </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.dateInfo}>
-                        <div>Nhận: {formatDate(booking.checkIn)}</div>
-                        <div>Trả: {formatDate(booking.checkOut)}</div>
+                        <div>Nhận: {formatDate(booking.ngayNhan)}</div>
+                        <div>Trả: {formatDate(booking.ngayTra)}</div>
                       </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.totalAmount}>
-                        {formatPrice(booking.total)}
+                        {formatPrice(booking.tongTien)}
                       </div>
                       <div className={Style.paymentMethod}>
-                        {booking.paymentMethod}
+                        {booking.phuongThucThanhToan || 'N/A'}
                       </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.statusContainer}>
-                        {getStatusIcon(booking.status)}
-                        {getStatusBadge(booking.status)}
+                        {getStatusIcon(booking.trangThai)}
+                        {getStatusBadge(booking.trangThai)}
                       </div>
                     </td>
                     <td className={Style.tableCell}>

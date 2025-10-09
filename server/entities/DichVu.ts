@@ -13,4 +13,7 @@ export class DichVu {
 
   @Column({ type: "enum", enum: ["Ăn uống", "tiện ích", "khác"] })
   loai!: string;
+
+  @Column({ nullable: true })
+  hinhAnh?: string;
 }

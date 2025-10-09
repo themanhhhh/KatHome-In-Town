@@ -64,5 +64,32 @@ export class NhanVienController {
       res.status(500).json({ message: 'Lỗi khi xóa nhân viên', error });
     }
   }
+
+  static async updateImage(req: Request, res: Response) {
+    try {
+      const nhanVienId = req.params.id;
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: 'Image URL is required' });
+      }
+
+      const nhanVien = await nhanVienRepository.findOneBy({ maNhanVien: nhanVienId });
+      if (!nhanVien) {
+        return res.status(404).json({ message: 'Không tìm thấy nhân viên' });
+      }
+
+      nhanVien.hinhAnh = imageUrl;
+      const result = await nhanVienRepository.save(nhanVien);
+      
+      res.json({ 
+        success: true, 
+        message: 'Employee image updated successfully',
+        nhanVien: result 
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Lỗi khi cập nhật hình ảnh nhân viên', error });
+    }
+  }
 }
 

@@ -4,8 +4,8 @@
  */
 
 // Use Next.js API Routes (simpler, no CORS issues)
-// Set to true if you want to call backend directly
-const USE_DIRECT_BACKEND = false;
+// Set to true to call backend directly (Express at NEXT_PUBLIC_API_URL)
+const USE_DIRECT_BACKEND = true;
 const API_BASE_URL = USE_DIRECT_BACKEND 
   ? (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001')
   : '';
@@ -47,6 +47,37 @@ async function apiRequest<T>(
       throw error;
     }
     throw new ApiError(500, 'Network error', error);
+  }
+}
+
+/**
+ * Upload file to Pinata IPFS
+ */
+async function uploadFileToPinata(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        pinata_api_key: '5b9afb41a6a64bcad1f7',
+        pinata_secret_api_key: '080a3e13f1c8a9527e3ff8faaeb9871b5df53900099d88edba2259f98be701ec',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload to Pinata');
+    }
+
+    const data = await response.json();
+    const imageUrl = `https://gateway.pinata.cloud/ipfs/${data.IpfsHash}`;
+    console.log('Image successfully uploaded to Pinata:', imageUrl);
+    return imageUrl;
+  } catch (error) {
+    console.error('Pinata upload error:', error);
+    throw new Error('Unable to upload image to Pinata');
   }
 }
 
@@ -95,6 +126,18 @@ export const usersApi = {
   create: (data: unknown) => api.post('users', data),
   update: (id: string, data: unknown) => api.put(`users/${id}`, data),
   delete: (id: string) => api.delete(`users/${id}`),
+  uploadAvatar: async (id: string, file: File) => {
+    const imageUrl = await uploadFileToPinata(file);
+    return api.put(`users/${id}/avatar`, { imageUrl });
+  },
+  createWithImage: async (data: unknown, imageFile?: File) => {
+    if (imageFile) {
+      const imageUrl = await uploadFileToPinata(imageFile);
+      return api.post('users', { ...data, avatar: imageUrl });
+    } else {
+      return api.post('users', data);
+    }
+  },
 };
 
 // Cơ sở
@@ -104,6 +147,18 @@ export const cosoApi = {
   create: (data: unknown) => api.post('coso', data),
   update: (id: string, data: unknown) => api.put(`coso/${id}`, data),
   delete: (id: string) => api.delete(`coso/${id}`),
+  uploadImage: async (id: string, file: File) => {
+    const imageUrl = await uploadFileToPinata(file);
+    return api.put(`coso/${id}/image`, { imageUrl });
+  },
+  createWithImage: async (data: unknown, imageFile?: File) => {
+    if (imageFile) {
+      const imageUrl = await uploadFileToPinata(imageFile);
+      return api.post('coso', { ...data, hinhAnh: imageUrl });
+    } else {
+      return api.post('coso', data);
+    }
+  },
 };
 
 // Hạng phòng
@@ -113,6 +168,18 @@ export const hangPhongApi = {
   create: (data: unknown) => api.post('hangphong', data),
   update: (id: string, data: unknown) => api.put(`hangphong/${id}`, data),
   delete: (id: string) => api.delete(`hangphong/${id}`),
+  uploadImage: async (id: string, file: File) => {
+    const imageUrl = await uploadFileToPinata(file);
+    return api.put(`hangphong/${id}/image`, { imageUrl });
+  },
+  createWithImage: async (data: unknown, imageFile?: File) => {
+    if (imageFile) {
+      const imageUrl = await uploadFileToPinata(imageFile);
+      return api.post('hangphong', { ...data, hinhAnh: imageUrl });
+    } else {
+      return api.post('hangphong', data);
+    }
+  },
 };
 
 // Phòng
@@ -122,6 +189,18 @@ export const phongApi = {
   create: (data: unknown) => api.post('phong', data),
   update: (id: string, data: unknown) => api.put(`phong/${id}`, data),
   delete: (id: string) => api.delete(`phong/${id}`),
+  uploadImage: async (id: string, file: File) => {
+    const imageUrl = await uploadFileToPinata(file);
+    return api.put(`phong/${id}/image`, { imageUrl });
+  },
+  createWithImage: async (data: unknown, imageFile?: File) => {
+    if (imageFile) {
+      const imageUrl = await uploadFileToPinata(imageFile);
+      return api.post('phong', { ...data, hinhAnh: imageUrl });
+    } else {
+      return api.post('phong', data);
+    }
+  },
 };
 
 // Availability
@@ -163,6 +242,18 @@ export const nhanVienApi = {
   create: (data: unknown) => api.post('nhanvien', data),
   update: (id: string, data: unknown) => api.put(`nhanvien/${id}`, data),
   delete: (id: string) => api.delete(`nhanvien/${id}`),
+  uploadImage: async (id: string, file: File) => {
+    const imageUrl = await uploadFileToPinata(file);
+    return api.put(`nhanvien/${id}/image`, { imageUrl });
+  },
+  createWithImage: async (data: unknown, imageFile?: File) => {
+    if (imageFile) {
+      const imageUrl = await uploadFileToPinata(imageFile);
+      return api.post('nhanvien', { ...data, hinhAnh: imageUrl });
+    } else {
+      return api.post('nhanvien', data);
+    }
+  },
 };
 
 // Chức vụ
@@ -181,6 +272,18 @@ export const dichVuApi = {
   create: (data: unknown) => api.post('dichvu', data),
   update: (id: string, data: unknown) => api.put(`dichvu/${id}`, data),
   delete: (id: string) => api.delete(`dichvu/${id}`),
+  uploadImage: async (id: string, file: File) => {
+    const imageUrl = await uploadFileToPinata(file);
+    return api.put(`dichvu/${id}/image`, { imageUrl });
+  },
+  createWithImage: async (data: unknown, imageFile?: File) => {
+    if (imageFile) {
+      const imageUrl = await uploadFileToPinata(imageFile);
+      return api.post('dichvu', { ...data, hinhAnh: imageUrl });
+    } else {
+      return api.post('dichvu', data);
+    }
+  },
 };
 
 // Đơn đặt phòng

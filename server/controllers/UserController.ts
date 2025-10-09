@@ -66,5 +66,33 @@ export class UserController {
       res.status(500).json({ message: 'Lỗi khi xóa user', error });
     }
   }
+
+  // PUT /api/users/:id/avatar - Cập nhật avatar
+  static async updateAvatar(req: Request, res: Response) {
+    try {
+      const userId = req.params.id;
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: 'Image URL is required' });
+      }
+
+      const user = await userRepository.findOneBy({ id: userId });
+      if (!user) {
+        return res.status(404).json({ message: 'Không tìm thấy user' });
+      }
+
+      user.avatar = imageUrl;
+      const result = await userRepository.save(user);
+      
+      res.json({ 
+        success: true, 
+        message: 'Avatar updated successfully',
+        user: result 
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Lỗi khi cập nhật avatar', error });
+    }
+  }
 }
 

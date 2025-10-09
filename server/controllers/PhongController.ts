@@ -17,7 +17,6 @@ export class PhongController {
       res.status(500).json({ message: 'Lỗi khi lấy danh sách phòng', error });
     }
   }
-
   static async getById(req: Request, res: Response) {
     try {
       const phong = await phongRepository.findOne({
@@ -32,7 +31,6 @@ export class PhongController {
       res.status(500).json({ message: 'Lỗi khi lấy thông tin phòng', error });
     }
   }
-
   static async create(req: Request, res: Response) {
     try {
       const phong = phongRepository.create(req.body);
@@ -42,7 +40,6 @@ export class PhongController {
       res.status(500).json({ message: 'Lỗi khi tạo phòng', error });
     }
   }
-
   static async update(req: Request, res: Response) {
     try {
       const phong = await phongRepository.findOneBy({ maPhong: req.params.id });
@@ -56,7 +53,6 @@ export class PhongController {
       res.status(500).json({ message: 'Lỗi khi cập nhật phòng', error });
     }
   }
-
   static async delete(req: Request, res: Response) {
     try {
       const result = await phongRepository.delete(req.params.id);
@@ -68,7 +64,6 @@ export class PhongController {
       res.status(500).json({ message: 'Lỗi khi xóa phòng', error });
     }
   }
-
   static async searchAvailability(req: Request, res: Response) {
     try {
       const { checkIn, checkOut, guests, coSoId } = req.query as {
@@ -93,8 +88,6 @@ export class PhongController {
 
       const requiredGuests = guests ? parseInt(guests, 10) : undefined;
 
-      // Step 1: find bookings overlapping with [checkIn, checkOut)
-      // Overlap condition: existing.checkin < requested.checkout AND existing.checkout > requested.checkin
       const overlappingBookings = await AppDataSource.getRepository(DonDatPhong)
         .createQueryBuilder('ddp')
         .leftJoinAndSelect('ddp.chiTiet', 'ct')
@@ -106,8 +99,7 @@ export class PhongController {
       const occupiedRoomIds = new Set(
         overlappingBookings.flatMap(b => (b.chiTiet || []).map(ct => ct.phong?.maPhong)).filter(Boolean) as string[]
       );
-
-      // Step 2: query all rooms (optionally by coSo), include hangPhong for capacity
+// Step 2: query all rooms (optionally by coSo), include hangPhong for capacity
       const phongQB = AppDataSource.getRepository(Phong)
         .createQueryBuilder('p')
         .leftJoinAndSelect('p.hangPhong', 'hp')
@@ -124,6 +116,33 @@ export class PhongController {
       return res.json(availableRooms);
     } catch (error) {
       return res.status(500).json({ message: 'Lỗi khi tìm phòng trống', error });
+    }
+  }
+
+  static async updateImage(req: Request, res: Response) {
+    try {
+      const phongId = req.params.id;
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: 'Image URL is required' });
+      }
+
+      const phong = await phongRepository.findOneBy({ maPhong: phongId });
+      if (!phong) {
+        return res.status(404).json({ message: 'Không tìm thấy phòng' });
+      }
+
+      phong.hinhAnh = imageUrl;
+      const result = await phongRepository.save(phong);
+      
+      res.json({ 
+        success: true, 
+        message: 'Room image updated successfully',
+        phong: result 
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Lỗi khi cập nhật hình ảnh phòng', error });
     }
   }
 }

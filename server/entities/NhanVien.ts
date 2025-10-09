@@ -35,4 +35,7 @@ export class NhanVien {
 
   @Column({ type: "date", nullable: true })
   ngayNghi!: Date;
+
+  @Column({ nullable: true })
+  hinhAnh?: string;
 }

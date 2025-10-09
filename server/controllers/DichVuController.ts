@@ -61,5 +61,32 @@ export class DichVuController {
       res.status(500).json({ message: 'Lỗi khi xóa dịch vụ', error });
     }
   }
+
+  static async updateImage(req: Request, res: Response) {
+    try {
+      const dichVuId = req.params.id;
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: 'Image URL is required' });
+      }
+
+      const dichVu = await dichVuRepository.findOneBy({ maDichVu: dichVuId });
+      if (!dichVu) {
+        return res.status(404).json({ message: 'Không tìm thấy dịch vụ' });
+      }
+
+      dichVu.hinhAnh = imageUrl;
+      const result = await dichVuRepository.save(dichVu);
+      
+      res.json({ 
+        success: true, 
+        message: 'Service image updated successfully',
+        dichVu: result 
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Lỗi khi cập nhật hình ảnh dịch vụ', error });
+    }
+  }
 }
 

@@ -15,118 +15,34 @@ import {
   UserPlus,
   Calendar,
   DollarSign,
-  Star
+  Star,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 
 import Style from "../../styles/usersmanagement.module.css";
+import { useApi } from "../../../hooks/useApi";
+import { usersApi, khachHangApi } from "../../../lib/api";
+import { ApiUser, ApiCustomer } from "../../../types/api";
 
-interface User {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  city: string;
-  registrationDate: string;
-  lastLogin: string;
-  totalBookings: number;
-  totalSpent: number;
-  status: 'active' | 'inactive' | 'banned';
-  averageRating: number;
-}
+// Using ApiUser and ApiCustomer types from types/api.ts
 
 const UsersManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState<'users' | 'customers'>('users');
 
-  // Mock data - trong thực tế sẽ fetch từ API
-  const [users] = useState<User[]>([
-    {
-      id: 1,
-      firstName: "Nguyễn",
-      lastName: "Văn A",
-      email: "nguyenvana@email.com",
-      phone: "0987654321",
-      city: "TP. Hồ Chí Minh",
-      registrationDate: "2024-01-15",
-      lastLogin: "2024-12-25",
-      totalBookings: 5,
-      totalSpent: 8500000,
-      status: "active",
-      averageRating: 4.8
-    },
-    {
-      id: 2,
-      firstName: "Trần",
-      lastName: "Thị B",
-      email: "tranthib@email.com",
-      phone: "0976543210",
-      city: "Hà Nội",
-      registrationDate: "2024-02-20",
-      lastLogin: "2024-12-20",
-      totalBookings: 3,
-      totalSpent: 4200000,
-      status: "active",
-      averageRating: 4.5
-    },
-    {
-      id: 3,
-      firstName: "Lê",
-      lastName: "Văn C",
-      email: "levanc@email.com",
-      phone: "0965432109",
-      city: "Đà Nẵng",
-      registrationDate: "2024-03-10",
-      lastLogin: "2024-12-15",
-      totalBookings: 2,
-      totalSpent: 3100000,
-      status: "active",
-      averageRating: 4.2
-    },
-    {
-      id: 4,
-      firstName: "Phạm",
-      lastName: "Thị D",
-      email: "phamthid@email.com",
-      phone: "0954321098",
-      city: "Đà Lạt",
-      registrationDate: "2024-04-05",
-      lastLogin: "2024-11-30",
-      totalBookings: 1,
-      totalSpent: 1600000,
-      status: "inactive",
-      averageRating: 4.0
-    },
-    {
-      id: 5,
-      firstName: "Hoàng",
-      lastName: "Văn E",
-      email: "hoangvane@email.com",
-      phone: "0943210987",
-      city: "Nha Trang",
-      registrationDate: "2024-05-12",
-      lastLogin: "2024-10-15",
-      totalBookings: 0,
-      totalSpent: 0,
-      status: "inactive",
-      averageRating: 0
-    },
-    {
-      id: 6,
-      firstName: "Vũ",
-      lastName: "Thị F",
-      email: "vuthif@email.com",
-      phone: "0932109876",
-      city: "Hội An",
-      registrationDate: "2024-06-18",
-      lastLogin: "2024-09-20",
-      totalBookings: 1,
-      totalSpent: 1200000,
-      status: "banned",
-      averageRating: 2.0
-    }
-  ]);
+  // Fetch data from API
+  const { data: users = [], loading: usersLoading, error: usersError, refetch: refetchUsers } = useApi<ApiUser[]>(
+    () => usersApi.getAll(),
+    []
+  );
+
+  const { data: customers = [], loading: customersLoading, error: customersError, refetch: refetchCustomers } = useApi<ApiCustomer[]>(
+    () => khachHangApi.getAll(),
+    []
+  );
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -153,16 +69,50 @@ const UsersManagementPage = () => {
     );
   };
 
-  const filteredUsers = users.filter(user => {
-    const fullName = `${user.firstName} ${user.lastName}`;
-    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  // Combine users and customers for unified display
+  const allUsers = [
+    ...(users || []).map(user => ({
+      ...user,
+      id: user.id.toString(),
+      name: user.taiKhoan,
+      email: user.email,
+      phone: 'N/A', // ApiUser doesn't have phone
+      city: 'N/A', // ApiUser doesn't have city
+      registrationDate: user.ngayTao,
+      lastLogin: user.lanDangNhapCuoi || 'N/A',
+      status: user.trangThai,
+      type: 'user' as const,
+      totalBookings: 0, // Placeholder
+      totalSpent: 0, // Placeholder
+      averageRating: 0 // Placeholder
+    })),
+    ...(customers || []).map(customer => ({
+      ...customer,
+      id: customer.maKhachHang,
+      name: customer.tenKhachHang,
+      email: customer.email,
+      phone: customer.soDienThoai,
+      city: customer.diaChi || 'N/A',
+      registrationDate: customer.ngayTao || 'N/A',
+      lastLogin: 'N/A',
+      status: 'active' as const,
+      type: 'customer' as const,
+      totalBookings: 0, // Placeholder
+      totalSpent: 0, // Placeholder
+      averageRating: 0 // Placeholder
+    }))
+  ];
+
+  const filteredUsers = allUsers.filter(user => {
+    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.phone.includes(searchTerm);
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesTab = activeTab === 'users' ? user.type === 'user' : user.type === 'customer';
+    return matchesSearch && matchesStatus && matchesTab;
   });
 
-  const handleSelectUser = (userId: number) => {
+  const handleSelectUser = (userId: string) => {
     setSelectedUsers(prev => 
       prev.includes(userId) 
         ? prev.filter(id => id !== userId)
@@ -178,6 +128,37 @@ const UsersManagementPage = () => {
     }
   };
 
+  // Loading and error states
+  const isLoading = usersLoading || customersLoading;
+  const hasError = usersError || customersError;
+
+  if (isLoading) {
+    return (
+      <div className={Style.usersManagement}>
+        <div className={Style.loadingContainer}>
+          <RefreshCw className={Style.loadingIcon} />
+          <p>Đang tải dữ liệu người dùng...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className={Style.usersManagement}>
+        <div className={Style.errorContainer}>
+          <AlertCircle className={Style.errorIcon} />
+          <h3>Lỗi tải dữ liệu</h3>
+          <p>{usersError || customersError}</p>
+          <button onClick={() => { refetchUsers(); refetchCustomers(); }} className={Style.retryButton}>
+            <RefreshCw className="w-4 h-4" />
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={Style.usersManagement}>
       {/* Header */}
@@ -185,7 +166,7 @@ const UsersManagementPage = () => {
         <div className={Style.headerContent}>
           <div className={Style.headerInfo}>
             <h1>Quản lý người dùng</h1>
-            <p>Quản lý thông tin và hoạt động của khách hàng</p>
+            <p>Quản lý thông tin và hoạt động của người dùng và khách hàng</p>
           </div>
           
           <div className={Style.headerActions}>
@@ -199,6 +180,24 @@ const UsersManagementPage = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className={Style.tabNavigation}>
+        <button
+          className={`${Style.tabButton} ${activeTab === 'users' ? Style.tabButtonActive : ''}`}
+          onClick={() => setActiveTab('users')}
+        >
+          <Users className="w-4 h-4" />
+          <span>Người dùng hệ thống ({(users || []).length})</span>
+        </button>
+        <button
+          className={`${Style.tabButton} ${activeTab === 'customers' ? Style.tabButtonActive : ''}`}
+          onClick={() => setActiveTab('customers')}
+        >
+          <Users className="w-4 h-4" />
+          <span>Khách hàng ({(customers || []).length})</span>
+        </button>
       </div>
 
       {/* Filters */}
@@ -240,7 +239,7 @@ const UsersManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {users.length}
+              {allUsers.length}
             </div>
             <div className={Style.statLabel}>
               Tổng người dùng
@@ -251,7 +250,7 @@ const UsersManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {users.filter(u => u.status === 'active').length}
+              {allUsers.filter(u => u.status === 'active').length}
             </div>
             <div className={Style.statLabel}>
               Đang hoạt động
@@ -262,7 +261,7 @@ const UsersManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {users.reduce((sum, u) => sum + u.totalBookings, 0)}
+              {allUsers.reduce((sum, u) => sum + u.totalBookings, 0)}
             </div>
             <div className={Style.statLabel}>
               Tổng booking
@@ -273,7 +272,7 @@ const UsersManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {formatPrice(users.reduce((sum, u) => sum + u.totalSpent, 0))}
+              {formatPrice(allUsers.reduce((sum, u) => sum + u.totalSpent, 0))}
             </div>
             <div className={Style.statLabel}>
               Tổng chi tiêu
@@ -337,10 +336,13 @@ const UsersManagementPage = () => {
                     <td className={Style.tableCell}>
                       <div>
                         <div className={Style.userName}>
-                          {user.firstName} {user.lastName}
+                          {user.name}
                         </div>
                         <div className={Style.userId}>
                           ID: {user.id}
+                        </div>
+                        <div className={Style.userType}>
+                          {user.type === 'user' ? 'Người dùng hệ thống' : 'Khách hàng'}
                         </div>
                       </div>
                     </td>
@@ -370,7 +372,7 @@ const UsersManagementPage = () => {
                         </div>
                         <div>
                           <span className={Style.activityLabel}>Truy cập: </span>
-                          {formatDate(user.lastLogin)}
+                          {user.lastLogin !== 'N/A' ? formatDate(user.lastLogin) : 'Chưa có'}
                         </div>
                       </div>
                     </td>

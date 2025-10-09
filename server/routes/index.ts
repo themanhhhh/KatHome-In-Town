@@ -34,6 +34,7 @@ router.get('/users/:id', UserController.getById);
 router.post('/users', UserController.create);
 router.put('/users/:id', UserController.update);
 router.delete('/users/:id', UserController.delete);
+router.put('/users/:id/avatar', UserController.updateAvatar);
 
 // CoSo routes
 router.get('/coso', CoSoController.getAll);
@@ -41,6 +42,7 @@ router.get('/coso/:id', CoSoController.getById);
 router.post('/coso', CoSoController.create);
 router.put('/coso/:id', CoSoController.update);
 router.delete('/coso/:id', CoSoController.delete);
+router.put('/coso/:id/image', CoSoController.updateImage);
 
 // HangPhong routes
 router.get('/hangphong', HangPhongController.getAll);
@@ -48,6 +50,7 @@ router.get('/hangphong/:id', HangPhongController.getById);
 router.post('/hangphong', HangPhongController.create);
 router.put('/hangphong/:id', HangPhongController.update);
 router.delete('/hangphong/:id', HangPhongController.delete);
+router.put('/hangphong/:id/image', HangPhongController.updateImage);
 
 // Phong routes
 router.get('/phong', PhongController.getAll);
@@ -56,6 +59,7 @@ router.post('/phong', PhongController.create);
 router.put('/phong/:id', PhongController.update);
 router.delete('/phong/:id', PhongController.delete);
 router.get('/availability', PhongController.searchAvailability);
+router.put('/phong/:id/image', PhongController.updateImage);
 
 // KhachHang routes
 router.get('/khachhang', KhachHangController.getAll);
@@ -70,6 +74,7 @@ router.get('/nhanvien/:id', NhanVienController.getById);
 router.post('/nhanvien', NhanVienController.create);
 router.put('/nhanvien/:id', NhanVienController.update);
 router.delete('/nhanvien/:id', NhanVienController.delete);
+router.put('/nhanvien/:id/image', NhanVienController.updateImage);
 
 // ChucVu routes
 router.get('/chucvu', ChucVuController.getAll);
@@ -84,6 +89,7 @@ router.get('/dichvu/:id', DichVuController.getById);
 router.post('/dichvu', DichVuController.create);
 router.put('/dichvu/:id', DichVuController.update);
 router.delete('/dichvu/:id', DichVuController.delete);
+router.put('/dichvu/:id/image', DichVuController.updateImage);
 
 // DonDatPhong routes
 router.get('/dondatphong', DonDatPhongController.getAll);

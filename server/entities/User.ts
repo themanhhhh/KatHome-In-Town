@@ -36,6 +36,9 @@ export class User {
   @Column({ nullable: true })
   resetPasswordExpiry?: Date;
 
+  @Column({ nullable: true })
+  avatar?: string;
+
   @CreateDateColumn()
   createdAt!: Date;
 

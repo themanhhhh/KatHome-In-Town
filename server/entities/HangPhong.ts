@@ -15,6 +15,9 @@ export class HangPhong {
   @Column({ length: 200 })
   moTa!: string;
 
+  @Column({ nullable: true })
+  hinhAnh?: string;
+
   @OneToMany(() => Phong, (phong) => phong.hangPhong)
   phong!: Phong[];
 }

@@ -64,5 +64,32 @@ export class HangPhongController {
       res.status(500).json({ message: 'Lỗi khi xóa hạng phòng', error });
     }
   }
+
+  static async updateImage(req: Request, res: Response) {
+    try {
+      const hangPhongId = req.params.id;
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: 'Image URL is required' });
+      }
+
+      const hangPhong = await hangPhongRepository.findOneBy({ maHangPhong: hangPhongId });
+      if (!hangPhong) {
+        return res.status(404).json({ message: 'Không tìm thấy hạng phòng' });
+      }
+
+      hangPhong.hinhAnh = imageUrl;
+      const result = await hangPhongRepository.save(hangPhong);
+      
+      res.json({ 
+        success: true, 
+        message: 'Room type image updated successfully',
+        hangPhong: result 
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Lỗi khi cập nhật hình ảnh hạng phòng', error });
+    }
+  }
 }
 

@@ -15,4 +15,7 @@ export class Phong {
 
   @Column({ length: 200 })
   moTa! : string;
+
+  @Column({ nullable: true })
+  hinhAnh?: string;
 }

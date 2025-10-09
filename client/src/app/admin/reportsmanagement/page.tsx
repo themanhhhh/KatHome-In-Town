@@ -16,10 +16,14 @@ import {
   PieChart,
   FileText,
   Eye,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from "lucide-react";
 
 import Style from "../../styles/reportsmanagement.module.css";
+import { useApi } from "../../../hooks/useApi";
+import { donDatPhongApi, phongApi, khachHangApi, usersApi } from "../../../lib/api";
+import { ApiBooking, ApiRoom, ApiCustomer, ApiUser } from "../../../types/api";
 
 interface ReportData {
   id: number;
@@ -43,95 +47,156 @@ const ReportsManagementPage = () => {
   const [periodFilter, setPeriodFilter] = useState("all");
   const [selectedReports, setSelectedReports] = useState<number[]>([]);
 
-  // Mock data - trong thực tế sẽ fetch từ API
-  const [reports] = useState<ReportData[]>([
+  // Fetch data from API
+  const { data: bookings = [], loading: bookingsLoading, error: bookingsError } = useApi<ApiBooking[]>(
+    () => donDatPhongApi.getAll(),
+    []
+  );
+
+  const { data: rooms = [], loading: roomsLoading, error: roomsError } = useApi<ApiRoom[]>(
+    () => phongApi.getAll(),
+    []
+  );
+
+  const { data: customers = [], loading: customersLoading, error: customersError } = useApi<ApiCustomer[]>(
+    () => khachHangApi.getAll(),
+    []
+  );
+
+  const { data: users = [], loading: usersLoading, error: usersError } = useApi<ApiUser[]>(
+    () => usersApi.getAll(),
+    []
+  );
+
+  // Calculate statistics from real data
+  const totalRevenue = bookings.reduce((sum, booking) => sum + booking.tongTien, 0);
+  const totalBookings = bookings.length;
+  const totalRooms = rooms.length;
+  const totalCustomers = customers.length;
+  const totalUsers = users.length;
+  const occupiedRooms = rooms.filter(room => room.trangThai === 'occupied').length;
+  const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0;
+
+  // Generate reports based on real data
+  const reports: ReportData[] = [
     {
       id: 1,
-      title: "Báo cáo doanh thu tháng 12/2024",
+      title: "Báo cáo doanh thu tháng hiện tại",
       type: "revenue",
       period: "monthly",
-      createdDate: "2024-12-25",
+      createdDate: new Date().toISOString().split('T')[0],
       status: "completed",
       size: "2.3 MB",
-      description: "Tổng hợp doanh thu, chi phí và lợi nhuận tháng 12",
+      description: "Tổng hợp doanh thu từ tất cả booking",
       data: {
-        value: 485200000,
+        value: totalRevenue,
         change: 12.5,
         trend: "up"
       }
     },
     {
       id: 2,
-      title: "Thống kê đặt phòng quý 4/2024",
+      title: "Thống kê đặt phòng",
       type: "bookings",
-      period: "quarterly",
-      createdDate: "2024-12-20",
+      period: "monthly",
+      createdDate: new Date().toISOString().split('T')[0],
       status: "completed",
       size: "1.8 MB",
-      description: "Phân tích xu hướng đặt phòng và tỷ lệ hủy",
+      description: "Phân tích xu hướng đặt phòng",
       data: {
-        value: 342,
+        value: totalBookings,
         change: 8.3,
         trend: "up"
       }
     },
     {
       id: 3,
-      title: "Báo cáo tỷ lệ lấp đầy năm 2024",
+      title: "Báo cáo tỷ lệ lấp đầy",
       type: "occupancy",
-      period: "yearly",
-      createdDate: "2024-12-15",
-      status: "processing",
-      size: "Đang xử lý...",
-      description: "Phân tích tỷ lệ lấp đầy theo từng tháng và loại phòng",
+      period: "monthly",
+      createdDate: new Date().toISOString().split('T')[0],
+      status: "completed",
+      size: "1.5 MB",
+      description: "Phân tích tỷ lệ lấp đầy phòng",
       data: {
-        value: 78.5,
+        value: occupancyRate,
         change: -2.1,
-        trend: "down"
+        trend: occupancyRate > 70 ? "up" : "down"
       }
     },
     {
       id: 4,
-      title: "Phân tích khách hàng VIP",
+      title: "Phân tích khách hàng",
       type: "customer",
       period: "monthly",
-      createdDate: "2024-12-10",
+      createdDate: new Date().toISOString().split('T')[0],
       status: "completed",
       size: "1.2 MB",
-      description: "Danh sách và hành vi khách hàng có giá trị cao",
+      description: "Thống kê khách hàng và người dùng",
       data: {
-        value: 45,
+        value: totalCustomers,
         change: 15.2,
         trend: "up"
       }
     },
     {
       id: 5,
-      title: "Hiệu suất phòng theo loại",
+      title: "Hiệu suất phòng",
       type: "rooms",
-      period: "quarterly",
-      createdDate: "2024-12-05",
-      status: "failed",
-      size: "0 MB",
-      description: "So sánh doanh thu và tỷ lệ đặt phòng theo từng loại",
+      period: "monthly",
+      createdDate: new Date().toISOString().split('T')[0],
+      status: "completed",
+      size: "1.0 MB",
+      description: "Thống kê phòng và tỷ lệ sử dụng",
       data: {
-        value: 0,
-        change: 0,
-        trend: "stable"
+        value: totalRooms,
+        change: 5.0,
+        trend: "up"
       }
     }
-  ]);
+  ];
 
   // Quick stats data
   const quickStats = {
     totalReports: reports.length,
     completedReports: reports.filter(r => r.status === 'completed').length,
     processingReports: reports.filter(r => r.status === 'processing').length,
-    totalRevenue: 485200000,
-    totalBookings: 342,
-    occupancyRate: 78.5,
+    totalRevenue: totalRevenue,
+    totalBookings: totalBookings,
+    occupancyRate: occupancyRate,
     customerSatisfaction: 4.8
   };
+
+  // Loading and error states
+  const isLoading = bookingsLoading || roomsLoading || customersLoading || usersLoading;
+  const hasError = bookingsError || roomsError || customersError || usersError;
+
+  if (isLoading) {
+    return (
+      <div className={Style.reportsManagement}>
+        <div className={Style.loadingContainer}>
+          <RefreshCw className={Style.loadingIcon} />
+          <p>Đang tải dữ liệu báo cáo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className={Style.reportsManagement}>
+        <div className={Style.errorContainer}>
+          <AlertCircle className={Style.errorIcon} />
+          <h3>Lỗi tải dữ liệu</h3>
+          <p>{bookingsError || roomsError || customersError || usersError}</p>
+          <button onClick={() => window.location.reload()} className={Style.retryButton}>
+            <RefreshCw className="w-4 h-4" />
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Filter functions
   const filteredReports = reports.filter(report => {

@@ -7,70 +7,111 @@ import {
   Star,
   Phone,
   CheckCircle,
-  XCircle
+  XCircle,
+  AlertCircle,
+  RefreshCw
 } from "lucide-react";
 
 import Style from "../styles/adminpage.module.css";
+import { useApi } from "../../hooks/useApi";
+import { donDatPhongApi, phongApi, khachHangApi, usersApi } from "../../lib/api";
+import { ApiBooking, ApiRoom, ApiCustomer, ApiUser } from "../../types/api";
 
 const AdminPage = () => {
-  // Mock data - trong thực tế sẽ fetch từ API
+  // Fetch data from API
+  const { data: bookings = [], loading: bookingsLoading, error: bookingsError } = useApi<ApiBooking[]>(
+    () => donDatPhongApi.getAll(),
+    []
+  );
+
+  const { data: rooms = [], loading: roomsLoading, error: roomsError } = useApi<ApiRoom[]>(
+    () => phongApi.getAll(),
+    []
+  );
+
+  const { data: customers = [], loading: customersLoading, error: customersError } = useApi<ApiCustomer[]>(
+    () => khachHangApi.getAll(),
+    []
+  );
+
+  const { data: users = [], loading: usersLoading, error: usersError } = useApi<ApiUser[]>(
+    () => usersApi.getAll(),
+    []
+  );
+
+  // Calculate statistics from real data
+  const totalRevenue = bookings.reduce((sum, booking) => sum + booking.tongTien, 0);
+  const totalBookings = bookings.length;
+  const totalUsers = users.length;
+  const totalCustomers = customers.length;
+  const occupiedRooms = rooms.filter(room => room.trangThai === 'occupied').length;
+  const availableRooms = rooms.filter(room => room.trangThai === 'available').length;
+  const occupancyRate = rooms.length > 0 ? (occupiedRooms / rooms.length) * 100 : 0;
+
   const stats = {
-    totalBookings: 156,
-    totalRevenue: 485200000,
-    totalUsers: 89,
-    occupancyRate: 78,
+    totalBookings,
+    totalRevenue,
+    totalUsers: totalUsers + totalCustomers,
+    occupancyRate: Math.round(occupancyRate),
     monthlyGrowth: 12.5,
     averageRating: 4.8
   };
 
-  const recentBookings = [
-    {
-      id: "BK1735123456",
-      guestName: "Nguyễn Văn A",
-      room: "Phòng Deluxe với Ban công",
-      checkIn: "2024-12-28",
-      checkOut: "2024-12-30",
-      total: 2400000,
-      status: "confirmed"
-    },
-    {
-      id: "BK1735123457",
-      guestName: "Trần Thị B",
-      room: "Phòng Superior",
-      checkIn: "2024-12-29",
-      checkOut: "2024-12-31",
-      total: 1800000,
-      status: "pending"
-    },
-    {
-      id: "BK1735123458",
-      guestName: "Lê Văn C",
-      room: "Phòng Standard",
-      checkIn: "2024-12-30",
-      checkOut: "2025-01-02",
-      total: 2100000,
-      status: "confirmed"
-    }
-  ];
+  // Get recent bookings (last 3)
+  const recentBookings = bookings.slice(0, 3).map(booking => ({
+    id: booking.maDonDatPhong,
+    guestName: booking.khachHang?.tenKhachHang || 'N/A',
+    room: booking.phong?.moTa || 'N/A',
+    checkIn: booking.ngayNhan,
+    checkOut: booking.ngayTra,
+    total: booking.tongTien,
+    status: booking.trangThai
+  }));
 
-  const upcomingCheckIns = [
-    {
-      id: 1,
-      guestName: "Phạm Thị D",
-      room: "Phòng Deluxe",
-      checkIn: "2024-12-28 14:00",
-      phone: "0987654321",
-      guests: 2
-    },
-    {
-      id: 2,
-      guestName: "Hoàng Văn E",
-      room: "Phòng Superior",
-      checkIn: "2024-12-28 16:30",
-      phone: "0976543210",
-      guests: 4
-    }
-  ];
+  // Get upcoming check-ins (today's check-ins)
+  const today = new Date().toISOString().split('T')[0];
+  const upcomingCheckIns = bookings
+    .filter(booking => booking.ngayNhan === today)
+    .slice(0, 2)
+    .map(booking => ({
+      id: booking.maDonDatPhong,
+      guestName: booking.khachHang?.tenKhachHang || 'N/A',
+      room: booking.phong?.moTa || 'N/A',
+      checkIn: `${booking.ngayNhan} 14:00`,
+      phone: booking.khachHang?.soDienThoai || 'N/A',
+      guests: booking.soLuongKhach
+    }));
+
+  // Loading and error states
+  const isLoading = bookingsLoading || roomsLoading || customersLoading || usersLoading;
+  const hasError = bookingsError || roomsError || customersError || usersError;
+
+  if (isLoading) {
+    return (
+      <div className={Style.adminpage}>
+        <div className={Style.loadingContainer}>
+          <RefreshCw className={Style.loadingIcon} />
+          <p>Đang tải dữ liệu dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className={Style.adminpage}>
+        <div className={Style.errorContainer}>
+          <AlertCircle className={Style.errorIcon} />
+          <h3>Lỗi tải dữ liệu</h3>
+          <p>{bookingsError || roomsError || customersError || usersError}</p>
+          <button onClick={() => window.location.reload()} className={Style.retryButton}>
+            <RefreshCw className="w-4 h-4" />
+            Thử lại
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -110,8 +151,8 @@ const AdminPage = () => {
                 <CheckCircle className="w-5 h-5 text-green-600" />
               </div>
               <div style={{ flex: 1 }}>
-                <div className={Style.statNumber}>15</div>
-                <div className={Style.statLabel}>Check In</div>
+                <div className={Style.statNumber}>{upcomingCheckIns.length}</div>
+                <div className={Style.statLabel}>Check In hôm nay</div>
               </div>
             </div>
           </div>
@@ -122,8 +163,8 @@ const AdminPage = () => {
                 <XCircle className="w-5 h-5 text-red-600" />
               </div>
               <div style={{ flex: 1 }}>
-                <div className={Style.statNumber}>7</div>
-                <div className={Style.statLabel}>Check Out</div>
+                <div className={Style.statNumber}>{occupiedRooms}</div>
+                <div className={Style.statLabel}>Đã thuê</div>
               </div>
             </div>
           </div>
@@ -134,7 +175,7 @@ const AdminPage = () => {
                 <Bed className="w-5 h-5 text-purple-600" />
               </div>
               <div style={{ flex: 1 }}>
-                <div className={Style.statNumber}>5</div>
+                <div className={Style.statNumber}>{availableRooms}</div>
                 <div className={Style.statLabel}>Có sẵn</div>
               </div>
             </div>
@@ -146,8 +187,8 @@ const AdminPage = () => {
                 <Calendar className="w-5 h-5 text-orange-600" />
               </div>
               <div style={{ flex: 1 }}>
-                <div className={Style.statNumber}>23</div>
-                <div className={Style.statLabel}>Đã đặt</div>
+                <div className={Style.statNumber}>{totalBookings}</div>
+                <div className={Style.statLabel}>Tổng booking</div>
               </div>
             </div>
           </div>

@@ -10,7 +10,7 @@ export class PhongController {
   static async getAll(req: Request, res: Response) {
     try {
       const phongs = await phongRepository.find({
-        relations: ['hangPhong', 'coSo']
+        relations: ['hangPhong', 'hangPhong.donGia', 'coSo']
       });
       res.json(phongs);
     } catch (error) {
@@ -21,7 +21,7 @@ export class PhongController {
     try {
       const phong = await phongRepository.findOne({
         where: { maPhong: req.params.id },
-        relations: ['hangPhong', 'coSo']
+        relations: ['hangPhong', 'hangPhong.donGia', 'coSo']
       });
       if (!phong) {
         return res.status(404).json({ message: 'Không tìm thấy phòng' });
@@ -103,6 +103,7 @@ export class PhongController {
       const phongQB = AppDataSource.getRepository(Phong)
         .createQueryBuilder('p')
         .leftJoinAndSelect('p.hangPhong', 'hp')
+        .leftJoinAndSelect('hp.donGia', 'dg')
         .leftJoinAndSelect('p.coSo', 'cs');
       if (coSoId) {
         phongQB.where('cs.id = :coSoId', { coSoId });

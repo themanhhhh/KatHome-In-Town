@@ -24,6 +24,8 @@ import Style from "../../styles/usersmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
 import { usersApi, khachHangApi } from "../../../lib/api";
 import { ApiUser, ApiCustomer } from "../../../types/api";
+import LoadingSpinner from "../../components/loading-spinner";
+import { UserForm } from "../../components/user-form";
 
 // Using ApiUser and ApiCustomer types from types/api.ts
 
@@ -31,6 +33,8 @@ const UsersManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [editingUser, setEditingUser] = useState<ApiUser | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'customers'>('users');
 
   // Fetch data from API
@@ -74,8 +78,8 @@ const UsersManagementPage = () => {
     ...(users || []).map(user => ({
       ...user,
       id: user.id.toString(),
-      name: user.taiKhoan,
-      email: user.email,
+      name: user.taiKhoan || 'N/A',
+      email: user.email || 'N/A',
       phone: 'N/A', // ApiUser doesn't have phone
       city: 'N/A', // ApiUser doesn't have city
       registrationDate: user.ngayTao,
@@ -104,20 +108,62 @@ const UsersManagementPage = () => {
   ];
 
   const filteredUsers = allUsers.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.phone.includes(searchTerm);
+    const matchesSearch = (user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (user.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (user.phone || '').includes(searchTerm);
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
     const matchesTab = activeTab === 'users' ? user.type === 'user' : user.type === 'customer';
     return matchesSearch && matchesStatus && matchesTab;
   });
 
   const handleSelectUser = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
+    setSelectedUsers(prev =>
+      prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
     );
+  };
+
+  const handleCreateUser = () => {
+    setEditingUser(null);
+    setShowUserForm(true);
+  };
+
+  const handleEditUser = (user: ApiUser) => {
+    setEditingUser(user);
+    setShowUserForm(true);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
+      try {
+        await usersApi.delete(userId);
+        await refetchUsers();
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Có lỗi xảy ra khi xóa người dùng');
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedUsers.length === 0) return;
+    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedUsers.length} người dùng đã chọn?`)) {
+      try {
+        await Promise.all(selectedUsers.map(id => usersApi.delete(id)));
+        await refetchUsers();
+        setSelectedUsers([]);
+      } catch (error) {
+        console.error('Error deleting users:', error);
+        alert('Có lỗi xảy ra khi xóa người dùng');
+      }
+    }
+  };
+
+  const handleFormSuccess = () => {
+    refetchUsers();
+    setShowUserForm(false);
+    setEditingUser(null);
   };
 
   const handleSelectAll = () => {
@@ -133,14 +179,7 @@ const UsersManagementPage = () => {
   const hasError = usersError || customersError;
 
   if (isLoading) {
-    return (
-      <div className={Style.usersManagement}>
-        <div className={Style.loadingContainer}>
-          <RefreshCw className={Style.loadingIcon} />
-          <p>Đang tải dữ liệu người dùng...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Đang tải ..." />;
   }
 
   if (hasError) {
@@ -174,7 +213,7 @@ const UsersManagementPage = () => {
               <Download className="w-4 h-4" />
               <span>Xuất Excel</span>
             </button>
-            <button className={Style.addButton}>
+            <button className={Style.addButton} onClick={handleCreateUser}>
               <UserPlus className="w-4 h-4" />
               <span>Thêm người dùng</span>
             </button>
@@ -293,8 +332,12 @@ const UsersManagementPage = () => {
                 <span className={Style.bulkText}>
                   Đã chọn {selectedUsers.length} người dùng
                 </span>
-                <button className={Style.bulkButton}>
-                  Thao tác hàng loạt
+                <button 
+                  className={`${Style.bulkButton} ${Style.bulkButtonDanger}`}
+                  onClick={handleBulkDelete}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Xóa đã chọn
                 </button>
               </div>
             )}
@@ -323,8 +366,8 @@ const UsersManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className={Style.tableRow}>
+                {filteredUsers.map((user, index) => (
+                  <tr key={user.id || `user-${index}`} className={Style.tableRow}>
                     <td className={Style.tableCell}>
                       <input
                         type="checkbox"
@@ -336,7 +379,7 @@ const UsersManagementPage = () => {
                     <td className={Style.tableCell}>
                       <div>
                         <div className={Style.userName}>
-                          {user.name}
+                          {user.name || 'N/A'}
                         </div>
                         <div className={Style.userId}>
                           ID: {user.id}
@@ -350,11 +393,11 @@ const UsersManagementPage = () => {
                       <div className={Style.contactInfo}>
                         <div className={Style.contactItem}>
                           <Mail className={Style.contactIcon} />
-                          <span>{user.email}</span>
+                          <span>{user.email || 'N/A'}</span>
                         </div>
                         <div className={Style.contactItem}>
                           <Phone className={Style.contactIcon} />
-                          <span>{user.phone}</span>
+                          <span>{user.phone || 'N/A'}</span>
                         </div>
                       </div>
                     </td>
@@ -408,12 +451,25 @@ const UsersManagementPage = () => {
                         <button className={Style.actionButton}>
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className={Style.actionButton}>
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button className={`${Style.actionButton} ${Style.actionButtonDanger}`}>
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {user.type === 'user' && (
+                          <>
+                            <button 
+                              className={Style.actionButton}
+                              onClick={() => {
+                                const apiUser = (users || []).find(u => u.id.toString() === user.id);
+                                if (apiUser) handleEditUser(apiUser);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              className={`${Style.actionButton} ${Style.actionButtonDanger}`}
+                              onClick={() => handleDeleteUser(user.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -430,6 +486,18 @@ const UsersManagementPage = () => {
           </div>
         </div>
       </div>
+
+      {/* User Form Modal */}
+      {showUserForm && (
+        <UserForm
+          user={editingUser}
+          onClose={() => {
+            setShowUserForm(false);
+            setEditingUser(null);
+          }}
+          onSuccess={handleFormSuccess}
+        />
+      )}
     </div>
   );
 };

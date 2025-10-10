@@ -8,6 +8,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   
   // Auth actions
   register: (data: RegisterData) => Promise<AuthResponse>;
@@ -123,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     isLoading,
     isAuthenticated: !!token && !!user,
+    isAdmin: !!user && user.vaiTro === 'admin',
     register,
     login,
     verifyEmail,

@@ -207,11 +207,28 @@ export const phongApi = {
 export interface AvailabilityRoom {
   maPhong: string;
   moTa: string;
+  hinhAnh?: string;
   hangPhong?: {
+    maHangPhong: string;
     tenHangPhong: string;
     sucChua: number;
+    moTa?: string;
+    hinhAnh?: string;
+    donGia?: DonGia[];
   };
-  coSo?: unknown;
+  coSo?: {
+    maCoSo: string;
+    tenCoSo: string;
+    diaChi: string;
+    sdt: string;
+    hinhAnh?: string;
+  };
+}
+
+export interface DonGia {
+  maHangPhong: string;
+  donViTinh: string;
+  donGia: number;
 }
 
 export const availabilityApi = {
@@ -297,7 +314,9 @@ export const donDatPhongApi = {
 
 // Đơn giá
 export const donGiaApi = {
-  getAll: () => api.get('dongia'),
+  getAll: () => api.get<DonGia[]>('dongia'),
+  getById: (maHangPhong: string, donViTinh: string) =>
+    api.get<DonGia>(`dongia/${maHangPhong}/${donViTinh}`),
   create: (data: unknown) => api.post('dongia', data),
 };
 

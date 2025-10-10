@@ -38,6 +38,7 @@ export function AIChat({ className = '' }: AIChatProps) {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isUsingChatGPT, setIsUsingChatGPT] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,65 +61,93 @@ export function AIChat({ className = '' }: AIChatProps) {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue.trim();
     setInputValue('');
     setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      if (isUsingChatGPT) {
+        // Call ChatGPT API
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: currentInput,
+            conversationHistory: messages.slice(-10) // Send last 10 messages for context
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get AI response');
+        }
+
+        const data = await response.json();
+        
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.message || 'Xin lỗi, tôi không thể trả lời câu hỏi này.',
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, aiResponse]);
+      } else {
+        // Use local response
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: generateAIResponse(currentInput),
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, aiResponse]);
+      }
+    } catch (error) {
+      console.error('Chat API error:', error);
+      setIsUsingChatGPT(false);
+      
+      // Fallback to local response if API fails
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateAIResponse(inputValue.trim()),
+        text: generateAIResponse(currentInput),
         isUser: false,
         timestamp: new Date()
       };
+      
       setMessages(prev => [...prev, aiResponse]);
+    } finally {
       setIsLoading(false);
-    }, 1000 + Math.random() * 1000);
+    }
   };
 
   const generateAIResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
+    // Basic fallback responses when API is unavailable
     if (input.includes('phòng') || input.includes('room')) {
-      return 'Chúng tôi có nhiều loại phòng khác nhau: Standard, Deluxe, VIP, Suite. Mỗi phòng đều có đầy đủ tiện nghi hiện đại. Bạn muốn tìm hiểu về loại phòng nào?';
+      return 'Chúng tôi có nhiều loại phòng khác nhau với đầy đủ tiện nghi hiện đại. Bạn có thể tìm kiếm phòng theo nhu cầu của mình.';
     }
     
     if (input.includes('giá') || input.includes('price') || input.includes('cost')) {
-      return 'Giá phòng dao động từ 500,000đ - 1,500,000đ/đêm tùy theo loại phòng và thời gian. Bạn có thể xem chi tiết giá trong trang tìm kiếm hoặc chi tiết phòng.';
+      return 'Giá phòng được cập nhật theo thời gian thực. Bạn có thể xem chi tiết giá trong trang tìm kiếm hoặc chi tiết phòng.';
     }
     
     if (input.includes('đặt phòng') || input.includes('book') || input.includes('reservation')) {
-      return 'Để đặt phòng, bạn có thể: 1) Tìm kiếm phòng theo ngày và số khách, 2) Chọn phòng phù hợp, 3) Điền thông tin và thanh toán. Tôi có thể hướng dẫn bạn từng bước!';
+      return 'Để đặt phòng, bạn có thể tìm kiếm phòng theo ngày và số khách, sau đó chọn phòng phù hợp và điền thông tin.';
     }
     
-    if (input.includes('tiện nghi') || input.includes('amenities')) {
-      return 'Các phòng đều có: WiFi miễn phí, TV, máy lạnh, tủ lạnh mini, phòng tắm riêng, đồ vệ sinh cá nhân, và nhiều tiện nghi khác. Một số phòng còn có ban công và view đẹp!';
-    }
-    
-    if (input.includes('vị trí') || input.includes('location') || input.includes('địa chỉ')) {
-      return 'KatHome In Town có nhiều cơ sở tại Hà Nội: Tây Hồ, Ba Đình, Hoàn Kiếm, Thanh Xuân, Đống Đa, Cầu Giấy. Mỗi cơ sở đều có vị trí thuận tiện gần trung tâm.';
-    }
-    
-    if (input.includes('hủy') || input.includes('cancel')) {
-      return 'Bạn có thể hủy đặt phòng miễn phí trước 24 tiếng. Sau đó sẽ có phí hủy theo chính sách. Bạn cần hỗ trợ hủy đặt phòng nào không?';
-    }
-    
-    if (input.includes('thanh toán') || input.includes('payment')) {
-      return 'Chúng tôi chấp nhận thanh toán bằng: Thẻ tín dụng, chuyển khoản ngân hàng, hoặc thanh toán tại quầy. Bạn có thể thanh toán khi nhận phòng.';
+    if (input.includes('liên hệ') || input.includes('contact') || input.includes('phone')) {
+      return 'Bạn có thể liên hệ với chúng tôi qua hotline hoặc email. Thông tin liên hệ được hiển thị trên trang chủ.';
     }
     
     if (input.includes('cảm ơn') || input.includes('thank')) {
       return 'Không có gì! Tôi rất vui được giúp đỡ bạn. Nếu có thêm câu hỏi gì, đừng ngại hỏi nhé! 😊';
     }
     
-    // Default response
-    const responses = [
-      'Tôi hiểu bạn đang hỏi về: "' + userInput + '". Bạn có thể hỏi tôi về phòng, giá, đặt phòng, tiện nghi, hoặc bất kỳ thông tin nào về KatHome In Town.',
-      'Để tôi giúp bạn tốt hơn, bạn có thể hỏi cụ thể về: các loại phòng, giá cả, cách đặt phòng, tiện nghi, hoặc vị trí các cơ sở.',
-      'Tôi có thể hỗ trợ bạn về thông tin phòng, đặt phòng, giá cả, tiện nghi, và các dịch vụ của KatHome In Town. Bạn muốn biết gì cụ thể?'
-    ];
-    
-    return responses[Math.floor(Math.random() * responses.length)];
+    // Default response when API is unavailable
+    return 'Xin chào! Tôi là trợ lý ảo của KatHome In Town. Hiện tại hệ thống AI đang tạm thời không khả dụng. Bạn có thể liên hệ trực tiếp với chúng tôi để được hỗ trợ.';
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -166,6 +195,11 @@ export function AIChat({ className = '' }: AIChatProps) {
               <div className="flex items-center space-x-2">
                 <Bot className="w-5 h-5 text-white" />
                 <span className="text-white font-medium">AI Assistant</span>
+                {isUsingChatGPT && (
+                  <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                    ChatGPT
+                  </span>
+                )}
               </div>
               <div className="flex items-center space-x-1">
                 <Button
@@ -256,6 +290,26 @@ export function AIChat({ className = '' }: AIChatProps) {
 
                 {/* Input */}
                 <div className="p-3 border-t" style={{ borderColor: '#F8E8EC' }}>
+                  {/* Toggle ChatGPT */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-600">AI Mode:</span>
+                      <button
+                        onClick={() => setIsUsingChatGPT(!isUsingChatGPT)}
+                        className={`text-xs px-2 py-1 rounded-full transition-colors ${
+                          isUsingChatGPT 
+                            ? 'bg-green-500 text-white' 
+                            : 'bg-gray-200 text-gray-700'
+                        }`}
+                      >
+                        {isUsingChatGPT ? 'ChatGPT' : 'Local'}
+                      </button>
+                    </div>
+                    {isUsingChatGPT && (
+                      <span className="text-xs text-green-600">Powered by OpenAI</span>
+                    )}
+                  </div>
+                  
                   <div className="flex space-x-2">
                     <Input
                       ref={inputRef}

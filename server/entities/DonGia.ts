@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { HangPhong } from "./HangPhong";
 
 @Entity()
@@ -9,7 +9,8 @@ export class DonGia {
   @PrimaryColumn()
   donViTinh!: string;
 
-  @ManyToOne(() => HangPhong)
+  @ManyToOne(() => HangPhong, (hangPhong) => hangPhong.donGia, { onDelete: 'CASCADE' })
+  @JoinColumn([{ name: "maHangPhong", referencedColumnName: "maHangPhong" }])
   hangPhong!: HangPhong;
 
   @Column()

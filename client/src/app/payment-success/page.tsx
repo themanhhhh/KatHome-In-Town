@@ -10,7 +10,7 @@ export default function PaymentSuccessPage() {
   const router = useRouter();
   const [bookingData, setBookingData] = useState<{
     roomData: {
-      id: number;
+      id: string;
       name: string;
       type: string;
       price: number;

@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Button } from './button';
-import { Card } from './card';
-import { Alert, AlertDescription } from './alert';
+import Image from 'next/image';
+import { Button } from './button/button';
+import { Card } from './card/card';
+import { Alert, AlertDescription } from './alert/alert';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 
 interface ImageUploadProps {
   onImageUpload: (file: File) => Promise<void>;
   currentImageUrl?: string;
   entityType: string;
-  entityId: string;
+  entityId?: string; // Make optional since it's not used
   className?: string;
 }
 
@@ -18,7 +19,8 @@ export function ImageUpload({
   onImageUpload, 
   currentImageUrl, 
   entityType, 
-  entityId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  entityId: _entityId, // Prefix with underscore to indicate unused
   className = '' 
 }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
@@ -66,7 +68,7 @@ export function ImageUpload({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <Card className="p-6">
+      <Card className="p-6 bg-white shadow-lg border-0">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Image Upload</h3>
@@ -92,9 +94,11 @@ export function ImageUpload({
             <div className="space-y-2">
               <p className="text-sm text-gray-600">Current Image:</p>
               <div className="relative inline-block">
-                <img
+                <Image
                   src={currentImageUrl}
                   alt={`${entityType} image`}
+                  width={128}
+                  height={128}
                   className="h-32 w-32 rounded-lg object-cover border"
                 />
               </div>

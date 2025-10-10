@@ -24,6 +24,7 @@ import Style from "../../styles/reportsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
 import { donDatPhongApi, phongApi, khachHangApi, usersApi } from "../../../lib/api";
 import { ApiBooking, ApiRoom, ApiCustomer, ApiUser } from "../../../types/api";
+import LoadingSpinner from "../../components/loading-spinner";
 
 interface ReportData {
   id: number;
@@ -63,19 +64,20 @@ const ReportsManagementPage = () => {
     []
   );
 
-  const { data: users = [], loading: usersLoading, error: usersError } = useApi<ApiUser[]>(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { data: _users = [], loading: usersLoading, error: usersError } = useApi<ApiUser[]>(
     () => usersApi.getAll(),
     []
   );
 
   // Calculate statistics from real data
-  const totalRevenue = bookings.reduce((sum, booking) => sum + booking.tongTien, 0);
-  const totalBookings = bookings.length;
-  const totalRooms = rooms.length;
-  const totalCustomers = customers.length;
-  const totalUsers = users.length;
-  const occupiedRooms = rooms.filter(room => room.trangThai === 'occupied').length;
-  const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0;
+  const totalRevenue = (bookings || []).reduce((sum, booking) => sum + (booking.tongTien || 0), 0);
+  const totalBookings = (bookings || []).length;
+  const totalRooms = (rooms || []).length;
+  const totalCustomers = (customers || []).length;
+  // const totalUsers = (users || []).length; // Unused variable
+  const roomsWithHangPhong = (rooms || []).filter(room => room.hangPhong?.tenHangPhong).length;
+  const occupancyRate = totalRooms > 0 ? (roomsWithHangPhong / totalRooms) * 100 : 0;
 
   // Generate reports based on real data
   const reports: ReportData[] = [
@@ -172,14 +174,7 @@ const ReportsManagementPage = () => {
   const hasError = bookingsError || roomsError || customersError || usersError;
 
   if (isLoading) {
-    return (
-      <div className={Style.reportsManagement}>
-        <div className={Style.loadingContainer}>
-          <RefreshCw className={Style.loadingIcon} />
-          <p>Đang tải dữ liệu báo cáo...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Đang tải ..." />;
   }
 
   if (hasError) {
@@ -450,8 +445,8 @@ const ReportsManagementPage = () => {
 
         {/* Reports Cards */}
         <div className={Style.reportsGrid}>
-          {filteredReports.map((report) => (
-            <div key={report.id} className={Style.reportCard}>
+          {filteredReports.map((report, index) => (
+            <div key={report.id || `report-${index}`} className={Style.reportCard}>
               <div className={Style.reportContent}>
                 {/* Header with checkbox and type */}
                 <div className={Style.reportHeader}>

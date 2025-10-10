@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import { 
   phongApi, 
@@ -8,14 +10,14 @@ import {
   nhanVienApi 
 } from '../lib/api';
 
-interface UseCreateWithImageOptions {
-  onSuccess?: (data: any) => void;
+interface UseCreateWithImageOptions<T> {
+  onSuccess?: (data: T) => void;
   onError?: (error: Error) => void;
 }
 
 export function useCreateWithImage<T>(
   createApi: (data: unknown, imageFile?: File) => Promise<T>,
-  options?: UseCreateWithImageOptions
+  options?: UseCreateWithImageOptions<T>
 ) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../card/card";
 import { Badge } from "../badge/badge";
 import { Input } from "../input/input";
 import { Label } from "../label/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../tabs/tabs";
-import { 
+import {
   ArrowLeft,
-  Star,
   Users,
   Bed,
   Bath,
@@ -22,32 +21,35 @@ import {
   Heart,
   Share2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Shield,
 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { DonGia, phongApi, donGiaApi } from "@/lib/api";
 
-interface Room {
-  id: number;
-  name: string;
-  type: string;
-  price: number;
-  originalPrice: number;
-  images: string[];
-  maxGuests: number;
-  beds: number;
-  bathrooms: number;
-  size: number;
-  amenities: string[];
-  rating: number;
-  reviews: number;
-  description: string;
-  detailedDescription: string;
-  policies: string[];
-  location: string;
+interface PhongDetail {
+  maPhong: string;
+  moTa: string;
+  hinhAnh?: string;
+  hangPhong?: {
+    maHangPhong: string;
+    tenHangPhong: string;
+    moTa?: string;
+    sucChua?: number;
+    hinhAnh?: string;
+    donGia?: DonGia[];
+  };
+  coSo?: {
+    maCoSo: string;
+    tenCoSo: string;
+    diaChi: string;
+    sdt: string;
+    hinhAnh?: string;
+  };
 }
 
 interface RoomData {
-  id: number;
+  id: string;
   name: string;
   type: string;
   price: number;
@@ -58,7 +60,7 @@ interface RoomData {
 }
 
 interface RoomDetailProps {
-  roomId: number;
+  roomId: string;
   searchData: {
     checkIn: string;
     checkOut: string;
@@ -69,452 +71,608 @@ interface RoomDetailProps {
   onProceedToCheckout: (roomData: RoomData) => void;
 }
 
-export function RoomDetail({ roomId, searchData, onBackToSearch, onBackToHome, onProceedToCheckout }: RoomDetailProps) {
+const NIGHT_IN_MS = 1000 * 60 * 60 * 24;
+
+const formatCurrency = (value: number) => {
+  if (!value) {
+    return "Lien he";
+  }
+  return `${new Intl.NumberFormat("vi-VN").format(value)} VND`;
+};
+
+const getNightCount = (checkIn: string, checkOut: string) => {
+  if (!checkIn || !checkOut) {
+    return 1;
+  }
+  const start = new Date(checkIn);
+  const end = new Date(checkOut);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return 1;
+  }
+  const diff = end.getTime() - start.getTime();
+  if (diff <= 0) {
+    return 1;
+  }
+  return Math.ceil(diff / NIGHT_IN_MS);
+};
+
+export function RoomDetail({
+  roomId,
+  searchData,
+  onBackToSearch,
+  onBackToHome,
+  onProceedToCheckout,
+}: RoomDetailProps) {
+  const [room, setRoom] = useState<PhongDetail | null>(null);
+  const [pricing, setPricing] = useState<{ fourHour: number; overnight: number }>(
+    { fourHour: 0, overnight: 0 }
+  );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [checkIn, setCheckIn] = useState(searchData.checkIn);
   const [checkOut, setCheckOut] = useState(searchData.checkOut);
   const [guests, setGuests] = useState(searchData.guests);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
 
-  // Mock data cho phòng chi tiết
-  const room: Room = {
-    id: roomId,
-    name: "Phòng Deluxe với Ban công",
-    type: "Deluxe Room",
-    price: 1200000,
-    originalPrice: 1500000,
-    images: [
-      "https://images.unsplash.com/photo-1731336478850-6bce7235e320?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZWx1eGUlMjBob3RlbCUyMHJvb20lMjBiZWR8ZW58MXx8fHwxNzU3NDQ2NDgxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      "https://images.unsplash.com/photo-1632598024410-3d8f24daab57?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBob3RlbCUyMHJvb20lMjBpbnRlcmlvcnxlbnwxfHx8fDE3NTczOTk2MTR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      "https://images.unsplash.com/photo-1678924133506-7508daa13c7c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxob3RlbCUyMGJhdGhyb29tJTIwbW9kZXJufGVufDF8fHx8MTc1NzQ0NzExM3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-      "https://images.unsplash.com/photo-1677160353599-5899a79ae439?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxob3RlbCUyMHJvb20lMjBiYWxjb255JTIwdmlld3xlbnwxfHx8fDE3NTczNjM5MzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-    ],
-    maxGuests: 4,
-    beds: 2,
-    bathrooms: 1,
-    size: 35,
-    amenities: [
-      "Wifi miễn phí",
-      "Điều hòa không khí",
-      "Ban công riêng",
-      "TV Smart 55 inch",
-      "Tủ lạnh mini",
-      "Máy pha cà phê",
-      "Két sắt",
-      "Máy sấy tóc",
-      "Đồ vệ sinh cá nhân",
-      "Khăn tắm cao cấp",
-      "Dép trong phòng",
-      "Bàn làm việc",
-      "Ghế thư giãn",
-      "Tủ quần áo rộng rãi",
-      "Cửa sổ lớn"
-    ],
-    rating: 4.8,
-    reviews: 45,
-    description: "Phòng rộng rãi với ban công nhìn ra khu vườn, phù hợp cho gia đình nhỏ.",
-    detailedDescription: "Phòng Deluxe với Ban công là lựa chọn hoàn hảo cho những ai muốn trải nghiệm sự thoải mái và yên tĩnh. Với diện tích 35m², phòng được thiết kế hiện đại với tone màu ấm áp, tạo cảm giác thư giãn ngay từ khi bước vào. Ban công riêng nhìn ra khu vườn xanh mát sẽ mang đến cho bạn những phút giây thư giãn tuyệt vời, đặc biệt vào buổi sáng sớm hoặc chiều tà khi thưởng thức tách cà phê.",
-    policies: [
-      "Nhận phòng: 14:00 - 22:00",
-      "Trả phòng: 06:00 - 12:00",
-      "Không hút thuốc trong phòng",
-      "Không cho phép mang theo thú cưng",
-      "Hủy miễn phí trước 24 tiếng",
-      "Thanh toán khi nhận phòng",
-      "Chính sách trẻ em: Miễn phí dưới 6 tuổi"
-    ],
-    location: "Tầng 2, KatHome In Town , 123 Đường Hoa Hồng, Phường 1, Đà Lạt"
-  };
+  useEffect(() => {
+    setCheckIn(searchData.checkIn);
+    setCheckOut(searchData.checkOut);
+    setGuests(searchData.guests);
+  }, [searchData.checkIn, searchData.checkOut, searchData.guests]);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
-  };
+  useEffect(() => {
+    let active = true;
 
-  const calculateNights = () => {
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
-    const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
+    const loadRoom = async () => {
+      setLoading(true);
+      setError(null);
 
-  const getTotalPrice = () => {
-    return room.price * calculateNights();
-  };
+      try {
+        const data = await phongApi.getById(roomId) as PhongDetail;
+        if (!active) {
+          return;
+        }
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % room.images.length);
-  };
+        setRoom(data);
 
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + room.images.length) % room.images.length);
-  };
+        if (data?.hangPhong?.maHangPhong) {
+          const code = data.hangPhong.maHangPhong;
+          const inlinePrice = (data.hangPhong.donGia || []).reduce<
+            Record<string, number>
+          >((acc, item) => {
+            acc[item.donViTinh] = item.donGia;
+            return acc;
+          }, {});
 
-  // Mock reviews data
-  const reviews = [
-    {
-      id: 1,
-      name: "Nguyễn Minh Anh",
-      rating: 5,
-      date: "15/12/2024",
-      comment: "Phòng rất đẹp và sạch sẽ. Ban công view khu vườn rất thoải mái. Staff nhiệt tình và chu đáo."
-    },
-    {
-      id: 2,
-      name: "Trần Thị Hương",
-      rating: 5,
-      date: "10/12/2024",
-      comment: "Vị trí tuyệt vời, gần trung tâm Đà Lạt. Phòng có ban công rất đẹp, phù hợp để thư giãn."
-    },
-    {
-      id: 3,
-      name: "Lê Văn Nam",
-      rating: 4,
-      date: "05/12/2024",
-      comment: "Phòng đẹp, tiện nghi đầy đủ. Điều hòa hoạt động tốt. Sẽ quay lại lần sau."
+          let fourHour: number = inlinePrice["4h"] ?? 0;
+          let overnight: number = inlinePrice["quaDem"] ?? 0;
+
+          // Check if we need to fetch fallback prices
+          const needsFourHourFallback = !inlinePrice["4h"];
+          const needsOvernightFallback = !inlinePrice["quaDem"];
+
+          if (needsFourHourFallback || needsOvernightFallback) {
+            const [fallback4h, fallbackOvernight] = await Promise.all([
+              needsFourHourFallback
+                ? donGiaApi.getById(code, "4h").catch(() => null)
+                : Promise.resolve<DonGia | null>(null),
+              needsOvernightFallback
+                ? donGiaApi.getById(code, "quaDem").catch(() => null)
+                : Promise.resolve<DonGia | null>(null),
+            ]);
+
+            if (!active) {
+              return;
+            }
+
+            if (needsFourHourFallback) {
+              fourHour = (fallback4h as DonGia | null)?.donGia ?? 0;
+            }
+            if (needsOvernightFallback) {
+              overnight = (fallbackOvernight as DonGia | null)?.donGia ?? 0;
+            }
+          }
+
+          const resolvedFourHour = fourHour ?? 0;
+          const resolvedOvernight = overnight ?? resolvedFourHour;
+
+          setPricing({
+            fourHour: resolvedFourHour,
+            overnight: resolvedOvernight,
+          });
+        } else if (active) {
+          setPricing({ fourHour: 0, overnight: 0 });
+        }
+      } catch (err) {
+        if (!active) {
+          return;
+        }
+        setError(err instanceof Error ? err.message : "Khong the tai du lieu phong");
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadRoom();
+
+    return () => {
+      active = false;
+    };
+  }, [roomId]);
+
+  const imageSources = useMemo(() => {
+    if (!room) return [];
+    const candidates = [room.hinhAnh, room.hangPhong?.hinhAnh].filter(
+      (src): src is string => Boolean(src && src.trim())
+    );
+    return Array.from(new Set(candidates));
+  }, [room]);
+
+  useEffect(() => {
+    if (imageSources.length === 0 && currentImageIndex !== 0) {
+      setCurrentImageIndex(0);
+    } else if (imageSources.length > 0 && currentImageIndex >= imageSources.length) {
+      setCurrentImageIndex(0);
     }
-  ];
+  }, [imageSources.length, currentImageIndex]);
 
-  return (
-    <div className="min-h-screen" style={{ backgroundColor: '#fef5f6' }}>
-      {/* Header Navigation */}
-      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#F8E8EC' }}>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button 
-                variant="ghost" 
-                onClick={onBackToSearch}
-                className="flex items-center space-x-2"
-                style={{ color: '#3D0301' }}
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Trở lại kết quả</span>
-              </Button>
-              <span className="text-sm opacity-60" style={{ color: '#3D0301' }}>|</span>
-              <Button 
-                variant="ghost" 
-                onClick={onBackToHome}
-                className="text-sm"
-                style={{ color: '#3D0301' }}
-              >
-                Trang chủ
-              </Button>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm">
-                <Heart className="w-4 h-4" style={{ color: '#3D0301' }} />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Share2 className="w-4 h-4" style={{ color: '#3D0301' }} />
-              </Button>
-            </div>
+  const hasImages = imageSources.length > 0;
+  const displayName =
+    room?.moTa || room?.hangPhong?.tenHangPhong || `Phong ${roomId}`;
+  const displayType = room?.hangPhong?.tenHangPhong || "Phong";
+  const capacity = room?.hangPhong?.sucChua ?? Math.max(2, guests || 1);
+  const beds = Math.max(1, Math.ceil(capacity / 2));
+  const pricePerNight = pricing.overnight || pricing.fourHour;
+  const nights = useMemo(
+    () => getNightCount(checkIn, checkOut),
+    [checkIn, checkOut]
+  );
+  const subtotal = pricePerNight * nights;
+  const serviceFee = subtotal > 0 ? Math.round(subtotal * 0.05) : 0;
+  const tax = subtotal > 0 ? Math.round(subtotal * 0.1) : 0;
+  const total = subtotal + serviceFee + tax;
+
+  const locationName = room?.coSo?.tenCoSo ?? "Chua co thong tin co so";
+  const locationAddress = room?.coSo?.diaChi ?? "Chua cap nhat dia chi";
+  const contactPhone = room?.coSo?.sdt ?? "Chua cap nhat";
+  const contactEmail = "Chua cap nhat";
+  const locationDisplay =
+    room?.coSo
+      ? [room.coSo.tenCoSo, room.coSo.diaChi]
+          .filter((value): value is string => Boolean(value && value.trim()))
+          .join(" - ") || "Chua co thong tin co so"
+      : "Chua co thong tin co so";
+
+  const description =
+    room?.moTa || room?.hangPhong?.moTa || "Thong tin ve phong se duoc cap nhat som.";
+
+const amenitiesToShow = useMemo(() => {
+  const list = (room as unknown as { tienNghi?: string[] } | null)?.tienNghi;
+  return Array.isArray(list)
+    ? list.filter((item): item is string => Boolean(item && item.trim()))
+    : [];
+}, [room]);
+
+  const policiesToShow: string[] = [];
+
+  const handleCheckout = () => {
+    if (!room) {
+      return;
+    }
+    const primaryImage = imageSources[0] ?? "";
+    onProceedToCheckout({
+      id: room.maPhong,
+      name: displayName,
+      type: displayType,
+      price: pricePerNight,
+      image: primaryImage,
+      maxGuests: capacity,
+      beds,
+      bathrooms: 1,
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#fef5f6" }}>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-3" style={{ color: "#3D0301" }}>
+            <div className="w-12 h-12 mx-auto border-4 border-t-transparent rounded-full animate-spin" />
+            <p>Dang tai thong tin phong...</p>
           </div>
         </div>
       </div>
+    );
+  }
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Room Images Gallery */}
-            <div className="relative">
-              <div className="relative h-96 rounded-lg overflow-hidden">
-                <ImageWithFallback
-                  src={room.images[currentImageIndex]}
-                  alt={`${room.name} - Image ${currentImageIndex + 1}`}
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Navigation buttons */}
+  if (error || !room) {
+    return (
+      <div className="min-h-screen flex flex-col" style={{ backgroundColor: "#fef5f6" }}>
+        <div className="flex-1 flex items-center justify-center">
+          <Card className="max-w-md shadow-lg border-0" style={{ backgroundColor: "#FAD0C4" }}>
+            <CardContent className="space-y-4 p-6 text-center" style={{ color: "#3D0301" }}>
+              <h2 className="text-xl font-semibold">Khong the tai phong</h2>
+              <p>{error || "Phong khong ton tai hoac da duoc cap nhat."}</p>
+              <div className="flex justify-center gap-3">
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white hover:bg-black/70"
-                  onClick={prevImage}
+                  variant="outline"
+                  style={{ borderColor: "#3D0301", color: "#3D0301" }}
+                  onClick={onBackToSearch}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  Quay lai tim kiem
                 </Button>
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white hover:bg-black/70"
-                  onClick={nextImage}
+                  className="text-white"
+                  style={{ backgroundColor: "#3D0301" }}
+                  onClick={onBackToHome}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  Ve trang chu
                 </Button>
-                
-                {/* Image counter */}
-                <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded text-sm">
-                  {currentImageIndex + 1} / {room.images.length}
-                </div>
               </div>
-              
-              {/* Thumbnail gallery */}
-              <div className="flex space-x-2 mt-4 overflow-x-auto">
-                {room.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                      index === currentImageIndex ? 'border-opacity-100' : 'border-transparent'
-                    }`}
-                    style={{ borderColor: index === currentImageIndex ? '#3D0301' : 'transparent' }}
-                  >
-                    <ImageWithFallback
-                      src={image}
-                      alt={`Thumbnail ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
-            {/* Room Info */}
-            <div>
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <h1 className="text-3xl font-heading" style={{ color: '#3D0301' }}>
-                      {room.name}
-                    </h1>
-                    <Badge style={{ backgroundColor: 'rgba(61, 3, 1, 0.1)', color: '#3D0301' }}>
-                      {room.type}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center space-x-4 mb-2">
-                    <div className="flex items-center space-x-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          className={`w-4 h-4 ${i < Math.floor(room.rating) ? 'fill-current' : ''}`}
-                          style={{ color: '#3D0301' }}
-                        />
+  const primaryImage = hasImages
+    ? imageSources[currentImageIndex % imageSources.length]
+    : undefined;
+
+  return (
+    <div className="min-h-screen" style={{ backgroundColor: "#fef5f6" }}>
+      <div className="container mx-auto px-4 py-8 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex gap-3">
+            <Button
+              variant="ghost"
+              onClick={onBackToSearch}
+              className="flex items-center gap-2"
+              style={{ color: "#3D0301" }}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Quay lai ket qua</span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={onBackToHome}
+              className="flex items-center gap-2"
+              style={{ color: "#3D0301" }}
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Ve trang chu</span>
+            </Button>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              style={{ borderColor: "#3D0301", color: "#3D0301" }}
+              onClick={() => setIsFavorite((prev) => !prev)}
+            >
+              <Heart
+                className="w-4 h-4"
+                fill={isFavorite ? "#3D0301" : "transparent"}
+              />
+              <span>{isFavorite ? "Da luu" : "Luu phong"}</span>
+            </Button>
+            <Button
+              variant="outline"
+              style={{ borderColor: "#3D0301", color: "#3D0301" }}
+            >
+              <Share2 className="w-4 h-4" />
+              <span>Chia se</span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="border-0 shadow-lg" style={{ backgroundColor: "#FAD0C4" }}>
+              <CardContent className="p-0">
+                {hasImages ? (
+                  <>
+                    <div className="relative">
+                      <ImageWithFallback
+                        src={primaryImage || ""}
+                        alt={displayName}
+                        className="w-full h-[420px] object-cover"
+                      />
+                      {imageSources.length > 1 && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full"
+                            style={{ backgroundColor: "rgba(0,0,0,0.4)", color: "#fff" }}
+                            onClick={() =>
+                              setCurrentImageIndex(
+                                (prev) =>
+                                  (prev - 1 + imageSources.length) % imageSources.length
+                              )
+                            }
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full"
+                            style={{ backgroundColor: "rgba(0,0,0,0.4)", color: "#fff" }}
+                            onClick={() =>
+                              setCurrentImageIndex(
+                                (prev) => (prev + 1) % imageSources.length
+                              )
+                            }
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </Button>
+                        </>
+                      )}
+                      <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs">
+                        <Maximize2 className="inline w-3 h-3 mr-1" />
+                        {imageSources.length} hinh
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-3 p-4">
+                      {imageSources.slice(0, 4).map((src, index) => (
+                        <button
+                          key={`${src}-${index}`}
+                          type="button"
+                          className={`rounded-lg overflow-hidden border-2 ${
+                            currentImageIndex % imageSources.length === index
+                              ? "border-[#3D0301]"
+                              : "border-transparent"
+                          }`}
+                          onClick={() => setCurrentImageIndex(index)}
+                        >
+                          <ImageWithFallback
+                            src={src}
+                            alt={`${displayName} ${index + 1}`}
+                            className="w-full h-20 object-cover"
+                          />
+                        </button>
                       ))}
                     </div>
-                    <span className="text-sm" style={{ color: '#3D0301' }}>
-                      {room.rating} ({room.reviews} đánh giá)
-                    </span>
+                  </>
+                ) : (
+                  <div className="w-full h-[420px] flex items-center justify-center text-sm" style={{ color: "#3D0301", backgroundColor: "rgba(255,255,255,0.5)" }}>
+                    Chua co hinh anh cho phong nay
                   </div>
-                  <div className="flex items-center space-x-2 text-sm" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
-                    <MapPin className="w-4 h-4" />
-                    <span>{room.location}</span>
-                  </div>
-                </div>
-              </div>
+                )}
+              </CardContent>
+            </Card>
 
-              <p className="mb-6" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>{room.detailedDescription}</p>
-
-              {/* Room Specs */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 rounded-lg" style={{ backgroundColor: '#FAD0C4' }}>
-                <div className="flex items-center space-x-2">
-                  <Users className="w-5 h-5" style={{ color: '#3D0301' }} />
-                  <div>
-                    <div className="text-sm" style={{ color: '#3D0301' }}>Khách tối đa</div>
-                    <div className="text-lg" style={{ color: '#3D0301' }}>{room.maxGuests} người</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Bed className="w-5 h-5" style={{ color: '#3D0301' }} />
-                  <div>
-                    <div className="text-sm" style={{ color: '#3D0301' }}>Giường</div>
-                    <div className="text-lg" style={{ color: '#3D0301' }}>{room.beds} giường</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Bath className="w-5 h-5" style={{ color: '#3D0301' }} />
-                  <div>
-                    <div className="text-sm" style={{ color: '#3D0301' }}>Phòng tắm</div>
-                    <div className="text-lg" style={{ color: '#3D0301' }}>{room.bathrooms} phòng</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Maximize2 className="w-5 h-5" style={{ color: '#3D0301' }} />
-                  <div>
-                    <div className="text-sm" style={{ color: '#3D0301' }}>Diện tích</div>
-                    <div className="text-lg" style={{ color: '#3D0301' }}>{room.size}m²</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs for details */}
-            <Tabs defaultValue="amenities" className="w-full">
-              <TabsList className="grid w-full grid-cols-3" style={{ backgroundColor: '#FAD0C4' }}>
-                <TabsTrigger value="amenities" style={{ color: '#3D0301' }}>Tiện nghi</TabsTrigger>
-                <TabsTrigger value="policies" style={{ color: '#3D0301' }}>Chính sách</TabsTrigger>
-                <TabsTrigger value="reviews" style={{ color: '#3D0301' }}>Đánh giá</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="amenities" className="mt-6">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {room.amenities.map((amenity, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-center space-x-2 p-3 rounded-lg"
-                      style={{ backgroundColor: '#FAD0C4' }}
-                    >
-                      <CheckCircle className="w-4 h-4" style={{ color: '#3D0301' }} />
-                      <span className="text-sm" style={{ color: '#3D0301' }}>{amenity}</span>
+            <Card className="border-0 shadow-lg" style={{ backgroundColor: "#FAD0C4" }}>
+              <CardContent className="space-y-6 p-6">
+                <div className="flex flex-wrap justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="secondary"
+                        style={{ backgroundColor: "rgba(61,3,1,0.1)", color: "#3D0301" }}
+                      >
+                        {displayType}
+                      </Badge>
+                      <span className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
+                        Ma phong: {room.maPhong}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="policies" className="mt-6">
-                <div className="space-y-3">
-                  {room.policies.map((policy, index) => (
-                    <div 
-                      key={index} 
-                      className="flex items-start space-x-3 p-3 rounded-lg"
-                      style={{ backgroundColor: '#FAD0C4' }}
+                    <h1
+                      className="text-2xl font-semibold font-heading"
+                      style={{ color: "#3D0301" }}
                     >
-                      <Clock className="w-4 h-4 mt-0.5" style={{ color: '#3D0301' }} />
-                      <span className="text-sm" style={{ color: '#3D0301' }}>{policy}</span>
+                      {displayName}
+                    </h1>
+                    <div className="flex items-center gap-2 text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
+                      <MapPin className="w-4 h-4" />
+                      <span>{locationDisplay}</span>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="text-right space-y-1">
+                    <div className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
+                      Gia theo 4 gio
+                    </div>
+                    <div className="text-2xl font-semibold" style={{ color: "#3D0301" }}>
+                      {formatCurrency(pricing.fourHour)}
+                    </div>
+                    <div className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
+                      Gia qua dem: {formatCurrency(pricing.overnight)}
+                    </div>
+                  </div>
                 </div>
-              </TabsContent>
-              
-              <TabsContent value="reviews" className="mt-6">
-                <div className="space-y-6">
-                  {reviews.map((review) => (
-                    <div 
-                      key={review.id} 
-                      className="p-4 rounded-lg"
-                      style={{ backgroundColor: '#FAD0C4' }}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-3">
-                          <div>
-                            <div style={{ color: '#3D0301' }}>{review.name}</div>
-                            <div className="text-xs opacity-70" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>{review.date}</div>
-                          </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="flex items-center gap-2 text-sm" style={{ color: "#3D0301" }}>
+                    <Users className="w-4 h-4" />
+                    <span>Toi da {capacity} khach</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm" style={{ color: "#3D0301" }}>
+                    <Bed className="w-4 h-4" />
+                    <span>{beds} giuong</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm" style={{ color: "#3D0301" }}>
+                    <Bath className="w-4 h-4" />
+                    <span>1 phong tam</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-semibold mb-3" style={{ color: "#3D0301" }}>
+                    Tien nghi noi bat
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {amenitiesToShow.length > 0 ? (
+                      amenitiesToShow.map((amenity) => (
+                        <Badge
+                          key={amenity}
+                          variant="outline"
+                          className="text-xs"
+                          style={{ borderColor: "#3D0301", color: "#3D0301" }}
+                        >
+                          {amenity}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm opacity-70" style={{ color: "rgba(61,3,1,0.7)" }}>
+                        Chua co thong tin tien nghi
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <Tabs defaultValue="overview" className="w-full">
+                  <TabsList className="grid grid-cols-3 bg-white/60" style={{ color: "#3D0301" }}>
+                    <TabsTrigger value="overview">Tong quan</TabsTrigger>
+                    <TabsTrigger value="policy">Chinh sach</TabsTrigger>
+                    <TabsTrigger value="area">Khu vuc</TabsTrigger>
+                  </TabsList>
+                  <TabsContent
+                    value="overview"
+                    className="mt-4 text-sm space-y-3"
+                    style={{ color: "rgba(61,3,1,0.7)" }}
+                  >
+                    <p>{description}</p>
+                  </TabsContent>
+                  <TabsContent
+                    value="policy"
+                    className="mt-4 text-sm space-y-2"
+                    style={{ color: "rgba(61,3,1,0.7)" }}
+                  >
+                    {policiesToShow.length > 0 ? (
+                      policiesToShow.map((policy) => (
+                        <div key={policy} className="flex items-start gap-2">
+                          <CheckCircle
+                            className="w-4 h-4 mt-1"
+                            style={{ color: "#3D0301" }}
+                          />
+                          <span>{policy}</span>
                         </div>
-                        <div className="flex items-center space-x-1">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`w-3 h-3 ${i < review.rating ? 'fill-current' : ''}`}
-                              style={{ color: '#3D0301' }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>{review.comment}</p>
+                      ))
+                    ) : (
+                      <span>Chua co chinh sach duoc cung cap.</span>
+                    )}
+                  </TabsContent>
+                  <TabsContent
+                    value="area"
+                    className="mt-4 text-sm space-y-2"
+                    style={{ color: "rgba(61,3,1,0.7)" }}
+                  >
+                    <p>Co so: {locationName}</p>
+                    <p>Dia chi: {locationAddress}</p>
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      <span>{contactPhone}</span>
                     </div>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      <span>{contactEmail}</span>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Booking Card */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24">
-              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
-                <CardContent className="p-6">
-                  <div className="mb-6">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="text-2xl" style={{ color: '#3D0301' }}>
-                        {formatPrice(room.price)}
-                      </span>
-                      {room.originalPrice > room.price && (
-                        <span className="text-lg line-through opacity-60" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
-                          {formatPrice(room.originalPrice)}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-sm opacity-80" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
-                      /đêm (đã bao gồm thuế)
+            <Card className="border-0 shadow-lg sticky top-24" style={{ backgroundColor: "#FAD0C4" }}>
+              <CardContent className="space-y-6 p-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-1" style={{ color: "#3D0301" }}>
+                    Dat phong
+                  </h3>
+                  <p className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
+                    Gia da bao gom phi dich vu va thue.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label style={{ color: "#3D0301" }}>Nhan phong</Label>
+                    <Input
+                      type="date"
+                      value={checkIn}
+                      onChange={(event) => setCheckIn(event.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label style={{ color: "#3D0301" }}>Tra phong</Label>
+                    <Input
+                      type="date"
+                      value={checkOut}
+                      onChange={(event) => setCheckOut(event.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label style={{ color: "#3D0301" }}>So khach</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={capacity}
+                    value={guests}
+                    onChange={(event) =>
+                      setGuests(Math.min(capacity, Math.max(1, Number(event.target.value) || 1)))
+                    }
+                  />
+                </div>
+
+                <div className="p-4 rounded-lg bg-white/60 space-y-3" style={{ color: "#3D0301" }}>
+                  <div className="flex justify-between text-sm">
+                    <span>
+                      {formatCurrency(pricePerNight)} x {nights} dem
                     </span>
+                    <span>{formatCurrency(subtotal)}</span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Phi dich vu (5%)</span>
+                    <span>{formatCurrency(serviceFee)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Thue (10%)</span>
+                    <span>{formatCurrency(tax)}</span>
+                  </div>
+                  <div className="border-t pt-3 flex justify-between font-semibold text-lg">
+                    <span>Tong cong</span>
+                    <span>{formatCurrency(total)}</span>
+                  </div>
+                </div>
 
-                  <div className="space-y-4 mb-6">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label style={{ color: '#3D0301' }}>Nhận phòng</Label>
-                        <Input 
-                          type="date"
-                          value={checkIn}
-                          onChange={(e) => setCheckIn(e.target.value)}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label style={{ color: '#3D0301' }}>Trả phòng</Label>
-                        <Input 
-                          type="date"
-                          value={checkOut}
-                          onChange={(e) => setCheckOut(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label style={{ color: '#3D0301' }}>Số khách</Label>
-                      <Input 
-                        type="number"
-                        min="1"
-                        max={room.maxGuests}
-                        value={guests}
-                        onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
-                      />
-                    </div>
-                  </div>
+                <Button
+                  className="w-full text-white"
+                  style={{ backgroundColor: "#3D0301" }}
+                  onClick={handleCheckout}
+                >
+                  Dat phong ngay
+                </Button>
 
-                  {/* Booking Summary */}
-                  <div className="space-y-3 mb-6 p-4 rounded-lg bg-white/50">
-                    <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
-                      <span>{formatPrice(room.price)} x {calculateNights()} đêm</span>
-                      <span>{formatPrice(getTotalPrice())}</span>
-                    </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
-                      <span>Phí dịch vụ</span>
-                      <span>Miễn phí</span>
-                    </div>
-                    <div className="border-t pt-3">
-                      <div className="flex justify-between" style={{ color: '#3D0301' }}>
-                        <span>Tổng cộng</span>
-                        <span>{formatPrice(getTotalPrice())}</span>
-                      </div>
-                    </div>
+                <div className="space-y-3 text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
+                  <div className="flex items-start gap-2">
+                    <Clock className="w-4 h-4 mt-1" style={{ color: "#3D0301" }} />
+                    <span>Huy mien phi truoc 24 gio. Sau do se tinh phi 50% tong gia tri.</span>
                   </div>
+                  <div className="flex items-start gap-2">
+                    <Shield className="w-4 h-4 mt-1" style={{ color: "#3D0301" }} />
+                    <span>Thanh toan an toan voi giao thuc ma hoa SSL.</span>
+                  </div>
+                </div>
 
-                  <Button 
-                    className="w-full mb-4 text-white"
-                    style={{ backgroundColor: '#3D0301' }}
-                    onClick={() => onProceedToCheckout({
-                      id: room.id,
-                      name: room.name,
-                      type: room.type,
-                      price: room.price,
-                      image: room.images[0],
-                      maxGuests: room.maxGuests,
-                      beds: room.beds,
-                      bathrooms: room.bathrooms
-                    })}
-                  >
-                    Đặt phòng ngay
-                  </Button>
-                  
-                  <div className="text-center text-xs opacity-70" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
-                    Bạn sẽ chưa bị tính phí
+                <div className="space-y-2 text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    <span>{contactPhone}</span>
                   </div>
-
-                  <div className="mt-6 space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Phone className="w-4 h-4" style={{ color: '#3D0301' }} />
-                      <span className="text-sm" style={{ color: '#3D0301' }}>+84 123 456 789</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Mail className="w-4 h-4" style={{ color: '#3D0301' }} />
-                      <span className="text-sm" style={{ color: '#3D0301' }}>info@rosehomestay.com</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    <span>{contactEmail}</span>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>

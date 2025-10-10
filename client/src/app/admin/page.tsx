@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { 
   Users,
@@ -16,6 +18,7 @@ import Style from "../styles/adminpage.module.css";
 import { useApi } from "../../hooks/useApi";
 import { donDatPhongApi, phongApi, khachHangApi, usersApi } from "../../lib/api";
 import { ApiBooking, ApiRoom, ApiCustomer, ApiUser } from "../../types/api";
+import LoadingSpinner from "../components/loading-spinner";
 
 const AdminPage = () => {
   // Fetch data from API
@@ -40,13 +43,13 @@ const AdminPage = () => {
   );
 
   // Calculate statistics from real data
-  const totalRevenue = bookings.reduce((sum, booking) => sum + booking.tongTien, 0);
-  const totalBookings = bookings.length;
-  const totalUsers = users.length;
-  const totalCustomers = customers.length;
-  const occupiedRooms = rooms.filter(room => room.trangThai === 'occupied').length;
-  const availableRooms = rooms.filter(room => room.trangThai === 'available').length;
-  const occupancyRate = rooms.length > 0 ? (occupiedRooms / rooms.length) * 100 : 0;
+  const totalRevenue = (bookings || []).reduce((sum, booking) => sum + (booking.tongTien || 0), 0);
+  const totalBookings = (bookings || []).length;
+  const totalUsers = (users || []).length;
+  const totalCustomers = (customers || []).length;
+  const roomsWithHangPhong = (rooms || []).filter(room => room.hangPhong?.tenHangPhong).length;
+  const roomsWithCoSo = (rooms || []).filter(room => room.coSo?.tenCoSo).length;
+  const occupancyRate = (rooms || []).length > 0 ? (roomsWithHangPhong / (rooms || []).length) * 100 : 0;
 
   const stats = {
     totalBookings,
@@ -54,11 +57,13 @@ const AdminPage = () => {
     totalUsers: totalUsers + totalCustomers,
     occupancyRate: Math.round(occupancyRate),
     monthlyGrowth: 12.5,
-    averageRating: 4.8
+    averageRating: 4.8,
+    roomsWithHangPhong,
+    roomsWithCoSo
   };
 
   // Get recent bookings (last 3)
-  const recentBookings = bookings.slice(0, 3).map(booking => ({
+  const recentBookings = (bookings || []).slice(0, 3).map(booking => ({
     id: booking.maDonDatPhong,
     guestName: booking.khachHang?.tenKhachHang || 'N/A',
     room: booking.phong?.moTa || 'N/A',
@@ -70,7 +75,7 @@ const AdminPage = () => {
 
   // Get upcoming check-ins (today's check-ins)
   const today = new Date().toISOString().split('T')[0];
-  const upcomingCheckIns = bookings
+  const upcomingCheckIns = (bookings || [])
     .filter(booking => booking.ngayNhan === today)
     .slice(0, 2)
     .map(booking => ({
@@ -87,14 +92,7 @@ const AdminPage = () => {
   const hasError = bookingsError || roomsError || customersError || usersError;
 
   if (isLoading) {
-    return (
-      <div className={Style.adminpage}>
-        <div className={Style.loadingContainer}>
-          <RefreshCw className={Style.loadingIcon} />
-          <p>Đang tải dữ liệu dashboard...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Đang tải ..." />;
   }
 
   if (hasError) {
@@ -163,8 +161,8 @@ const AdminPage = () => {
                 <XCircle className="w-5 h-5 text-red-600" />
               </div>
               <div style={{ flex: 1 }}>
-                <div className={Style.statNumber}>{occupiedRooms}</div>
-                <div className={Style.statLabel}>Đã thuê</div>
+                <div className={Style.statNumber}>{roomsWithHangPhong}</div>
+                <div className={Style.statLabel}>Có hạng phòng</div>
               </div>
             </div>
           </div>
@@ -175,8 +173,8 @@ const AdminPage = () => {
                 <Bed className="w-5 h-5 text-purple-600" />
               </div>
               <div style={{ flex: 1 }}>
-                <div className={Style.statNumber}>{availableRooms}</div>
-                <div className={Style.statLabel}>Có sẵn</div>
+                <div className={Style.statNumber}>{roomsWithCoSo}</div>
+                <div className={Style.statLabel}>Có cơ sở</div>
               </div>
             </div>
           </div>
@@ -205,8 +203,8 @@ const AdminPage = () => {
             </div>
             <div className={Style.cardContent}>
               <div>
-                {recentBookings.map((booking) => (
-                  <div key={booking.id} className={Style.bookingItem}>
+                {recentBookings.map((booking, index) => (
+                  <div key={booking.id || `booking-${index}`} className={Style.bookingItem}>
                     <div className={Style.bookingInfo}>
                       <div className={Style.bookingHeader}>
                         <h4 className={Style.guestName}>
@@ -245,8 +243,8 @@ const AdminPage = () => {
             </div>
             <div className={Style.cardContent}>
               <div>
-                {upcomingCheckIns.map((checkin) => (
-                  <div key={checkin.id} className={Style.checkinItem}>
+                {upcomingCheckIns.map((checkin, index) => (
+                  <div key={checkin.id || `checkin-${index}`} className={Style.checkinItem}>
                     <div className={Style.checkinIcon}>
                       <Users className="w-4 h-4" />
                     </div>

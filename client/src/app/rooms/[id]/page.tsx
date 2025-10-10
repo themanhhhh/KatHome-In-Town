@@ -9,10 +9,10 @@ import { RoomDetail } from "../../components/roomdetail/RoomDetail";
 export default function RoomDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [roomId, setRoomId] = React.useState<number | null>(null);
+  const [roomId, setRoomId] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    params.then(p => setRoomId(parseInt(p.id)));
+    params.then((p) => setRoomId(p.id));
   }, [params]);
 
   const checkIn = searchParams.get('checkIn') || '';
@@ -39,7 +39,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const handleProceedToCheckout = (roomData: {
-    id: number;
+    id: string;
     name: string;
     type: string;
     price: number;

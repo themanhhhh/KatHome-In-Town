@@ -10,7 +10,7 @@ export default function VerifyEmailPage() {
     bookingId: string;
     bookingDate: string;
     roomData: {
-      id: number;
+      id: string;
       name: string;
       type: string;
       price: number;
@@ -60,7 +60,7 @@ export default function VerifyEmailPage() {
     bookingId: string;
     bookingDate: string;
     roomData: {
-      id: number;
+      id: string;
       name: string;
       type: string;
       price: number;

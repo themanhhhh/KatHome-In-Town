@@ -9,7 +9,7 @@ import { Checkout } from "../components/checkout/Checkout";
 export default function CheckoutPage() {
   const router = useRouter();
   const [roomData, setRoomData] = useState<{
-    id: number;
+    id: string;
     name: string;
     type: string;
     price: number;
@@ -51,7 +51,7 @@ export default function CheckoutPage() {
 
   const handleProceedToVerification = (bookingData: {
     roomData: {
-      id: number;
+      id: string;
       name: string;
       type: string;
       price: number;

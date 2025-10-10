@@ -27,7 +27,7 @@ import { ImageWithFallback } from "../figma/ImageWithFallback";
 
 interface BookingData {
   roomData: {
-    id: number;
+    id: string;
     name: string;
     type: string;
     price: number;
@@ -61,7 +61,7 @@ interface BookingData {
 
 interface CheckoutProps {
   roomData: {
-    id: number;
+    id: string;
     name: string;
     type: string;
     price: number;

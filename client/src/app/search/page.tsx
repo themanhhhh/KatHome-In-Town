@@ -24,7 +24,7 @@ export default function SearchPage() {
     router.push('/');
   };
 
-  const handleViewRoomDetail = (roomId: number) => {
+  const handleViewRoomDetail = (roomId: string) => {
     const params = new URLSearchParams({
       checkIn,
       checkOut,

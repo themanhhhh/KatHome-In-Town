@@ -28,7 +28,9 @@ import Style from "../../styles/roomsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
 import { phongApi, hangPhongApi } from "../../../lib/api";
 import { ApiRoom, ApiRoomType } from "../../../types/api";
+import LoadingSpinner from "../../components/loading-spinner";
 import { ImageUpload } from "../../components/image-upload";
+import { RoomForm } from "../../components/room-form";
 
 // Using ApiRoom type from types/api.ts
 
@@ -37,7 +39,10 @@ const RoomsManagementPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [uploadingImages, setUploadingImages] = useState<Set<string>>(new Set());
+  const [showRoomForm, setShowRoomForm] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<ApiRoom | null>(null);
 
   // Fetch data from API
   const { data: rooms = [], loading: roomsLoading, error: roomsError, refetch: refetchRooms } = useApi<ApiRoom[]>(
@@ -56,10 +61,9 @@ const RoomsManagementPage = () => {
     const matchesSearch = room.moTa.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (room.hangPhong?.tenHangPhong || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (room.coSo?.tenCoSo || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || room.trangThai === statusFilter;
     const matchesType = typeFilter === "all" || room.hangPhong?.tenHangPhong === typeFilter;
     
-    return matchesSearch && matchesStatus && matchesType;
+    return matchesSearch && matchesType;
   });
 
   // Selection functions
@@ -94,6 +98,48 @@ const RoomsManagementPage = () => {
     }
   };
 
+  const handleCreateRoom = () => {
+    setEditingRoom(null);
+    setShowRoomForm(true);
+  };
+
+  const handleEditRoom = (room: ApiRoom) => {
+    setEditingRoom(room);
+    setShowRoomForm(true);
+  };
+
+  const handleDeleteRoom = async (roomId: string) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa phòng này?')) {
+      try {
+        await phongApi.delete(roomId);
+        await refetchRooms();
+      } catch (error) {
+        console.error('Error deleting room:', error);
+        alert('Có lỗi xảy ra khi xóa phòng');
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRooms.length === 0) return;
+    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedRooms.length} phòng đã chọn?`)) {
+      try {
+        await Promise.all(selectedRooms.map(id => phongApi.delete(id)));
+        await refetchRooms();
+        setSelectedRooms([]);
+      } catch (error) {
+        console.error('Error deleting rooms:', error);
+        alert('Có lỗi xảy ra khi xóa phòng');
+      }
+    }
+  };
+
+  const handleFormSuccess = () => {
+    refetchRooms();
+    setShowRoomForm(false);
+    setEditingRoom(null);
+  };
+
   // Utility functions
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -102,31 +148,10 @@ const RoomsManagementPage = () => {
     }).format(price);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'available':
-        return <span className={`${Style.badge} ${Style.badgeAvailable}`}>Có sẵn</span>;
-      case 'occupied':
-        return <span className={`${Style.badge} ${Style.badgeOccupied}`}>Đã thuê</span>;
-      case 'maintenance':
-        return <span className={`${Style.badge} ${Style.badgeMaintenance}`}>Bảo trì</span>;
-      case 'cleaning':
-        return <span className={`${Style.badge} ${Style.badgeCleaning}`}>Dọn dẹp</span>;
-      default:
-        return <span className={Style.badge}>{status}</span>;
-    }
-  };
 
   // Loading and error states
   if (roomsLoading) {
-    return (
-      <div className={Style.roomsManagement}>
-        <div className={Style.loadingContainer}>
-          <RefreshCw className={Style.loadingIcon} />
-          <p>Đang tải dữ liệu phòng...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Đang tải ..." />;
   }
 
   if (roomsError) {
@@ -172,7 +197,7 @@ const RoomsManagementPage = () => {
               <Download className="w-4 h-4" />
               <span>Xuất Excel</span>
             </button>
-            <button className={Style.addButton}>
+            <button className={Style.addButton} onClick={handleCreateRoom}>
               <Plus className="w-4 h-4" />
               <span>Thêm phòng</span>
             </button>
@@ -244,10 +269,10 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(rooms || []).filter(r => r.trangThai === 'available').length}
+              {(rooms || []).filter(r => r.hangPhong?.tenHangPhong).length}
             </div>
             <div className={Style.statLabel}>
-              Có sẵn
+              Có hạng phòng
             </div>
           </div>
         </div>
@@ -255,10 +280,10 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(rooms || []).filter(r => r.trangThai === 'occupied').length}
+              {(rooms || []).filter(r => r.coSo?.tenCoSo).length}
             </div>
             <div className={Style.statLabel}>
-              Đã thuê
+              Có cơ sở
             </div>
           </div>
         </div>
@@ -287,8 +312,12 @@ const RoomsManagementPage = () => {
                 <span className={Style.bulkText}>
                   Đã chọn {selectedRooms.length} phòng
                 </span>
-                <button className={Style.bulkButton}>
-                  Thao tác hàng loạt
+                <button 
+                  className={`${Style.bulkButton} ${Style.bulkButtonDanger}`}
+                  onClick={handleBulkDelete}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Xóa đã chọn
                 </button>
               </div>
             )}
@@ -319,8 +348,8 @@ const RoomsManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredRooms.map((room) => (
-                  <tr key={room.maPhong} className={Style.tableRow}>
+                {filteredRooms.map((room, index) => (
+                  <tr key={room.maPhong || `room-${index}`} className={Style.tableRow}>
                     <td className={Style.tableCell}>
                       <input
                         type="checkbox"
@@ -420,17 +449,28 @@ const RoomsManagementPage = () => {
                       </div>
                     </td>
                     <td className={Style.tableCell}>
-                      {getStatusBadge(room.trangThai)}
+                      <div className={Style.statusInfo}>
+                        <span className={Style.statusLabel}>Hạng:</span>
+                        <span className={Style.statusValue}>
+                          {room.hangPhong?.tenHangPhong || 'N/A'}
+                        </span>
+                      </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.actions}>
                         <button className={Style.actionButton}>
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className={Style.actionButton}>
+                        <button 
+                          className={Style.actionButton}
+                          onClick={() => handleEditRoom(room)}
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className={`${Style.actionButton} ${Style.actionButtonDanger}`}>
+                        <button 
+                          className={`${Style.actionButton} ${Style.actionButtonDanger}`}
+                          onClick={() => handleDeleteRoom(room.maPhong)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -449,6 +489,19 @@ const RoomsManagementPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Room Form Modal */}
+      {showRoomForm && (
+        <RoomForm
+          room={editingRoom}
+          roomTypes={roomTypes || []}
+          onClose={() => {
+            setShowRoomForm(false);
+            setEditingRoom(null);
+          }}
+          onSuccess={handleFormSuccess}
+        />
+      )}
     </div>
   );
 };

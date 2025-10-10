@@ -6,12 +6,14 @@ import {
   Calendar,
   Users,
   Bed,
-  Settings,
   LogOut,
   Menu,
   Home,
-  BarChart3
+  BarChart3,
+  Building
 } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import LoadingSpinner from "../components/loading-spinner";
 
 import Style from "../styles/adminlayout.module.css";
 
@@ -49,75 +51,39 @@ const menuItems = [
     href: '/admin/roomsmanagement'
   },
   {
+    id: 'coso',
+    label: 'Cơ sở',
+    icon: Building,
+    description: 'Quản lý cơ sở',
+    href: '/admin/cosomanagement'
+  },
+  {
     id: 'analytics',
     label: 'Báo cáo',
     icon: BarChart3,
     description: 'Thống kê doanh thu',
     href: '/admin/reportsmanagement'
-  },
-  {
-    id: 'settings',
-    label: 'Cài đặt',
-    icon: Settings,
-    description: 'Cấu hình hệ thống',
-    href: '/admin/settings'
   }
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const { user, isAuthenticated, isAdmin, isLoading, logout } = useAuth();
 
-  // Thông tin user (đơn giản để hiển thị UI). Quyền thực sự dựa trên API /auth/me
-  const [user, setUser] = useState<{ firstName?: string; lastName?: string; isAuthenticated: boolean; vaiTro?: string }>({ isAuthenticated: false });
-
-  // Guard kiểm tra quyền admin
+  // Redirect nếu không phải admin
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-        if (!token) {
-          setAuthorized(false);
-          window.location.href = '/login';
-          return;
-        }
-
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-          credentials: 'include',
-        });
-
-        if (!res.ok) {
-          setAuthorized(false);
-          window.location.href = '/login';
-          return;
-        }
-
-        const data = await res.json();
-        const vaiTro = data?.user?.vaiTro;
-        if (vaiTro !== 'admin') {
-          setAuthorized(false);
-          window.location.href = '/';
-          return;
-        }
-
-        const name = data?.user?.taiKhoan || 'Admin User';
-        const [firstName, ...rest] = String(name).split(' ');
-        setUser({ firstName, lastName: rest.join(' '), isAuthenticated: true, vaiTro });
-        setAuthorized(true);
-      } catch {
-        setAuthorized(false);
+    if (!isLoading) {
+      if (!isAuthenticated) {
         window.location.href = '/login';
+        return;
       }
-    };
-
-    checkAuth();
-  }, []);
+      if (!isAdmin) {
+        window.location.href = '/';
+        return;
+      }
+    }
+  }, [isAuthenticated, isAdmin, isLoading]);
 
   // Open sidebar by default on desktop
   useEffect(() => {
@@ -148,8 +114,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   const handleLogout = () => {
-    // In real app, this would handle logout logic
-    console.log('Logout clicked');
+    logout();
     handleBackToHome();
   };
 
@@ -162,19 +127,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     }
   }, []);
 
-  if (authorized === null) {
-    return (
-      <div className={Style.adminLayout}>
-        <div className={Style.mainContainer}>
-          <div className={Style.mainContent}>
-            <main className={Style.contentArea}>Đang kiểm tra quyền truy cập...</main>
-          </div>
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return <LoadingSpinner text="Đang tải..." />;
   }
 
-  if (authorized === false) {
+  if (!isAuthenticated || !isAdmin) {
     return null; // đã redirect ở trên
   }
 
@@ -211,11 +168,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               </button>
               
               <div className={Style.userInfo}>
-                {user.isAuthenticated ? (
+                {user ? (
                   <>
                     <div className={`${Style.userDetails} ${Style.hiddenOnMobile}`}>
                       <div className={Style.userName}>
-                        {user.firstName} {user.lastName}
+                        {user.taiKhoan}
                       </div>
                       <div className={Style.userRole}>
                         Administrator

@@ -23,6 +23,8 @@ import Style from "../../styles/bookingsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
 import { donDatPhongApi } from "../../../lib/api";
 import { ApiBooking } from "../../../types/api";
+import LoadingSpinner from "../../components/loading-spinner";
+import { BookingForm } from "../../components/booking-form";
 
 // Using ApiBooking type from types/api.ts
 
@@ -30,6 +32,8 @@ const BookingsManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
+  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [editingBooking, setEditingBooking] = useState<ApiBooking | null>(null);
 
   // Fetch data from API
   const { data: bookings = [], loading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useApi<ApiBooking[]>(
@@ -62,6 +66,48 @@ const BookingsManagementPage = () => {
         {config.label}
       </span>
     );
+  };
+
+  const handleCreateBooking = () => {
+    setEditingBooking(null);
+    setShowBookingForm(true);
+  };
+
+  const handleEditBooking = (booking: ApiBooking) => {
+    setEditingBooking(booking);
+    setShowBookingForm(true);
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa đặt phòng này?')) {
+      try {
+        await donDatPhongApi.delete(bookingId);
+        await refetchBookings();
+      } catch (error) {
+        console.error('Error deleting booking:', error);
+        alert('Có lỗi xảy ra khi xóa đặt phòng');
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedBookings.length === 0) return;
+    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedBookings.length} đặt phòng đã chọn?`)) {
+      try {
+        await Promise.all(selectedBookings.map(id => donDatPhongApi.delete(id)));
+        await refetchBookings();
+        setSelectedBookings([]);
+      } catch (error) {
+        console.error('Error deleting bookings:', error);
+        alert('Có lỗi xảy ra khi xóa đặt phòng');
+      }
+    }
+  };
+
+  const handleFormSuccess = () => {
+    refetchBookings();
+    setShowBookingForm(false);
+    setEditingBooking(null);
   };
 
   const getStatusIcon = (status: string) => {
@@ -109,14 +155,7 @@ const BookingsManagementPage = () => {
 
   // Loading and error states
   if (bookingsLoading) {
-    return (
-      <div className={Style.bookingsManagement}>
-        <div className={Style.loadingContainer}>
-          <RefreshCw className={Style.loadingIcon} />
-          <p>Đang tải dữ liệu đặt phòng...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Đang tải..." />;
   }
 
   if (bookingsError) {
@@ -153,6 +192,10 @@ const BookingsManagementPage = () => {
             <button className={Style.exportButton}>
               <Download className="w-4 h-4" />
               <span>Xuất Excel</span>
+            </button>
+            <button className={Style.addButton} onClick={handleCreateBooking}>
+              <Calendar className="w-4 h-4" />
+              <span>Thêm đặt phòng</span>
             </button>
           </div>
         </div>
@@ -252,8 +295,12 @@ const BookingsManagementPage = () => {
                 <span className={Style.bulkText}>
                   Đã chọn {selectedBookings.length} booking
                 </span>
-                <button className={Style.bulkButton}>
-                  Xác nhận hàng loạt
+                <button 
+                  className={`${Style.bulkButton} ${Style.bulkButtonDanger}`}
+                  onClick={handleBulkDelete}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Xóa đã chọn
                 </button>
               </div>
             )}
@@ -282,8 +329,8 @@ const BookingsManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredBookings.map((booking) => (
-                  <tr key={booking.maDonDatPhong} className={Style.tableRow}>
+                {filteredBookings.map((booking, index) => (
+                  <tr key={booking.maDonDatPhong || `booking-${index}`} className={Style.tableRow}>
                     <td className={Style.tableCell}>
                       <input
                         type="checkbox"
@@ -353,10 +400,16 @@ const BookingsManagementPage = () => {
                         <button className={Style.actionButton}>
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className={Style.actionButton}>
+                        <button 
+                          className={Style.actionButton}
+                          onClick={() => handleEditBooking(booking)}
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className={`${Style.actionButton} ${Style.actionButtonDanger}`}>
+                        <button 
+                          className={`${Style.actionButton} ${Style.actionButtonDanger}`}
+                          onClick={() => handleDeleteBooking(booking.maDonDatPhong)}
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -375,6 +428,18 @@ const BookingsManagementPage = () => {
           </div>
         </div>
       </div>
+
+      {/* Booking Form Modal */}
+      {showBookingForm && (
+        <BookingForm
+          booking={editingBooking}
+          onClose={() => {
+            setShowBookingForm(false);
+            setEditingBooking(null);
+          }}
+          onSuccess={handleFormSuccess}
+        />
+      )}
     </div>
   );
 };

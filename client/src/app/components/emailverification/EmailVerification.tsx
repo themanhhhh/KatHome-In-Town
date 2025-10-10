@@ -20,7 +20,7 @@ interface BookingData {
   bookingId: string;
   bookingDate: string;
   roomData: {
-    id: number;
+    id: string;
     name: string;
     type: string;
     price: number;
@@ -66,8 +66,7 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
   const [canResend, setCanResend] = useState(false);
   const [isResending, setIsResending] = useState(false);
 
-  // Mock verification code for demo (in real app, this would be sent via email)
-  const correctCode = "123456";
+  // Verification code will be sent via email and validated through API
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -105,9 +104,23 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
     setIsVerifying(true);
     setError("");
 
-    // Simulate verification process
-    setTimeout(() => {
-      if (verificationCode === correctCode) {
+    // Call verification API
+    try {
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: bookingData.guestInfo.email,
+          code: verificationCode,
+          bookingId: bookingData.bookingId
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
         setIsVerifying(false);
         onVerificationSuccess({
           ...bookingData,
@@ -116,24 +129,47 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
         });
       } else {
         setIsVerifying(false);
-        setError("Mã xác thực không đúng. Vui lòng thử lại.");
+        setError(result.message || "Mã xác thực không đúng. Vui lòng thử lại.");
         setVerificationCode("");
       }
-    }, 2000);
+    } catch (error) {
+      setIsVerifying(false);
+      setError("Có lỗi xảy ra. Vui lòng thử lại sau.");
+      setVerificationCode("");
+    }
   };
 
   const handleResendCode = async () => {
     setIsResending(true);
     
-    // Simulate resending code
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: bookingData.guestInfo.email,
+          bookingId: bookingData.bookingId
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setIsResending(false);
+        setCanResend(false);
+        setCountdown(300); // Reset countdown
+        setError("");
+        alert("Mã xác thực mới đã được gửi đến email của bạn!");
+      } else {
+        setIsResending(false);
+        setError(result.message || "Không thể gửi lại mã. Vui lòng thử lại sau.");
+      }
+    } catch (error) {
       setIsResending(false);
-      setCanResend(false);
-      setCountdown(300); // Reset countdown
-      setError("");
-      // In real app, would trigger new email send
-      alert("Mã xác thực mới đã được gửi đến email của bạn!");
-    }, 1000);
+      setError("Có lỗi xảy ra. Vui lòng thử lại sau.");
+    }
   };
 
   const handleCodeChange = (value: string) => {
@@ -285,10 +321,10 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
                 </div>
               </div>
 
-              {/* Demo Notice */}
+              {/* Security Notice */}
               <div className="p-3 rounded-lg border-2 border-dashed" style={{ borderColor: '#F2A7C3', backgroundColor: 'rgba(242, 167, 195, 0.1)' }}>
                 <p className="text-xs text-center" style={{ color: '#C599B6' }}>
-                  <strong>Demo:</strong> Sử dụng mã <span className="font-mono bg-white px-1 rounded">123456</span> để xác thực
+                  <strong>Lưu ý:</strong> Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư và nhập mã 6 chữ số.
                 </p>
               </div>
             </CardContent>

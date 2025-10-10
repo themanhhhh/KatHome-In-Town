@@ -1,5 +1,6 @@
 import { Entity, PrimaryColumn, Column, OneToMany } from "typeorm";
 import { Phong } from "./Phong";
+import { DonGia } from "./DonGia";
 
 @Entity()
 export class HangPhong {
@@ -20,4 +21,7 @@ export class HangPhong {
 
   @OneToMany(() => Phong, (phong) => phong.hangPhong)
   phong!: Phong[];
+
+  @OneToMany(() => DonGia, (donGia) => donGia.hangPhong)
+  donGia!: DonGia[];
 }

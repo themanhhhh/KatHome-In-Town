@@ -3,7 +3,6 @@ export interface ApiRoom {
   maPhong: string;
   moTa: string;
   hinhAnh?: string;
-  trangThai: 'available' | 'occupied' | 'maintenance' | 'cleaning';
   hangPhong?: {
     maHangPhong: string;
     tenHangPhong: string;
@@ -69,5 +68,9 @@ export interface ApiRoomType {
 export interface ApiCoSo {
   maCoSo: string;
   tenCoSo: string;
+  diaChi?: string;
+  soDienThoai?: string;
+  email?: string;
+  moTa?: string;
   hinhAnh?: string;
 }

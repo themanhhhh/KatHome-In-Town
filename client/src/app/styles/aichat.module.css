@@ -1,0 +1,20 @@
+/* AIChat specific styles */
+.aichat-user-message {
+  color: #ffffff !important;
+}
+
+.aichat-user-timestamp {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.aichat-user-icon {
+  color: #ffffff !important;
+}
+
+.aichat-ai-message {
+  color: #3D0301 !important;
+}
+
+.aichat-ai-timestamp {
+  color: rgba(61, 3, 1, 0.7) !important;
+}

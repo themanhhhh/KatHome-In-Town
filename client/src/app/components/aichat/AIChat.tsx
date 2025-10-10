@@ -38,7 +38,8 @@ export function AIChat({ className = '' }: AIChatProps) {
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isUsingChatGPT, setIsUsingChatGPT] = useState(false);
+  const [isUsingChatGPT, setIsUsingChatGPT] = useState(true); // Default to ChatGPT
+  const [apiError, setApiError] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -85,6 +86,10 @@ export function AIChat({ className = '' }: AIChatProps) {
 
         const data = await response.json();
         
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
         const aiResponse: Message = {
           id: (Date.now() + 1).toString(),
           text: data.message || 'Xin lỗi, tôi không thể trả lời câu hỏi này.',
@@ -93,6 +98,7 @@ export function AIChat({ className = '' }: AIChatProps) {
         };
         
         setMessages(prev => [...prev, aiResponse]);
+        setApiError(false);
       } else {
         // Use local response
         const aiResponse: Message = {
@@ -106,7 +112,7 @@ export function AIChat({ className = '' }: AIChatProps) {
       }
     } catch (error) {
       console.error('Chat API error:', error);
-      setIsUsingChatGPT(false);
+      setApiError(true);
       
       // Fallback to local response if API fails
       const aiResponse: Message = {
@@ -165,13 +171,13 @@ export function AIChat({ className = '' }: AIChatProps) {
   };
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
+    <div className={`fixed bottom-4 right-4 z-50 ${className}`} data-aichat="true">
       {/* Chat Toggle Button */}
       {!isOpen && (
         <Button
           onClick={() => setIsOpen(true)}
           className="w-14 h-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
-          style={{ backgroundColor: '#3D0301' }}
+          style={{ backgroundColor: '#82213D' }}
         >
           <MessageCircle className="w-6 h-6 text-white" />
         </Button>
@@ -188,16 +194,21 @@ export function AIChat({ className = '' }: AIChatProps) {
           <CardContent className="p-0 h-full flex flex-col">
             {/* Header */}
             <div 
-              className="flex items-center justify-between p-3 border-b cursor-pointer"
-              style={{ backgroundColor: '#3D0301', borderColor: '#F8E8EC' }}
+              className="flex items-center justify-between p-3 border-b cursor-pointer rounded-t-xl"
+              style={{ backgroundColor: '#82213D', borderColor: '#F8E8EC' }}
               onClick={() => setIsMinimized(!isMinimized)}
             >
               <div className="flex items-center space-x-2">
                 <Bot className="w-5 h-5 text-white" />
                 <span className="text-white font-medium">AI Assistant</span>
-                {isUsingChatGPT && (
-                  <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                {isUsingChatGPT && !apiError && (
+                  <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-xl">
                     ChatGPT
+                  </span>
+                )}
+                {apiError && (
+                  <span className="text-xs bg-red-500 text-white px-2 py-1 rounded-xl">
+                    Offline
                   </span>
                 )}
               </div>
@@ -234,14 +245,15 @@ export function AIChat({ className = '' }: AIChatProps) {
                       className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                     >
                       <div
-                        className={`max-w-[80%] rounded-lg p-3 ${
+                        className={`max-w-[80%] rounded-xl p-3 ${
                           message.isUser
                             ? 'rounded-br-sm'
                             : 'rounded-bl-sm'
                         }`}
                         style={{
-                          backgroundColor: message.isUser ? '#3D0301' : '#FAD0C4',
-                          color: message.isUser ? 'white' : '#3D0301'
+                          backgroundColor: message.isUser ? '#82213D' : '#FAD0C4',
+                          color: message.isUser ? '#ffffff' : '#82213D',
+                          border: message.isUser ? '1px solid #F8E8EC' : '1px solid #F8E8EC'
                         }}
                       >
                         <div className="flex items-start space-x-2">
@@ -249,14 +261,32 @@ export function AIChat({ className = '' }: AIChatProps) {
                             <Bot className="w-4 h-4 mt-0.5 flex-shrink-0" />
                           )}
                           {message.isUser && (
-                            <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                            <User 
+                              className="w-4 h-4 mt-0.5 flex-shrink-0" 
+                              style={{ 
+                                color: '#ffffff',
+                                fill: '#ffffff',
+                                stroke: '#ffffff'
+                              }} 
+                            />
                           )}
                           <div className="flex-1">
-                            <p className="text-sm">{message.text}</p>
                             <p 
-                              className="text-xs mt-1 opacity-70"
+                              className="text-sm"
                               style={{ 
-                                color: message.isUser ? 'rgba(255,255,255,0.7)' : 'rgba(61,3,1,0.7)' 
+                                color: message.isUser ? '#ffffff' : '#82213D',
+                                WebkitTextFillColor: message.isUser ? '#ffffff' : '#82213D',
+                                fontWeight: message.isUser ? 'bold' : 'normal',
+                                backgroundColor: message.isUser ? '#88213D' : 'transparent'
+                              }}
+                            >
+                              {message.text}
+                            </p>
+                            <p 
+                              className="text-xs mt-1 opacity-80"
+                              style={{ 
+                                color: message.isUser ? 'rgba(255,255,255,0.9)' : 'rgba(61,3,1,0.7)',
+                                WebkitTextFillColor: message.isUser ? 'rgba(255,255,255,0.9)' : 'rgba(61,3,1,0.7)'
                               }}
                             >
                               {formatTime(message.timestamp)}
@@ -269,10 +299,14 @@ export function AIChat({ className = '' }: AIChatProps) {
                   
                   {isLoading && (
                     <div className="flex justify-start">
-                      <div
-                        className="max-w-[80%] rounded-lg rounded-bl-sm p-3"
-                        style={{ backgroundColor: '#FAD0C4', color: '#3D0301' }}
-                      >
+                        <div
+                          className="max-w-[80%] rounded-xl rounded-bl-sm p-3"
+                          style={{ 
+                            backgroundColor: '#FAD0C4', 
+                            color: '#82213D',
+                            border: '1px solid #F8E8EC'
+                          }}
+                        >
                         <div className="flex items-center space-x-2">
                           <Bot className="w-4 h-4" />
                           <div className="flex space-x-1">
@@ -290,22 +324,33 @@ export function AIChat({ className = '' }: AIChatProps) {
 
                 {/* Input */}
                 <div className="p-3 border-t" style={{ borderColor: '#F8E8EC' }}>
+                  {/* API Status */}
+                  {apiError && (
+                    <div className="mb-2 p-2 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600">
+                      ⚠️ ChatGPT API không khả dụng. Đang sử dụng chế độ offline.
+                    </div>
+                  )}
+                  
                   {/* Toggle ChatGPT */}
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <span className="text-xs text-gray-600">AI Mode:</span>
                       <button
-                        onClick={() => setIsUsingChatGPT(!isUsingChatGPT)}
-                        className={`text-xs px-2 py-1 rounded-full transition-colors ${
+                        onClick={() => {
+                          setIsUsingChatGPT(!isUsingChatGPT);
+                          setApiError(false);
+                        }}
+                        className={`text-xs px-2 py-1 rounded-xl transition-colors ${
                           isUsingChatGPT 
                             ? 'bg-green-500 text-white' 
                             : 'bg-gray-200 text-gray-700'
                         }`}
+                        style={{ border: '1px solid #F8E8EC' }}
                       >
                         {isUsingChatGPT ? 'ChatGPT' : 'Local'}
                       </button>
                     </div>
-                    {isUsingChatGPT && (
+                    {isUsingChatGPT && !apiError && (
                       <span className="text-xs text-green-600">Powered by OpenAI</span>
                     )}
                   </div>
@@ -317,15 +362,20 @@ export function AIChat({ className = '' }: AIChatProps) {
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Nhập câu hỏi của bạn..."
-                      className="flex-1"
+                      className="flex-1 rounded-xl"
+                      style={{ borderColor: '#F8E8EC' }}
                       disabled={isLoading}
                     />
                     <Button
                       onClick={handleSendMessage}
                       disabled={!inputValue.trim() || isLoading}
                       size="sm"
-                      className="px-3"
-                      style={{ backgroundColor: '#3D0301' }}
+                      className="px-3 rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      style={{ 
+                        backgroundColor: '#82213D',
+                        border: '1px solid #F8E8EC',
+                        color: '#ffffff'
+                      }}
                     >
                       <Send className="w-4 h-4" />
                     </Button>

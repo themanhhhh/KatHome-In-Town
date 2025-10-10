@@ -1,11 +1,6 @@
 'use client';
 
 import { useState, useEffect } from "react";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../card/card";
-import { Input } from "../input/input";
-import { Label } from "../label/label";
-import { Badge } from "../badge/badge";
 import { 
   ArrowLeft,
   Mail,
@@ -15,6 +10,7 @@ import {
   Clock,
   RefreshCw
 } from "lucide-react";
+import Style from "../../styles/verify-email.module.css";
 
 interface BookingData {
   bookingId: string;
@@ -180,155 +176,159 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className={Style.verifyEmailPage}>
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b" style={{ borderColor: '#FAD0C4' }}>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
+      <div className={Style.header}>
+        <div className={Style.container}>
+          <div className={Style.headerContent}>
+            <button 
               onClick={onBack}
-              className="flex items-center space-x-2"
-              style={{ color: '#C599B6' }}
+              className={Style.backButton}
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Quay lại</span>
-            </Button>
-            <div className="flex items-center space-x-2">
-              <h1 className="text-xl font-semibold font-heading" style={{ color: '#C599B6' }}>Xác thực email</h1>
-              <Badge style={{ backgroundColor: '#F2A7C3', color: '#C599B6' }}>
+            </button>
+            <div className={Style.headerTitle}>
+              <h1>Xác thực email</h1>
+              <span className={Style.stepBadge}>
                 Bước 2/2
-              </Badge>
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-md mx-auto">
-          <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
-            <CardHeader className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F2A7C3' }}>
-                <Mail className="w-8 h-8" style={{ color: '#C599B6' }} />
+      <div className={Style.container}>
+        <div className={Style.mainContent}>
+          <div className={Style.verificationCard}>
+            <div className={Style.cardHeader}>
+              <div className={Style.iconContainer}>
+                <Mail className={Style.icon} />
               </div>
-              <CardTitle style={{ color: '#C599B6' }}>Xác thực email</CardTitle>
-              <p className="text-sm opacity-80" style={{ color: '#C599B6' }}>
+              <h2 className={Style.cardTitle}>Xác thực email</h2>
+              <p className={Style.cardDescription}>
                 Chúng tôi đã gửi mã xác thực 6 chữ số đến email
               </p>
-              <p className="font-medium" style={{ color: '#C599B6' }}>
+              <div className={Style.emailAddress}>
                 {bookingData.guestInfo.email}
-              </p>
-            </CardHeader>
+              </div>
+            </div>
             
-            <CardContent className="space-y-6">
-              <form onSubmit={handleVerificationSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-center block" style={{ color: '#C599B6' }}>
+            <div className={Style.cardContent}>
+              <form onSubmit={handleVerificationSubmit} className={Style.form}>
+                <div className={Style.inputGroup}>
+                  <label className={Style.inputLabel}>
                     Nhập mã xác thực
-                  </Label>
-                  <Input
+                  </label>
+                  <input
+                    type="text"
                     value={verificationCode}
                     onChange={(e) => handleCodeChange(e.target.value)}
                     placeholder="123456"
-                    className={`text-center text-2xl tracking-widest ${error ? 'border-red-500' : ''}`}
+                    className={`${Style.verificationInput} ${error ? Style.error : ''}`}
                     maxLength={6}
                     autoComplete="off"
                   />
                   {error && (
-                    <p className="text-sm text-red-500 flex items-center justify-center space-x-1">
+                    <p className={Style.errorMessage}>
                       <AlertCircle className="w-3 h-3" />
                       <span>{error}</span>
                     </p>
                   )}
                 </div>
 
-                <Button 
+                <button 
                   type="submit"
                   disabled={isVerifying || verificationCode.length !== 6}
-                  className="w-full text-white py-3"
-                  style={{ backgroundColor: '#C599B6' }}
+                  className={Style.submitButton}
                 >
                   {isVerifying ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <>
+                      <div className={Style.loadingSpinner} />
                       <span>Đang xác thực...</span>
-                    </div>
+                    </>
                   ) : (
-                    <div className="flex items-center space-x-2">
+                    <>
                       <CheckCircle className="w-4 h-4" />
                       <span>Xác thực</span>
-                    </div>
+                    </>
                   )}
-                </Button>
+                </button>
               </form>
 
               {/* Countdown and Resend */}
-              <div className="text-center space-y-3">
+              <div className={Style.countdownSection}>
                 {countdown > 0 ? (
-                  <div className="flex items-center justify-center space-x-2 text-sm" style={{ color: '#C599B6' }}>
-                    <Clock className="w-4 h-4" />
+                  <div className={Style.countdown}>
+                    <Clock className={Style.countdownIcon} />
                     <span>Mã sẽ hết hạn sau: {formatTime(countdown)}</span>
                   </div>
                 ) : (
-                  <p className="text-sm" style={{ color: '#C599B6' }}>
+                  <p className={Style.expiredMessage}>
                     Mã xác thực đã hết hạn
                   </p>
                 )}
 
-                <Button
-                  variant="ghost"
+                <button
                   onClick={handleResendCode}
                   disabled={!canResend || isResending}
-                  className="text-sm"
-                  style={{ color: '#C599B6' }}
+                  className={Style.resendButton}
                 >
                   {isResending ? (
-                    <div className="flex items-center space-x-2">
+                    <>
                       <RefreshCw className="w-3 h-3 animate-spin" />
                       <span>Đang gửi...</span>
-                    </div>
+                    </>
                   ) : (
-                    <div className="flex items-center space-x-2">
+                    <>
                       <RefreshCw className="w-3 h-3" />
                       <span>Gửi lại mã</span>
-                    </div>
+                    </>
                   )}
-                </Button>
+                </button>
               </div>
 
               {/* Security Notice */}
-              <div className="p-4 rounded-lg bg-white/50">
-                <div className="flex items-start space-x-2">
-                  <Shield className="w-4 h-4 mt-0.5" style={{ color: '#C599B6' }} />
-                  <div className="text-xs space-y-1" style={{ color: '#C599B6' }}>
-                    <p className="font-medium">Bảo mật thông tin</p>
-                    <p className="opacity-80">
-                      Mã xác thực này chỉ có hiệu lực trong 5 phút và chỉ được sử dụng một lần. 
-                      Không chia sẻ mã này với bất kỳ ai.
-                    </p>
-                  </div>
+              <div className={Style.infoSection}>
+                <div className={Style.infoHeader}>
+                  <Shield className={Style.infoIcon} />
+                  <span>Bảo mật thông tin</span>
+                </div>
+                <div className={Style.infoContent}>
+                  <p>
+                    Mã xác thực này chỉ có hiệu lực trong 5 phút và chỉ được sử dụng một lần. 
+                    Không chia sẻ mã này với bất kỳ ai.
+                  </p>
                 </div>
               </div>
 
               {/* Booking Info Reminder */}
-              <div className="p-4 rounded-lg bg-white/50">
-                <h4 className="font-medium mb-2 font-heading" style={{ color: '#C599B6' }}>Thông tin đặt phòng</h4>
-                <div className="text-sm space-y-1" style={{ color: '#C599B6' }}>
-                  <p><strong>Mã đặt phòng:</strong> {bookingData.bookingId}</p>
-                  <p><strong>Phòng:</strong> {bookingData.roomData.name}</p>
-                  <p><strong>Khách hàng:</strong> {bookingData.guestInfo.firstName} {bookingData.guestInfo.lastName}</p>
-                  <p><strong>Tổng tiền:</strong> {new Intl.NumberFormat('vi-VN').format(bookingData.paymentInfo.total)}đ</p>
+              <div className={Style.bookingInfo}>
+                <h4 className={Style.bookingTitle}>Thông tin đặt phòng</h4>
+                <div className={Style.bookingDetails}>
+                  <div className={Style.bookingDetail}>
+                    <span className={Style.bookingLabel}>Mã đặt phòng:</span> {bookingData.bookingId}
+                  </div>
+                  <div className={Style.bookingDetail}>
+                    <span className={Style.bookingLabel}>Phòng:</span> {bookingData.roomData.name}
+                  </div>
+                  <div className={Style.bookingDetail}>
+                    <span className={Style.bookingLabel}>Khách hàng:</span> {bookingData.guestInfo.firstName} {bookingData.guestInfo.lastName}
+                  </div>
+                  <div className={Style.bookingDetail}>
+                    <span className={Style.bookingLabel}>Tổng tiền:</span> {new Intl.NumberFormat('vi-VN').format(bookingData.paymentInfo.total)}đ
+                  </div>
                 </div>
               </div>
 
-              {/* Security Notice */}
-              <div className="p-3 rounded-lg border-2 border-dashed" style={{ borderColor: '#F2A7C3', backgroundColor: 'rgba(242, 167, 195, 0.1)' }}>
-                <p className="text-xs text-center" style={{ color: '#C599B6' }}>
+              {/* Final Notice */}
+              <div className={Style.securityNotice}>
+                <p className={Style.securityText}>
                   <strong>Lưu ý:</strong> Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư và nhập mã 6 chữ số.
                 </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

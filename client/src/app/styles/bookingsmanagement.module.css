@@ -120,6 +120,24 @@
   color: white;
 }
 
+.addButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #3D0301;
+  color: white;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.addButton:hover {
+  background-color: #B8899A;
+}
+
 .filtersCard {
   border: none;
   border-radius: 0.75rem;
@@ -154,9 +172,8 @@
 }
 
 .searchInput {
-  padding-left: 2.5rem;
   width: 100%;
-  padding: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 2.5rem;
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   font-size: 0.875rem;

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { 
   Search,
   Filter,
@@ -26,6 +27,7 @@ import { CoSoForm } from "../../components/coso-form";
 
 const CoSoManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedCoSos, setSelectedCoSos] = useState<string[]>([]);
   const [showCoSoForm, setShowCoSoForm] = useState(false);
   const [editingCoSo, setEditingCoSo] = useState<ApiCoSo | null>(null);
@@ -43,6 +45,7 @@ const CoSoManagementPage = () => {
                          (coso.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (coso.soDienThoai || '').includes(searchTerm);
     
+    // For now, just return search matches since ApiCoSo doesn't have status field
     return matchesSearch;
   });
 
@@ -124,7 +127,7 @@ const CoSoManagementPage = () => {
           <p className="text-gray-600 mb-4">{cososError}</p>
           <button
             onClick={() => refetchCoSos()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className={Style.retryButton}
           >
             Thử lại
           </button>
@@ -134,13 +137,13 @@ const CoSoManagementPage = () => {
   }
 
   return (
-    <div className={Style.container}>
+    <div className={Style.cosomanagement}>
       {/* Header */}
       <div className={Style.header}>
         <div className={Style.headerContent}>
           <div className={Style.headerInfo}>
-            <h1 className={Style.headerTitle}>Quản lý cơ sở</h1>
-            <p className={Style.headerDescription}>
+            <h1>Quản lý cơ sở</h1>
+            <p>
               Quản lý tất cả cơ sở của KatHome In Town
             </p>
           </div>
@@ -161,28 +164,40 @@ const CoSoManagementPage = () => {
       {/* Filters */}
       <div className={Style.filtersCard}>
         <div className={Style.filtersContent}>
-          <div className={Style.searchContainer}>
-            <Search className={Style.searchIcon} />
-            <input
-              type="text"
-              placeholder="Tìm kiếm cơ sở..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={Style.searchInput}
-            />
-          </div>
-          
-          <div className={Style.filterButtons}>
-            <button className={Style.filterButton}>
-              <Filter className="w-4 h-4" />
-              <span>Bộ lọc</span>
-            </button>
-            <button 
-              className={Style.refreshButton}
-              onClick={() => refetchCoSos()}
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
+          <div className={Style.filtersRow}>
+            <div className={Style.searchContainer}>
+              <Search className={Style.searchIcon} />
+              <input
+                type="text"
+                placeholder="Tìm kiếm cơ sở..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={Style.searchInput}
+              />
+            </div>
+            
+            <div className={Style.filterControls}>
+              <div className={Style.filterGroup}>
+                <Filter className={Style.filterIcon} />
+                <select 
+                  value={statusFilter} 
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className={Style.selectTrigger}
+                >
+                  <option value="all">Tất cả</option>
+                  <option value="active">Hoạt động</option>
+                  <option value="inactive">Tạm dừng</option>
+                  <option value="maintenance">Bảo trì</option>
+                </select>
+              </div>
+              
+              <button 
+                className={Style.refreshButton}
+                onClick={() => refetchCoSos()}
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -294,9 +309,11 @@ const CoSoManagementPage = () => {
                           <h4 className={Style.cosName}>{coso.tenCoSo}</h4>
                           {coso.hinhAnh && (
                             <div className={Style.cosImage}>
-                              <img 
+                              <Image 
                                 src={coso.hinhAnh} 
                                 alt={coso.tenCoSo}
+                                width={48}
+                                height={48}
                                 className="w-12 h-12 rounded-lg object-cover"
                               />
                             </div>

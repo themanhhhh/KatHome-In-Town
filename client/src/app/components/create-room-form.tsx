@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Button } from './button';
 import { Card } from './card';
 import { Input } from './input';
@@ -161,9 +162,11 @@ export function CreateRoomForm({ onSuccess, onCancel }: CreateRoomFormProps) {
               </div>
             ) : (
               <div className="relative">
-                <img
+                <Image
                   src={imagePreview}
                   alt="Preview"
+                  width={400}
+                  height={192}
                   className="w-full h-48 object-cover rounded-lg border"
                 />
                 <Button

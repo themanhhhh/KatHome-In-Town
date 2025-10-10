@@ -6,8 +6,8 @@ import { Card } from './card/card';
 import { Alert, AlertDescription } from './alert/alert';
 import { X, Save } from 'lucide-react';
 import { ImageUpload } from './image-upload';
-import { ApiCoSo } from '../types/api';
-import { cosoApi } from '../lib/api';
+import { ApiCoSo } from '../../types/api';
+import { cosoApi } from '../../lib/api';
 
 interface CoSoFormProps {
   coso?: ApiCoSo | null;

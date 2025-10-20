@@ -1,0 +1,195 @@
+{
+  "info": {
+    "_postman_id": "b9bb7f0a-6b9d-4f3a-bc6d-6b2ef6a5f001",
+    "name": "Booking Website API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for Booking Website backend and frontend API routes. Update the baseUrl variable if your server runs on a different port."
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"taiKhoan\": \"user1\",\n  \"matKhau\": \"password123\",\n  \"gmail\": \"user1@example.com\",\n  \"soDienThoai\": \"0123456789\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"taiKhoan\": \"user1\",\n  \"matKhau\": \"password123\"\n}" }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/verify-email", "host": ["{{baseUrl}}"], "path": ["api","auth","verify-email"] },
+            "body": { "mode": "raw", "raw": "{\n  \"gmail\": \"user1@example.com\",\n  \"code\": \"123456\"\n}" }
+          }
+        },
+        {
+          "name": "Resend Verification",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/resend-verification", "host": ["{{baseUrl}}"], "path": ["api","auth","resend-verification"] },
+            "body": { "mode": "raw", "raw": "{\n  \"gmail\": \"user1@example.com\"\n}" }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/forgot-password", "host": ["{{baseUrl}}"], "path": ["api","auth","forgot-password"] },
+            "body": { "mode": "raw", "raw": "{\n  \"gmail\": \"user1@example.com\"\n}" }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/auth/reset-password", "host": ["{{baseUrl}}"], "path": ["api","auth","reset-password"] },
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<reset-token>\",\n  \"newPassword\": \"newpass123\"\n}" }
+          }
+        },
+        {
+          "name": "Me",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api","auth","me"] } }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] } } },
+        { "name": "Get By Id", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/users/1", "host": ["{{baseUrl}}"], "path": ["api","users","1"] } } },
+        { "name": "Create", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api","users"] }, "body": { "mode": "raw", "raw": "{\n  \"taiKhoan\": \"u2\",\n  \"matKhau\": \"password\",\n  \"gmail\": \"u2@example.com\"\n}" } } },
+        { "name": "Update", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/users/1", "host": ["{{baseUrl}}"], "path": ["api","users","1"] }, "body": { "mode": "raw", "raw": "{\n  \"soDienThoai\": \"0987654321\"\n}" } } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/users/1", "host": ["{{baseUrl}}"], "path": ["api","users","1"] } } }
+      ]
+    },
+    {
+      "name": "CoSo",
+      "item": [
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/coso", "host": ["{{baseUrl}}"], "path": ["api","coso"] } } },
+        { "name": "Create", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/coso", "host": ["{{baseUrl}}"], "path": ["api","coso"] }, "body": { "mode": "raw", "raw": "{\n  \"tenCoSo\": \"Cơ sở 1\",\n  \"diaChi\": \"Hà Nội\"\n}" } } },
+        { "name": "Update", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/coso/1", "host": ["{{baseUrl}}"], "path": ["api","coso","1"] }, "body": { "mode": "raw", "raw": "{\n  \"diaChi\": \"Đà Nẵng\"\n}" } } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/coso/1", "host": ["{{baseUrl}}"], "path": ["api","coso","1"] } } }
+      ]
+    },
+    {
+      "name": "HangPhong",
+      "item": [
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/hangphong", "host": ["{{baseUrl}}"], "path": ["api","hangphong"] } } },
+        { "name": "Create", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/hangphong", "host": ["{{baseUrl}}"], "path": ["api","hangphong"] }, "body": { "mode": "raw", "raw": "{\n  \"tenHangPhong\": \"Deluxe\",\n  \"moTa\": \"Phòng cao cấp\"\n}" } } },
+        { "name": "Update", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/hangphong/1", "host": ["{{baseUrl}}"], "path": ["api","hangphong","1"] }, "body": { "mode": "raw", "raw": "{\n  \"moTa\": \"Phòng view hồ\"\n}" } } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/hangphong/1", "host": ["{{baseUrl}}"], "path": ["api","hangphong","1"] } } },
+        { "name": "Upload Image", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/hangphong/1/image", "host": ["{{baseUrl}}"], "path": ["api","hangphong","1","image"] }, "body": { "mode": "raw", "raw": "{\n  \"imageUrl\": \"https://example.com/img.jpg\"\n}" } } }
+      ]
+    },
+    {
+      "name": "Phong",
+      "item": [
+        { "name": "Search Availability", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/availability?checkIn=2025-01-10&checkOut=2025-01-12&guests=2", "host": ["{{baseUrl}}"], "path": ["api","availability"], "query": [ {"key":"checkIn","value":"2025-01-10"},{"key":"checkOut","value":"2025-01-12"},{"key":"guests","value":"2"} ] } } },
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/phong", "host": ["{{baseUrl}}"], "path": ["api","phong"] } } },
+        { "name": "Create", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/phong", "host": ["{{baseUrl}}"], "path": ["api","phong"] }, "body": { "mode": "raw", "raw": "{\n  \"tenPhong\": \"P101\",\n  \"moTa\": \"Phòng tiêu chuẩn\"\n}" } } },
+        { "name": "Update", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/phong/1", "host": ["{{baseUrl}}"], "path": ["api","phong","1"] }, "body": { "mode": "raw", "raw": "{\n  \"moTa\": \"Phòng sửa mới\"\n}" } } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/phong/1", "host": ["{{baseUrl}}"], "path": ["api","phong","1"] } } },
+        { "name": "Upload Image", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/phong/1/image", "host": ["{{baseUrl}}"], "path": ["api","phong","1","image"] }, "body": { "mode": "raw", "raw": "{\n  \"imageUrl\": \"https://example.com/img.jpg\"\n}" } } }
+      ]
+    },
+    {
+      "name": "KhachHang",
+      "item": [
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/khachhang", "host": ["{{baseUrl}}"], "path": ["api","khachhang"] } } },
+        { "name": "Create", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/khachhang", "host": ["{{baseUrl}}"], "path": ["api","khachhang"] }, "body": { "mode": "raw", "raw": "{\n  \"hoTen\": \"Nguyễn Văn A\",\n  \"email\": \"a@example.com\",\n  \"soDienThoai\": \"0909999999\"\n}" } } },
+        { "name": "Update", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/khachhang/1", "host": ["{{baseUrl}}"], "path": ["api","khachhang","1"] }, "body": { "mode": "raw", "raw": "{\n  \"soDienThoai\": \"0909000000\"\n}" } } },
+        { "name": "Delete", "request": { "method": "DELETE", "url": { "raw": "{{baseUrl}}/api/khachhang/1", "host": ["{{baseUrl}}"], "path": ["api","khachhang","1"] } } }
+      ]
+    },
+    {
+      "name": "NhanVien",
+      "item": [
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/nhanvien", "host": ["{{baseUrl}}"], "path": ["api","nhanvien"] } } },
+        { "name": "Create", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/nhanvien", "host": ["{{baseUrl}}"], "path": ["api","nhanvien"] }, "body": { "mode": "raw", "raw": "{\n  \"hoTen\": \"Nhân viên A\",\n  \"email\": \"nv@example.com\"\n}" } } },
+        { "name": "Upload Image", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/nhanvien/1/image", "host": ["{{baseUrl}}"], "path": ["api","nhanvien","1","image"] }, "body": { "mode": "raw", "raw": "{\n  \"imageUrl\": \"https://example.com/img.jpg\"\n}" } } }
+      ]
+    },
+    {
+      "name": "ChucVu",
+      "item": [
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/chucvu", "host": ["{{baseUrl}}"], "path": ["api","chucvu"] } } }
+      ]
+    },
+    {
+      "name": "DichVu",
+      "item": [
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/dichvu", "host": ["{{baseUrl}}"], "path": ["api","dichvu"] } } },
+        { "name": "Upload Image", "request": { "method": "PUT", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/dichvu/1/image", "host": ["{{baseUrl}}"], "path": ["api","dichvu","1","image"] }, "body": { "mode": "raw", "raw": "{\n  \"imageUrl\": \"https://example.com/img.jpg\"\n}" } } }
+      ]
+    },
+    {
+      "name": "DonDatPhong",
+      "item": [
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/dondatphong", "host": ["{{baseUrl}}"], "path": ["api","dondatphong"] } } },
+        { "name": "Create", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/dondatphong", "host": ["{{baseUrl}}"], "path": ["api","dondatphong"] }, "body": { "mode": "raw", "raw": "{\n  \"maKhachHang\": 1,\n  \"maPhong\": 1,\n  \"ngayNhan\": \"2025-01-10\",\n  \"ngayTra\": \"2025-01-12\",\n  \"soLuongKhach\": 2\n}" } } }
+      ]
+    },
+    {
+      "name": "Pricing (DonGia)",
+      "item": [
+        { "name": "Get All", "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/dongia", "host": ["{{baseUrl}}"], "path": ["api","dongia"] } } },
+        { "name": "Create", "request": { "method": "POST", "header": [ { "key": "Content-Type", "value": "application/json" } ], "url": { "raw": "{{baseUrl}}/api/dongia", "host": ["{{baseUrl}}"], "path": ["api","dongia"] }, "body": { "mode": "raw", "raw": "{\n  \"maHangPhong\": 1,\n  \"donViTinh\": \"4h\",\n  \"donGia\": 350000\n}" } } }
+      ]
+    },
+    {
+      "name": "Email Service",
+      "item": [
+        {
+          "name": "Send Payment Confirmation",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/send-payment-confirmation", "host": ["{{baseUrl}}"], "path": ["api","send-payment-confirmation"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@example.com\",\n  \"customerName\": \"Nguyễn Văn A\",\n  \"bookingData\": {\n    \"bookingId\": \"BK1234567890\",\n    \"roomName\": \"Deluxe Room\",\n    \"checkIn\": \"2025-01-10\",\n    \"checkOut\": \"2025-01-12\",\n    \"guests\": 2,\n    \"totalAmount\": 1500000,\n    \"paymentMethod\": \"Credit Card\",\n    \"bookingDate\": \"2025-01-05\"\n  }\n}"
+            }
+          }
+        }
+      ,
+        {
+          "name": "Verify Payment (and send email)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "url": { "raw": "{{baseUrl}}/api/payment/verify", "host": ["{{baseUrl}}"], "path": ["api","payment","verify"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingId\": \"BK1234567890\",\n  \"totalAmount\": 1500000,\n  \"paymentMethod\": \"Credit Card\",\n  \"paymentRef\": \"PMT-XYZ-001\",\n  \"sendEmail\": true,\n  \"customerEmail\": \"customer@example.com\",\n  \"customerName\": \"Nguyễn Văn A\",\n  \"roomName\": \"Deluxe Room\",\n  \"checkIn\": \"2025-01-10\",\n  \"checkOut\": \"2025-01-12\",\n  \"guests\": 2,\n  \"bookingDate\": \"2025-01-05\"\n}"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3001" }
+  ]
+}

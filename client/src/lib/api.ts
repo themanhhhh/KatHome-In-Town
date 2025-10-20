@@ -133,7 +133,7 @@ export const usersApi = {
   createWithImage: async (data: unknown, imageFile?: File) => {
     if (imageFile) {
       const imageUrl = await uploadFileToPinata(imageFile);
-      return api.post('users', { ...data, avatar: imageUrl });
+      return api.post('users', { ...(data as Record<string, unknown>), avatar: imageUrl });
     } else {
       return api.post('users', data);
     }
@@ -154,7 +154,7 @@ export const cosoApi = {
   createWithImage: async (data: unknown, imageFile?: File) => {
     if (imageFile) {
       const imageUrl = await uploadFileToPinata(imageFile);
-      return api.post('coso', { ...data, hinhAnh: imageUrl });
+      return api.post('coso', { ...(data as Record<string, unknown>), hinhAnh: imageUrl });
     } else {
       return api.post('coso', data);
     }
@@ -175,7 +175,7 @@ export const hangPhongApi = {
   createWithImage: async (data: unknown, imageFile?: File) => {
     if (imageFile) {
       const imageUrl = await uploadFileToPinata(imageFile);
-      return api.post('hangphong', { ...data, hinhAnh: imageUrl });
+      return api.post('hangphong', { ...(data as Record<string, unknown>), hinhAnh: imageUrl });
     } else {
       return api.post('hangphong', data);
     }
@@ -196,7 +196,7 @@ export const phongApi = {
   createWithImage: async (data: unknown, imageFile?: File) => {
     if (imageFile) {
       const imageUrl = await uploadFileToPinata(imageFile);
-      return api.post('phong', { ...data, hinhAnh: imageUrl });
+      return api.post('phong', { ...(data as Record<string, unknown>), hinhAnh: imageUrl });
     } else {
       return api.post('phong', data);
     }
@@ -266,7 +266,7 @@ export const nhanVienApi = {
   createWithImage: async (data: unknown, imageFile?: File) => {
     if (imageFile) {
       const imageUrl = await uploadFileToPinata(imageFile);
-      return api.post('nhanvien', { ...data, hinhAnh: imageUrl });
+      return api.post('nhanvien', { ...(data as Record<string, unknown>), hinhAnh: imageUrl });
     } else {
       return api.post('nhanvien', data);
     }
@@ -296,7 +296,7 @@ export const dichVuApi = {
   createWithImage: async (data: unknown, imageFile?: File) => {
     if (imageFile) {
       const imageUrl = await uploadFileToPinata(imageFile);
-      return api.post('dichvu', { ...data, hinhAnh: imageUrl });
+      return api.post('dichvu', { ...(data as Record<string, unknown>), hinhAnh: imageUrl });
     } else {
       return api.post('dichvu', data);
     }
@@ -304,12 +304,41 @@ export const dichVuApi = {
 };
 
 // Đơn đặt phòng
+export interface CreateBookingRequest {
+  coSoId: string;
+  khachHangId?: string;
+  customerEmail: string;
+  customerPhone: string;
+  customerName: string;
+  rooms: {
+    roomId: string;
+    checkIn: string;
+    checkOut: string;
+    adults: number;
+    children: number;
+    price: number;
+  }[];
+  notes?: string;
+}
+
 export const donDatPhongApi = {
   getAll: () => api.get('dondatphong'),
   getById: (id: string) => api.get(`dondatphong/${id}`),
-  create: (data: unknown) => api.post('dondatphong', data),
+  create: (data: CreateBookingRequest) => api.post('dondatphong', data),
   update: (id: string, data: unknown) => api.put(`dondatphong/${id}`, data),
   delete: (id: string) => api.delete(`dondatphong/${id}`),
+  
+  // Booking management
+  verifyOTP: (bookingId: string, otpCode: string) => 
+    api.post(`bookings/${bookingId}/verify-otp`, { otpCode }),
+  confirmPayment: (bookingId: string, paymentMethod: string = 'Cash') => 
+    api.post(`bookings/${bookingId}/confirm-payment`, { paymentMethod }),
+  checkIn: (bookingId: string) => 
+    api.post(`bookings/${bookingId}/check-in`, {}),
+  checkOut: (bookingId: string) => 
+    api.post(`bookings/${bookingId}/check-out`, {}),
+  cancel: (bookingId: string) => 
+    api.post(`bookings/${bookingId}/cancel`, {}),
 };
 
 // Đơn giá
@@ -338,6 +367,60 @@ export const khieuNaiApi = {
   delete: (id: string) => api.delete(`khieunai/${id}`),
 };
 
+// Payment
+export const paymentApi = {
+  verify: (payload: {
+    bookingId: string;
+    totalAmount: number;
+    paymentMethod: string;
+    paymentRef?: string;
+    sendEmail?: boolean;
+    customerEmail?: string;
+    customerName?: string;
+    roomName?: string;
+    checkIn?: string;
+    checkOut?: string;
+    guests?: number;
+    bookingDate?: string;
+  }) => api.post('payment/verify', payload),
+
+  sendPaymentConfirmation: (payload: {
+    email: string;
+    customerName: string;
+    bookingData: {
+      bookingId: string;
+      roomName: string;
+      checkIn: string;
+      checkOut: string;
+      guests: number;
+      totalAmount: number;
+      paymentMethod: string;
+      bookingDate: string;
+    };
+  }) => api.post('send-payment-confirmation', payload),
+
+  /**
+   * Finalize booking payment
+   * - Updates booking payment status to paid
+   * - Creates revenue record
+   * - Called after payment verification succeeds
+   */
+  finalizeBooking: (payload: {
+    bookingId: string;
+    totalAmount: number;
+    paymentMethod: string;
+    paymentRef?: string;
+    paidAt?: string;
+    sendEmail?: boolean;
+  }) => api.post(`bookings/${payload.bookingId}/finalize`, {
+    totalAmount: payload.totalAmount,
+    paymentMethod: payload.paymentMethod,
+    paymentRef: payload.paymentRef,
+    paidAt: payload.paidAt,
+    sendEmail: payload.sendEmail,
+  }),
+};
+
 // Cơ sở
 export const coSoApi = {
   getAll: () => api.get('coso'),
@@ -345,6 +428,71 @@ export const coSoApi = {
   create: (data: unknown) => api.post('coso', data),
   update: (id: string, data: unknown) => api.put(`coso/${id}`, data),
   delete: (id: string) => api.delete(`coso/${id}`),
+};
+
+// Revenue
+export interface RevenueSummary {
+  summary: {
+    totalRevenue: number;
+    totalBookings: number;
+    averageRevenue: number;
+  };
+  byPaymentMethod: Record<string, { count: number; total: number }>;
+  byBranch: Record<string, { count: number; total: number; name: string }>;
+  timeline: Record<string, { count: number; total: number }>;
+  dateRange: {
+    startDate: string | null;
+    endDate: string | null;
+  };
+}
+
+export const revenueApi = {
+  getAll: () => api.get('revenue'),
+  getById: (id: number) => api.get(`revenue/${id}`),
+  getSummary: (params?: {
+    startDate?: string;
+    endDate?: string;
+    groupBy?: 'day' | 'month' | 'year';
+  }) => {
+    const query = params ? `?${new URLSearchParams(params as Record<string, string>).toString()}` : '';
+    return api.get<RevenueSummary>(`revenue/summary${query}`);
+  },
+};
+
+// Reports
+export interface ApiReport {
+  id: string;
+  title: string;
+  type: 'revenue' | 'bookings' | 'occupancy' | 'customer' | 'rooms';
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
+  status: 'completed' | 'processing' | 'failed';
+  description?: string;
+  value: number;
+  change: number;
+  trend: 'up' | 'down' | 'stable';
+  fileSize?: string;
+  fileUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const reportsApi = {
+  getAll: () => api.get<ApiReport[]>('reports'),
+  getById: (id: string) => api.get<ApiReport>(`reports/${id}`),
+  create: (data: {
+    title: string;
+    type: string;
+    period: string;
+    description?: string;
+    value?: number;
+    change?: number;
+    trend?: string;
+    status?: string;
+  }) => api.post('reports', data),
+  update: (id: string, data: Partial<ApiReport>) => api.put(`reports/${id}`, data),
+  delete: (id: string) => api.delete(`reports/${id}`),
+  bulkDelete: (ids: string[]) => api.post('reports/bulk-delete', { ids }),
+  markCompleted: (id: string) => api.post(`reports/${id}/complete`, {}),
 };
 
 /**

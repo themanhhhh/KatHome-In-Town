@@ -57,6 +57,8 @@ interface RoomData {
   maxGuests: number;
   beds: number;
   bathrooms: number;
+  branchId?: string;
+  branchName?: string;
 }
 
 interface RoomDetailProps {
@@ -272,6 +274,8 @@ const amenitiesToShow = useMemo(() => {
       maxGuests: capacity,
       beds,
       bathrooms: 1,
+      branchId: room.coSo?.maCoSo,
+      branchName: room.coSo?.tenCoSo,
     });
   };
 

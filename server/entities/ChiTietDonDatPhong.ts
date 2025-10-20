@@ -18,4 +18,29 @@ export class ChiTietDonDatPhong {
 
   @Column()
   soTreEm!: number;
+
+  @Column({ type: "timestamp" })
+  checkInDate!: Date;
+
+  @Column({ type: "timestamp" })
+  checkOutDate!: Date;
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
+  donGia?: number;
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
+  thanhTien?: number;
+
+  @Column({ 
+    type: "enum", 
+    enum: ["reserved", "paid", "checked_in", "checked_out", "cancelled"],
+    default: "reserved" 
+  })
+  trangThai!: string;
+
+  @Column({ type: "timestamp", nullable: true })
+  actualCheckInTime?: Date;
+
+  @Column({ type: "timestamp", nullable: true })
+  actualCheckOutTime?: Date;
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from './button/button';
 import { Card } from './card/card';
@@ -26,7 +26,17 @@ export function ImageUpload({
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cleanup preview URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -44,15 +54,24 @@ export function ImageUpload({
       return;
     }
 
+    // Create preview URL for the selected file
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+
     setIsUploading(true);
     setError(null);
     setSuccess(null);
 
     try {
       await onImageUpload(file);
-      setSuccess('Image uploaded successfully!');
+      setSuccess('Image selected! Will be uploaded when you save.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload image');
+      // Reset preview on error
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setPreviewUrl(null);
     } finally {
       setIsUploading(false);
       // Reset file input
@@ -73,6 +92,7 @@ export function ImageUpload({
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Image Upload</h3>
             <Button
+              type="button"
               onClick={handleUploadClick}
               disabled={isUploading}
               className="flex items-center gap-2"
@@ -90,22 +110,29 @@ export function ImageUpload({
             className="hidden"
           />
 
-          {currentImageUrl && (
+          {(previewUrl || currentImageUrl) && (
             <div className="space-y-2">
-              <p className="text-sm text-gray-600">Current Image:</p>
+              <p className="text-sm text-gray-600">
+                {previewUrl ? 'Selected Image (Preview):' : 'Current Image:'}
+              </p>
               <div className="relative inline-block">
                 <Image
-                  src={currentImageUrl}
+                  src={previewUrl || currentImageUrl || ''}
                   alt={`${entityType} image`}
                   width={128}
                   height={128}
                   className="h-32 w-32 rounded-lg object-cover border"
                 />
+                {previewUrl && (
+                  <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl-lg rounded-tr-lg">
+                    New
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {!currentImageUrl && (
+          {!previewUrl && !currentImageUrl && (
             <div className="flex items-center justify-center h-32 w-32 border-2 border-dashed border-gray-300 rounded-lg">
               <div className="text-center">
                 <ImageIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />

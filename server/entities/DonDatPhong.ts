@@ -37,7 +37,51 @@ export class DonDatPhong {
   ngayXacNhan!: Date;
 
   @Column({ type: "timestamp", nullable: true })
-  ngayHuy!: Date;
+  ngayHuy?: Date;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  customerEmail?: string;
+
+  @Column({ type: "varchar", length: 100, nullable: true })
+  customerPhone?: string;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  customerName?: string;
+
+  @Column({ type: "text", nullable: true })
+  notes?: string;
+
+  @Column({ type: "varchar", length: 50, default: "website" })
+  bookingSource?: string; // website, phone, walkin, etc.
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
+  totalAmount?: number;
+
+  // Payment fields
+  @Column({ type: "varchar", length: 50, nullable: true, default: 'pending' })
+  paymentStatus?: string; // pending, paid, failed, refunded
+
+  @Column({ type: "varchar", length: 50, nullable: true })
+  paymentMethod?: string;
+
+  @Column({ type: "varchar", length: 255, nullable: true })
+  paymentRef?: string;
+
+  @Column({ type: "timestamp", nullable: true })
+  paidAt?: Date;
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
+  totalPaid?: number;
+
+  // OTP verification fields
+  @Column({ type: "varchar", length: 6, nullable: true })
+  otpCode?: string;
+
+  @Column({ type: "timestamp", nullable: true })
+  otpExpiry?: Date;
+
+  @Column({ type: "boolean", default: false })
+  isVerified?: boolean;
 
   @OneToMany(() => ChiTietDonDatPhong, (ct) => ct.donDatPhong)
   chiTiet!: ChiTietDonDatPhong[];

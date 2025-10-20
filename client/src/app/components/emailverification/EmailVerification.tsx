@@ -7,9 +7,9 @@ import {
   Shield,
   CheckCircle,
   AlertCircle,
-  Clock,
-  RefreshCw
+  Clock
 } from "lucide-react";
+import { donDatPhongApi } from "@/lib/api";
 import Style from "../../styles/verify-email.module.css";
 
 interface BookingData {
@@ -59,16 +59,12 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
   const [error, setError] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [countdown, setCountdown] = useState(300); // 5 minutes countdown
-  const [canResend, setCanResend] = useState(false);
-  const [isResending, setIsResending] = useState(false);
 
-  // Verification code will be sent via email and validated through API
-
+  // OTP countdown timer
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          setCanResend(true);
           return 0;
         }
         return prev - 1;
@@ -88,83 +84,37 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
     e.preventDefault();
     
     if (!verificationCode.trim()) {
-      setError("Vui lòng nhập mã xác thực");
+      setError("Vui lòng nhập mã OTP");
       return;
     }
 
     if (verificationCode.length !== 6) {
-      setError("Mã xác thực phải có 6 chữ số");
+      setError("Mã OTP phải có 6 chữ số");
       return;
     }
 
     setIsVerifying(true);
     setError("");
 
-    // Call verification API
     try {
-      const response = await fetch('/api/auth/verify-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: bookingData.guestInfo.email,
-          code: verificationCode,
-          bookingId: bookingData.bookingId
-        }),
-      });
+      const result = await donDatPhongApi.verifyOTP(bookingData.bookingId, verificationCode) as { success: boolean; message?: string };
 
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        setIsVerifying(false);
+      if (result.success) {
         onVerificationSuccess({
           ...bookingData,
           verificationStatus: "verified",
           verificationTime: new Date().toISOString()
         });
       } else {
-        setIsVerifying(false);
-        setError(result.message || "Mã xác thực không đúng. Vui lòng thử lại.");
+        setError(result.message || "Mã OTP không đúng. Vui lòng thử lại.");
         setVerificationCode("");
       }
-    } catch (error) {
-      setIsVerifying(false);
+    } catch (err) {
+      console.error('OTP verification error:', err);
       setError("Có lỗi xảy ra. Vui lòng thử lại sau.");
       setVerificationCode("");
-    }
-  };
-
-  const handleResendCode = async () => {
-    setIsResending(true);
-    
-    try {
-      const response = await fetch('/api/auth/resend-verification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: bookingData.guestInfo.email,
-          bookingId: bookingData.bookingId
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        setIsResending(false);
-        setCanResend(false);
-        setCountdown(300); // Reset countdown
-        setError("");
-        alert("Mã xác thực mới đã được gửi đến email của bạn!");
-      } else {
-        setIsResending(false);
-        setError(result.message || "Không thể gửi lại mã. Vui lòng thử lại sau.");
-      }
-    } catch (error) {
-      setIsResending(false);
-      setError("Có lỗi xảy ra. Vui lòng thử lại sau.");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -176,7 +126,7 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
   };
 
   return (
-    <div className={Style.verifyEmailPage}>
+    <div className={Style.verifyEmailPage} data-allow-select="true">
       {/* Header */}
       <div className={Style.header}>
         <div className={Style.container}>
@@ -189,9 +139,9 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
               <span>Quay lại</span>
             </button>
             <div className={Style.headerTitle}>
-              <h1>Xác thực email</h1>
+              <h1>Xác nhận đặt phòng</h1>
               <span className={Style.stepBadge}>
-                Bước 2/2
+                Bước 2/3
               </span>
             </div>
           </div>
@@ -205,9 +155,9 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
               <div className={Style.iconContainer}>
                 <Mail className={Style.icon} />
               </div>
-              <h2 className={Style.cardTitle}>Xác thực email</h2>
+              <h2 className={Style.cardTitle}>Xác nhận đặt phòng</h2>
               <p className={Style.cardDescription}>
-                Chúng tôi đã gửi mã xác thực 6 chữ số đến email
+                Chúng tôi đã gửi mã OTP 6 chữ số đến email
               </p>
               <div className={Style.emailAddress}>
                 {bookingData.guestInfo.email}
@@ -218,7 +168,7 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
               <form onSubmit={handleVerificationSubmit} className={Style.form}>
                 <div className={Style.inputGroup}>
                   <label className={Style.inputLabel}>
-                    Nhập mã xác thực
+                    Nhập mã OTP
                   </label>
                   <input
                     type="text"
@@ -245,47 +195,29 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
                   {isVerifying ? (
                     <>
                       <div className={Style.loadingSpinner} />
-                      <span>Đang xác thực...</span>
+                      <span>Đang xác nhận...</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle className="w-4 h-4" />
-                      <span>Xác thực</span>
+                      <span>Xác nhận đặt phòng</span>
                     </>
                   )}
                 </button>
               </form>
 
-              {/* Countdown and Resend */}
+              {/* Countdown */}
               <div className={Style.countdownSection}>
                 {countdown > 0 ? (
                   <div className={Style.countdown}>
                     <Clock className={Style.countdownIcon} />
-                    <span>Mã sẽ hết hạn sau: {formatTime(countdown)}</span>
+                    <span>Mã OTP sẽ hết hạn sau: {formatTime(countdown)}</span>
                   </div>
                 ) : (
                   <p className={Style.expiredMessage}>
-                    Mã xác thực đã hết hạn
+                    Mã OTP đã hết hạn. Vui lòng đặt lại phòng.
                   </p>
                 )}
-
-                <button
-                  onClick={handleResendCode}
-                  disabled={!canResend || isResending}
-                  className={Style.resendButton}
-                >
-                  {isResending ? (
-                    <>
-                      <RefreshCw className="w-3 h-3 animate-spin" />
-                      <span>Đang gửi...</span>
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-3 h-3" />
-                      <span>Gửi lại mã</span>
-                    </>
-                  )}
-                </button>
               </div>
 
               {/* Security Notice */}
@@ -296,7 +228,7 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
                 </div>
                 <div className={Style.infoContent}>
                   <p>
-                    Mã xác thực này chỉ có hiệu lực trong 5 phút và chỉ được sử dụng một lần. 
+                    Mã OTP này chỉ có hiệu lực trong 5 phút và chỉ được sử dụng một lần. 
                     Không chia sẻ mã này với bất kỳ ai.
                   </p>
                 </div>
@@ -324,7 +256,7 @@ export function EmailVerification({ bookingData, onBack, onVerificationSuccess }
               {/* Final Notice */}
               <div className={Style.securityNotice}>
                 <p className={Style.securityText}>
-                  <strong>Lưu ý:</strong> Mã xác thực đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư và nhập mã 6 chữ số.
+                  <strong>Lưu ý:</strong> Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư và nhập mã 6 chữ số để xác nhận đặt phòng.
                 </p>
               </div>
             </div>

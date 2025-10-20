@@ -68,7 +68,6 @@ export function AIChat({ className = '' }: AIChatProps) {
 
     try {
       if (isUsingChatGPT) {
-        // Call ChatGPT API
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
@@ -131,7 +130,6 @@ export function AIChat({ className = '' }: AIChatProps) {
   const generateAIResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    // Basic fallback responses when API is unavailable
     if (input.includes('phòng') || input.includes('room')) {
       return 'Chúng tôi có nhiều loại phòng khác nhau với đầy đủ tiện nghi hiện đại. Bạn có thể tìm kiếm phòng theo nhu cầu của mình.';
     }

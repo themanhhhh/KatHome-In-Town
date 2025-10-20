@@ -9,6 +9,7 @@ import { Textarea } from "../textarea/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select/select";
 import { Separator } from "../separator/separator";
 import { Badge } from "../badge/badge";
+import { donDatPhongApi } from "@/lib/api";
 import { 
   ArrowLeft,
   CreditCard,
@@ -69,11 +70,14 @@ interface CheckoutProps {
     maxGuests: number;
     beds: number;
     bathrooms: number;
+    branchId?: string; // coSoId
+    branchName?: string;
   };
   searchData: {
     checkIn: string;
     checkOut: string;
     guests: number;
+    branchId?: string; // coSoId from search
   };
   onBack: () => void;
   onProceedToVerification: (bookingData: BookingData) => void;
@@ -170,9 +174,42 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
     setIsProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
-      const bookingData = {
+    try {
+      // Create booking via API
+      const totalPrice = getTotalPrice();
+      const customerName = `${formData.firstName} ${formData.lastName}`;
+      
+      // Get coSoId from roomData or searchData
+      const coSoId = roomData.branchId || searchData.branchId;
+      
+      if (!coSoId) {
+        throw new Error('Branch information is missing. Please go back and search again.');
+      }
+      
+      const response = await donDatPhongApi.create({
+        coSoId,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
+        customerName,
+        rooms: [{
+          roomId: roomData.id,
+          checkIn: searchData.checkIn,
+          checkOut: searchData.checkOut,
+          adults: searchData.guests,
+          children: 0,
+          price: totalPrice,
+        }],
+        notes: formData.specialRequests || undefined,
+      }) as { success: boolean; data: { maDatPhong: string; ngayDat: string }; message?: string };
+
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to create booking');
+      }
+
+      const booking = response.data;
+      
+      // For cash payment, proceed to payment success with booking info
+      const bookingData: BookingData = {
         roomData,
         searchData,
         guestInfo: {
@@ -186,20 +223,24 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
           specialRequests: formData.specialRequests
         },
         paymentInfo: {
-          method: formData.paymentMethod,
-          total: getTotalPrice()
+          method: formData.paymentMethod || 'cash',
+          total: totalPrice
         },
-        bookingId: `BK${Date.now()}`,
-        bookingDate: new Date().toISOString()
+        bookingId: booking.maDatPhong,
+        bookingDate: booking.ngayDat
       };
       
       setIsProcessing(false);
       onProceedToVerification(bookingData);
-    }, 2000);
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      setIsProcessing(false);
+      alert(error instanceof Error ? error.message : 'Có lỗi xảy ra khi tạo đặt phòng. Vui lòng thử lại.');
+    }
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#fef5f6' }}>
+    <div className="min-h-screen" data-allow-select="true" data-checkout="true" style={{ backgroundColor: '#fef5f6' }}>
       {/* Header */}
       <div className="sticky top-0 z-10 border-b" style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderColor: '#F8E8EC' }}>
         <div className="container mx-auto px-4 py-4">
@@ -337,10 +378,10 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                     <div className="space-y-2">
                       <Label style={{ color: '#3D0301' }}>Thành phố *</Label>
                       <Select value={formData.city} onValueChange={(value: string) => handleInputChange('city', value)}>
-                        <SelectTrigger className={errors.city ? 'border-red-500' : ''} style={{ color: '#3D0301' }}>
+                        <SelectTrigger className={`${errors.city ? 'border-red-500' : ''} bg-white`} style={{ color: '#3D0301', backgroundColor: '#ffffff' }}>
                           <SelectValue placeholder="Chọn thành phố" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white" style={{ backgroundColor: '#ffffff' }}>
                           <SelectItem value="ho-chi-minh">TP. Hồ Chí Minh</SelectItem>
                           <SelectItem value="ha-noi">Hà Nội</SelectItem>
                           <SelectItem value="da-nang">Đà Nẵng</SelectItem>
@@ -393,10 +434,10 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                   <div className="space-y-2">
                     <Label style={{ color: '#3D0301' }}>Phương thức thanh toán *</Label>
                     <Select value={formData.paymentMethod} onValueChange={(value: string) => handleInputChange('paymentMethod', value)}>
-                      <SelectTrigger className={errors.paymentMethod ? 'border-red-500' : ''} style={{ color: '#3D0301' }}>
+                      <SelectTrigger className={`${errors.paymentMethod ? 'border-red-500' : ''} bg-white`} style={{ color: '#3D0301', backgroundColor: '#ffffff' }}>
                         <SelectValue placeholder="Chọn phương thức thanh toán" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white" style={{ backgroundColor: '#ffffff' }}>
                         <SelectItem value="card">Thẻ tín dụng/ghi nợ</SelectItem>
                         <SelectItem value="bank-transfer">Chuyển khoản ngân hàng</SelectItem>
                         <SelectItem value="cash">Thanh toán tại chỗ</SelectItem>

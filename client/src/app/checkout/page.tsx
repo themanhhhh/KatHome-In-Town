@@ -17,6 +17,8 @@ export default function CheckoutPage() {
     maxGuests: number;
     beds: number;
     bathrooms: number;
+    branchId?: string;
+    branchName?: string;
   } | null>(null);
   const [searchData, setSearchData] = useState<{
     checkIn: string;
@@ -59,6 +61,8 @@ export default function CheckoutPage() {
       maxGuests: number;
       beds: number;
       bathrooms: number;
+      branchId?: string;
+      branchName?: string;
     };
     searchData: {
       checkIn: string;
@@ -100,8 +104,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen flex flex-col" data-allow-select="true" data-checkout="true">
       <main className="flex-1">
         <Checkout 
           roomData={roomData}

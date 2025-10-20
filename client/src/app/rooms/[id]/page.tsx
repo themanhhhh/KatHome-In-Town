@@ -47,6 +47,8 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     maxGuests: number;
     beds: number;
     bathrooms: number;
+    branchId?: string;
+    branchName?: string;
   }) => {
     // Save room data and search data to sessionStorage for checkout
     sessionStorage.setItem('checkoutRoomData', JSON.stringify(roomData));

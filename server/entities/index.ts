@@ -14,3 +14,5 @@ export { DangKyCaLam } from "./DangKyCaLam";
 export { TheoDoiCaLam } from "./TheoDoiCaLam";
 export { KhachHang } from "./KhachHang";
 export { KhieuNai } from "./KhieuNai";
+export { Revenue } from "./Revenue";
+export { Report } from "./Report";

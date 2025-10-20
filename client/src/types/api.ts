@@ -17,25 +17,60 @@ export interface ApiRoom {
 }
 
 export interface ApiBooking {
-  maDonDatPhong: string;
+  maDatPhong: string;
   ngayDat: string;
-  ngayNhan: string;
-  ngayTra: string;
-  soLuongKhach: number;
-  tongTien: number;
-  trangThai: 'confirmed' | 'pending' | 'cancelled' | 'completed';
-  phuongThucThanhToan: string;
-  ghiChu?: string;
+  ngayXacNhan?: string;
+  ngayHuy?: string;
+  checkinDuKien: string;
+  checkoutDuKien: string;
+  totalAmount?: number;
+  trangThai: string; // "R" (Reserved), "CF" (Confirmed), "CC" (Checked-out/Completed), "AB" (Aborted/Cancelled)
+  phuongThucThanhToan?: string; // "Card" or "Cash"
+  customerEmail?: string;
+  customerPhone?: string;
+  customerName?: string;
+  notes?: string;
+  bookingSource?: string;
+  paymentStatus?: string;
+  paymentMethod?: string;
+  paymentRef?: string;
+  paidAt?: string;
+  totalPaid?: number;
+  otpCode?: string;
+  otpExpiry?: string;
+  isVerified?: boolean;
   khachHang?: {
     maKhachHang: string;
     tenKhachHang: string;
     email: string;
     soDienThoai: string;
   };
-  phong?: {
-    maPhong: string;
-    moTa: string;
+  coSo?: {
+    maCoSo: string;
+    tenCoSo: string;
+    hinhAnh?: string;
   };
+  nhanVien?: {
+    maNhanVien: string;
+    tenNhanVien: string;
+  };
+  chiTiet?: Array<{
+    maChiTiet: string;
+    phong?: {
+      maPhong: string;
+      moTa: string;
+      hinhAnh?: string;
+    };
+    soNguoiLon: number;
+    soTreEm: number;
+    checkInDate: string;
+    checkOutDate: string;
+    donGia?: number;
+    thanhTien?: number;
+    trangThai: string;
+    actualCheckInTime?: string;
+    actualCheckOutTime?: string;
+  }>;
 }
 
 export interface ApiUser {

@@ -22,31 +22,21 @@ import {
 
 import Style from "../../styles/reportsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
-import { donDatPhongApi, phongApi, khachHangApi, usersApi } from "../../../lib/api";
+import { donDatPhongApi, phongApi, khachHangApi, usersApi, revenueApi, reportsApi, type RevenueSummary, type ApiReport } from "../../../lib/api";
 import { ApiBooking, ApiRoom, ApiCustomer, ApiUser } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
+import { ReportForm } from "../../components/report-form";
+import { toast } from "sonner";
 
-interface ReportData {
-  id: number;
-  title: string;
-  type: 'revenue' | 'bookings' | 'occupancy' | 'customer' | 'rooms';
-  period: string;
-  createdDate: string;
-  status: 'completed' | 'processing' | 'failed';
-  size: string;
-  description: string;
-  data: {
-    value: number;
-    change: number;
-    trend: 'up' | 'down' | 'stable';
-  };
-}
+// Remove ReportData interface - using ApiReport from api.ts now
 
 const ReportsManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [periodFilter, setPeriodFilter] = useState("all");
-  const [selectedReports, setSelectedReports] = useState<number[]>([]);
+  const [selectedReports, setSelectedReports] = useState<string[]>([]);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [editingReport, setEditingReport] = useState<ApiReport | null>(null);
 
   // Fetch data from API
   const { data: bookings = [], loading: bookingsLoading, error: bookingsError } = useApi<ApiBooking[]>(
@@ -59,6 +49,7 @@ const ReportsManagementPage = () => {
     []
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: customers = [], loading: customersLoading, error: customersError } = useApi<ApiCustomer[]>(
     () => khachHangApi.getAll(),
     []
@@ -70,108 +61,177 @@ const ReportsManagementPage = () => {
     []
   );
 
+  // Fetch revenue summary data
+  const { data: revenueSummaryRaw, loading: revenueLoading, error: revenueError } = useApi(
+    () => revenueApi.getSummary({ groupBy: 'month' })
+  );
+
+  const revenueSummary = revenueSummaryRaw as RevenueSummary | undefined;
+
+  // Fetch reports from API
+  const { data: reports = [], loading: reportsLoading, error: reportsError, refetch: refetchReports } = useApi<ApiReport[]>(
+    () => reportsApi.getAll(),
+    []
+  );
+
   // Calculate statistics from real data
-  const totalRevenue = (bookings || []).reduce((sum, booking) => sum + (booking.tongTien || 0), 0);
-  const totalBookings = (bookings || []).length;
+  const totalRevenue = revenueSummary?.summary?.totalRevenue || (bookings || []).reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
+  const totalBookings = revenueSummary?.summary?.totalBookings || (bookings || []).length;
   const totalRooms = (rooms || []).length;
-  const totalCustomers = (customers || []).length;
+  // const totalCustomers = (customers || []).length; // Unused variable
   // const totalUsers = (users || []).length; // Unused variable
   const roomsWithHangPhong = (rooms || []).filter(room => room.hangPhong?.tenHangPhong).length;
   const occupancyRate = totalRooms > 0 ? (roomsWithHangPhong / totalRooms) * 100 : 0;
-
-  // Generate reports based on real data
-  const reports: ReportData[] = [
-    {
-      id: 1,
-      title: "Báo cáo doanh thu tháng hiện tại",
-      type: "revenue",
-      period: "monthly",
-      createdDate: new Date().toISOString().split('T')[0],
-      status: "completed",
-      size: "2.3 MB",
-      description: "Tổng hợp doanh thu từ tất cả booking",
-      data: {
-        value: totalRevenue,
-        change: 12.5,
-        trend: "up"
-      }
-    },
-    {
-      id: 2,
-      title: "Thống kê đặt phòng",
-      type: "bookings",
-      period: "monthly",
-      createdDate: new Date().toISOString().split('T')[0],
-      status: "completed",
-      size: "1.8 MB",
-      description: "Phân tích xu hướng đặt phòng",
-      data: {
-        value: totalBookings,
-        change: 8.3,
-        trend: "up"
-      }
-    },
-    {
-      id: 3,
-      title: "Báo cáo tỷ lệ lấp đầy",
-      type: "occupancy",
-      period: "monthly",
-      createdDate: new Date().toISOString().split('T')[0],
-      status: "completed",
-      size: "1.5 MB",
-      description: "Phân tích tỷ lệ lấp đầy phòng",
-      data: {
-        value: occupancyRate,
-        change: -2.1,
-        trend: occupancyRate > 70 ? "up" : "down"
-      }
-    },
-    {
-      id: 4,
-      title: "Phân tích khách hàng",
-      type: "customer",
-      period: "monthly",
-      createdDate: new Date().toISOString().split('T')[0],
-      status: "completed",
-      size: "1.2 MB",
-      description: "Thống kê khách hàng và người dùng",
-      data: {
-        value: totalCustomers,
-        change: 15.2,
-        trend: "up"
-      }
-    },
-    {
-      id: 5,
-      title: "Hiệu suất phòng",
-      type: "rooms",
-      period: "monthly",
-      createdDate: new Date().toISOString().split('T')[0],
-      status: "completed",
-      size: "1.0 MB",
-      description: "Thống kê phòng và tỷ lệ sử dụng",
-      data: {
-        value: totalRooms,
-        change: 5.0,
-        trend: "up"
-      }
-    }
-  ];
+  const averageRevenue = revenueSummary?.summary?.averageRevenue || 0;
 
   // Quick stats data
   const quickStats = {
-    totalReports: reports.length,
-    completedReports: reports.filter(r => r.status === 'completed').length,
-    processingReports: reports.filter(r => r.status === 'processing').length,
+    totalReports: (reports || []).length,
+    completedReports: (reports || []).filter(r => r.status === 'completed').length,
+    processingReports: (reports || []).filter(r => r.status === 'processing').length,
     totalRevenue: totalRevenue,
     totalBookings: totalBookings,
     occupancyRate: occupancyRate,
     customerSatisfaction: 4.8
   };
 
+  // CRUD Handlers
+  const handleCreateReport = () => {
+    setEditingReport(null);
+    setShowReportForm(true);
+  };
+
+  const handleEditReport = (report: ApiReport) => {
+    setEditingReport(report);
+    setShowReportForm(true);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleDeleteReport = async (reportId: string) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa báo cáo này?')) {
+      try {
+        await reportsApi.delete(reportId);
+        await refetchReports();
+        toast.success('Xóa báo cáo thành công!', {
+          description: `Báo cáo đã được xóa khỏi hệ thống.`,
+          duration: 4000,
+        });
+      } catch (error) {
+        console.error('Error deleting report:', error);
+        toast.error('Lỗi xóa báo cáo', {
+          description: error instanceof Error ? error.message : 'Có lỗi xảy ra khi xóa báo cáo',
+          duration: 5000,
+        });
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedReports.length === 0) return;
+    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedReports.length} báo cáo đã chọn?`)) {
+      const deleteToast = toast.loading(`Đang xóa ${selectedReports.length} báo cáo...`);
+      try {
+        await reportsApi.bulkDelete(selectedReports);
+        await refetchReports();
+        setSelectedReports([]);
+        toast.success('Xóa báo cáo thành công!', {
+          id: deleteToast,
+          description: `Đã xóa ${selectedReports.length} báo cáo khỏi hệ thống.`,
+          duration: 4000,
+        });
+      } catch (error) {
+        console.error('Error deleting reports:', error);
+        toast.error('Lỗi xóa báo cáo', {
+          id: deleteToast,
+          description: error instanceof Error ? error.message : 'Có lỗi xảy ra khi xóa báo cáo',
+          duration: 5000,
+        });
+      }
+    }
+  };
+
+  const handleFormSuccess = (isEdit: boolean) => {
+    refetchReports();
+    setShowReportForm(false);
+    setEditingReport(null);
+    
+    if (isEdit) {
+      toast.success('Cập nhật báo cáo thành công!', {
+        description: 'Thông tin báo cáo đã được cập nhật.',
+        duration: 4000,
+      });
+    } else {
+      toast.success('Tạo báo cáo thành công!', {
+        description: 'Báo cáo mới đã được thêm vào hệ thống.',
+        duration: 4000,
+      });
+    }
+  };
+
+  const handleDownload = async (report: ApiReport) => {
+    if (report.status !== 'completed') {
+      toast.warning('Không thể tải xuống', {
+        description: 'Chỉ có thể tải xuống báo cáo đã hoàn thành.',
+        duration: 4000,
+      });
+      return;
+    }
+
+    const downloadToast = toast.loading('Đang tạo file tải xuống...');
+    
+    // Simulate download delay
+    setTimeout(() => {
+      // Create mock CSV/JSON data
+      const data = {
+        id: report.id,
+        title: report.title,
+        type: report.type,
+        period: report.period,
+        value: report.value,
+        change: report.change,
+        trend: report.trend,
+        createdAt: report.createdAt,
+      };
+      
+      const jsonStr = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `report-${report.id}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Tải xuống thành công!', {
+        id: downloadToast,
+        description: `File ${link.download} đã được tải xuống.`,
+        duration: 4000,
+      });
+    }, 1000);
+  };
+
+  const handleMarkCompleted = async (reportId: string) => {
+    try {
+      await reportsApi.markCompleted(reportId);
+      await refetchReports();
+      toast.success('Đã đánh dấu hoàn thành!', {
+        description: 'Báo cáo đã được đánh dấu hoàn thành.',
+        duration: 4000,
+      });
+    } catch (error) {
+      console.error('Error marking report completed:', error);
+      toast.error('Lỗi cập nhật trạng thái', {
+        description: error instanceof Error ? error.message : 'Có lỗi xảy ra',
+        duration: 5000,
+      });
+    }
+  };
+
   // Loading and error states
-  const isLoading = bookingsLoading || roomsLoading || customersLoading || usersLoading;
-  const hasError = bookingsError || roomsError || customersError || usersError;
+  const isLoading = bookingsLoading || roomsLoading || customersLoading || usersLoading || revenueLoading || reportsLoading;
+  const hasError = bookingsError || roomsError || customersError || usersError || revenueError || reportsError;
 
   if (isLoading) {
     return <LoadingSpinner text="Đang tải ..." />;
@@ -183,7 +243,7 @@ const ReportsManagementPage = () => {
         <div className={Style.errorContainer}>
           <AlertCircle className={Style.errorIcon} />
           <h3>Lỗi tải dữ liệu</h3>
-          <p>{bookingsError || roomsError || customersError || usersError}</p>
+          <p>{bookingsError || roomsError || customersError || usersError || revenueError}</p>
           <button onClick={() => window.location.reload()} className={Style.retryButton}>
             <RefreshCw className="w-4 h-4" />
             Thử lại
@@ -194,9 +254,9 @@ const ReportsManagementPage = () => {
   }
 
   // Filter functions
-  const filteredReports = reports.filter(report => {
+  const filteredReports = (reports || []).filter(report => {
     const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         (report.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === "all" || report.type === typeFilter;
     const matchesPeriod = periodFilter === "all" || report.period === periodFilter;
     
@@ -212,7 +272,7 @@ const ReportsManagementPage = () => {
     }
   };
 
-  const handleSelectReport = (reportId: number) => {
+  const handleSelectReport = (reportId: string) => {
     setSelectedReports(prev => 
       prev.includes(reportId) 
         ? prev.filter(id => id !== reportId)
@@ -298,11 +358,11 @@ const ReportsManagementPage = () => {
             <p>Tạo và quản lý các báo cáo kinh doanh của KatHome In Town</p>
           </div>
           <div className={Style.headerActions}>
-            <button className={Style.refreshButton}>
+            <button className={Style.refreshButton} onClick={refetchReports}>
               <RefreshCw className="w-4 h-4" />
               <span>Làm mới</span>
             </button>
-            <button className={Style.createButton}>
+            <button className={Style.createButton} onClick={handleCreateReport}>
               <FileText className="w-4 h-4" />
               <span>Tạo báo cáo</span>
             </button>
@@ -354,8 +414,20 @@ const ReportsManagementPage = () => {
               <Bed className="w-5 h-5 text-orange-600" />
             </div>
             <div className={Style.statInfo}>
-              <div className={Style.statValue}>{quickStats.occupancyRate}%</div>
+              <div className={Style.statValue}>{quickStats.occupancyRate.toFixed(1)}%</div>
               <div className={Style.statLabel}>Tỷ lệ lấp đầy</div>
+            </div>
+          </div>
+        </div>
+
+        <div className={Style.statCard}>
+          <div className={Style.statContent}>
+            <div className={`${Style.statIcon} ${Style.statIconTeal}`}>
+              <TrendingUp className="w-5 h-5 text-teal-600" />
+            </div>
+            <div className={Style.statInfo}>
+              <div className={Style.statValueLarge}>{formatPrice(averageRevenue)}</div>
+              <div className={Style.statLabel}>Trung bình/booking</div>
             </div>
           </div>
         </div>
@@ -422,9 +494,9 @@ const ReportsManagementPage = () => {
               <span className={Style.bulkText}>
                 Đã chọn {selectedReports.length} báo cáo
               </span>
-              <button className={Style.bulkButton}>
+              <button className={Style.bulkButton} onClick={handleBulkDelete}>
                 <Download className="w-4 h-4" />
-                <span>Tải xuống hàng loạt</span>
+                <span>Xóa hàng loạt</span>
               </button>
             </div>
           )}
@@ -481,19 +553,19 @@ const ReportsManagementPage = () => {
                     <div className={Style.reportDataContent}>
                       <div className={Style.reportDataInfo}>
                         <div className={Style.reportDataValue}>
-                          {report.type === 'revenue' && formatPrice(report.data.value)}
-                          {report.type === 'bookings' && `${report.data.value} booking`}
-                          {report.type === 'occupancy' && `${report.data.value}%`}
-                          {report.type === 'customer' && `${report.data.value} khách VIP`}
-                          {report.type === 'rooms' && `${report.data.value} phòng`}
+                          {report.type === 'revenue' && formatPrice(report.value)}
+                          {report.type === 'bookings' && `${report.value} booking`}
+                          {report.type === 'occupancy' && `${report.value}%`}
+                          {report.type === 'customer' && `${report.value} khách VIP`}
+                          {report.type === 'rooms' && `${report.value} phòng`}
                         </div>
                         <div className={Style.reportDataTrend}>
-                          {getTrendIcon(report.data.trend)}
+                          {getTrendIcon(report.trend)}
                           <span className={`${Style.trendText} ${
-                            report.data.trend === 'up' ? Style.trendUp : 
-                            report.data.trend === 'down' ? Style.trendDown : Style.trendStable
+                            report.trend === 'up' ? Style.trendUp : 
+                            report.trend === 'down' ? Style.trendDown : Style.trendStable
                           }`}>
-                            {report.data.change > 0 ? '+' : ''}{report.data.change}% so với kỳ trước
+                            {report.change > 0 ? '+' : ''}{report.change}% so với kỳ trước
                           </span>
                         </div>
                       </div>
@@ -531,7 +603,7 @@ const ReportsManagementPage = () => {
                   <div className={Style.reportMetadata}>
                     <div className={Style.metadataItem}>
                       <Calendar className={Style.metadataIcon} />
-                      <span>{formatDate(report.createdDate)}</span>
+                      <span>{formatDate(report.createdAt)}</span>
                     </div>
                     <span className={Style.periodBadge}>
                       {report.period === 'daily' && 'Hàng ngày'}
@@ -540,20 +612,41 @@ const ReportsManagementPage = () => {
                       {report.period === 'quarterly' && 'Hàng quý'}
                       {report.period === 'yearly' && 'Hàng năm'}
                     </span>
-                    <span className={Style.fileSize}>{report.size}</span>
+                    <span className={Style.fileSize}>{report.fileSize || '0 KB'}</span>
                   </div>
                   
                   <div className={Style.reportActions}>
-                    <button className={Style.actionButton}>
+                    <button 
+                      className={Style.actionButton}
+                      onClick={() => handleEditReport(report)}
+                      title="Xem/Chỉnh sửa"
+                    >
                       <Eye className="w-4 h-4" />
                     </button>
                     {report.status === 'completed' && (
-                      <button className={Style.actionButton}>
+                      <button 
+                        className={Style.actionButton}
+                        onClick={() => handleDownload(report)}
+                        title="Tải xuống"
+                      >
                         <Download className="w-4 h-4" />
                       </button>
                     )}
+                    {report.status === 'processing' && (
+                      <button 
+                        className={Style.actionButton}
+                        onClick={() => handleMarkCompleted(report.id)}
+                        title="Đánh dấu hoàn thành"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </button>
+                    )}
                     {report.status === 'failed' && (
-                      <button className={Style.actionButton}>
+                      <button 
+                        className={Style.actionButton}
+                        onClick={() => handleMarkCompleted(report.id)}
+                        title="Thử lại"
+                      >
                         <RefreshCw className="w-4 h-4" />
                       </button>
                     )}
@@ -574,13 +667,25 @@ const ReportsManagementPage = () => {
             <p className={Style.emptyDescription}>
               Thử thay đổi bộ lọc hoặc tạo báo cáo mới
             </p>
-            <button className={Style.emptyButton}>
+            <button className={Style.emptyButton} onClick={handleCreateReport}>
               <FileText className="w-4 h-4" />
               Tạo báo cáo đầu tiên
             </button>
           </div>
         )}
       </div>
+
+      {/* Report Form Modal */}
+      {showReportForm && (
+        <ReportForm
+          report={editingReport}
+          onClose={() => {
+            setShowReportForm(false);
+            setEditingReport(null);
+          }}
+          onSuccess={handleFormSuccess}
+        />
+      )}
     </div>
   );
 };

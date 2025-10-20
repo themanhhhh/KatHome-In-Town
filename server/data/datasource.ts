@@ -14,7 +14,7 @@ export const AppDataSource = new DataSource({
   entities: [
     entities.User, entities.CoSo, entities.Phong, entities.HangPhong, entities.DonDatPhong, entities.ChiTietDonDatPhong, entities.DonGia,
     entities.DichVu, entities.DonDatDichVu, entities.NhanVien, entities.ChucVu, entities.CaLam, entities.DangKyCaLam,
-    entities.TheoDoiCaLam, entities.KhachHang, entities.KhieuNai
+    entities.TheoDoiCaLam, entities.KhachHang, entities.KhieuNai, entities.Revenue , entities.Report
   ],
   migrations: ["src/migrations/*.ts"], // Đường dẫn đến migrations
   migrationsTableName: "migrations", // Tên bảng lưu trữ migration history

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { 
   Search,
   Filter,
@@ -26,11 +27,11 @@ import {
 
 import Style from "../../styles/roomsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
-import { phongApi, hangPhongApi } from "../../../lib/api";
+import { phongApi, hangPhongApi, coSoApi, donGiaApi } from "../../../lib/api";
 import { ApiRoom, ApiRoomType } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
-import { ImageUpload } from "../../components/image-upload";
 import { RoomForm } from "../../components/room-form";
+import { toast } from "sonner";
 
 // Using ApiRoom type from types/api.ts
 
@@ -39,10 +40,10 @@ const RoomsManagementPage = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [uploadingImages, setUploadingImages] = useState<Set<string>>(new Set());
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState<ApiRoom | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Fetch data from API
   const { data: rooms = [], loading: roomsLoading, error: roomsError, refetch: refetchRooms } = useApi<ApiRoom[]>(
@@ -52,6 +53,26 @@ const RoomsManagementPage = () => {
 
   const { data: roomTypes = [] } = useApi<ApiRoomType[]>(
     () => hangPhongApi.getAll(),
+    []
+  );
+
+  const { data: coSoList = [] } = useApi<Array<{
+    maCoSo: string;
+    tenCoSo: string;
+    diaChi: string;
+    sdt: string;
+    hinhAnh?: string;
+  }>>(
+    () => coSoApi.getAll(),
+    []
+  );
+
+  const { data: donGiaList = [] } = useApi<Array<{
+    maHangPhong: string;
+    donViTinh: string;
+    donGia: number;
+  }>>(
+    () => donGiaApi.getAll(),
     []
   );
 
@@ -65,6 +86,58 @@ const RoomsManagementPage = () => {
     
     return matchesSearch && matchesType;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRooms = filteredRooms.slice(startIndex, endIndex);
+
+  // Generate page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxPagesToShow = 5; // Số trang tối đa hiển thị (không kể ellipsis)
+    
+    if (totalPages <= maxPagesToShow + 2) {
+      // Nếu tổng số trang ít, hiển thị tất cả
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Luôn hiển thị trang 1
+      pages.push(1);
+      
+      if (currentPage <= 3) {
+        // Nếu ở đầu: 1 2 3 4 ... 15
+        for (let i = 2; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // Nếu ở cuối: 1 ... 12 13 14 15
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        // Nếu ở giữa: 1 ... 6 7 8 ... 15
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, typeFilter, statusFilter]);
 
   // Selection functions
   const handleSelectAll = () => {
@@ -83,21 +156,6 @@ const RoomsManagementPage = () => {
     );
   };
 
-  const handleImageUpload = async (roomId: string, file: File) => {
-    setUploadingImages(prev => new Set(prev).add(roomId));
-    try {
-      await phongApi.uploadImage(roomId, file);
-      // Refresh rooms data to get updated image URL
-      await refetchRooms();
-    } finally {
-      setUploadingImages(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(roomId);
-        return newSet;
-      });
-    }
-  };
-
   const handleCreateRoom = () => {
     setEditingRoom(null);
     setShowRoomForm(true);
@@ -113,9 +171,16 @@ const RoomsManagementPage = () => {
       try {
         await phongApi.delete(roomId);
         await refetchRooms();
+        toast.success('Xóa phòng thành công!', {
+          description: `Phòng #${roomId} đã được xóa khỏi hệ thống.`,
+          duration: 4000,
+        });
       } catch (error) {
         console.error('Error deleting room:', error);
-        alert('Có lỗi xảy ra khi xóa phòng');
+        toast.error('Lỗi xóa phòng', {
+          description: error instanceof Error ? error.message : 'Có lỗi xảy ra khi xóa phòng',
+          duration: 5000,
+        });
       }
     }
   };
@@ -123,21 +188,43 @@ const RoomsManagementPage = () => {
   const handleBulkDelete = async () => {
     if (selectedRooms.length === 0) return;
     if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedRooms.length} phòng đã chọn?`)) {
+      const deleteToast = toast.loading(`Đang xóa ${selectedRooms.length} phòng...`);
       try {
         await Promise.all(selectedRooms.map(id => phongApi.delete(id)));
         await refetchRooms();
         setSelectedRooms([]);
+        toast.success('Xóa phòng thành công!', {
+          id: deleteToast,
+          description: `Đã xóa ${selectedRooms.length} phòng khỏi hệ thống.`,
+          duration: 4000,
+        });
       } catch (error) {
         console.error('Error deleting rooms:', error);
-        alert('Có lỗi xảy ra khi xóa phòng');
+        toast.error('Lỗi xóa phòng', {
+          id: deleteToast,
+          description: error instanceof Error ? error.message : 'Có lỗi xảy ra khi xóa phòng',
+          duration: 5000,
+        });
       }
     }
   };
 
-  const handleFormSuccess = () => {
+  const handleFormSuccess = (isEdit: boolean) => {
     refetchRooms();
     setShowRoomForm(false);
     setEditingRoom(null);
+    
+    if (isEdit) {
+      toast.success('Cập nhật phòng thành công!', {
+        description: 'Thông tin phòng đã được cập nhật.',
+        duration: 4000,
+      });
+    } else {
+      toast.success('Thêm phòng mới thành công!', {
+        description: 'Phòng mới đã được thêm vào hệ thống.',
+        duration: 4000,
+      });
+    }
   };
 
   // Utility functions
@@ -146,6 +233,22 @@ const RoomsManagementPage = () => {
       style: 'currency',
       currency: 'VND'
     }).format(price);
+  };
+
+  // Get room price from donGiaList
+  const getRoomPrice = (maHangPhong?: string) => {
+    if (!maHangPhong || !donGiaList || donGiaList.length === 0) return null;
+    
+    // Find price for this room type (prefer daily rate)
+    const priceItem = donGiaList.find(
+      item => item.maHangPhong === maHangPhong && 
+      (item.donViTinh === 'Ngày' || item.donViTinh === 'ngay')
+    );
+    
+    // Fallback to any price for this room type
+    const fallbackPrice = donGiaList.find(item => item.maHangPhong === maHangPhong);
+    
+    return priceItem?.donGia || fallbackPrice?.donGia || null;
   };
 
 
@@ -331,7 +434,7 @@ const RoomsManagementPage = () => {
                   <th className={Style.tableHeadCell}>
                     <input
                       type="checkbox"
-                      checked={selectedRooms.length === filteredRooms.length}
+                      checked={paginatedRooms.length > 0 && paginatedRooms.every(room => selectedRooms.includes(room.maPhong))}
                       onChange={handleSelectAll}
                       className={Style.checkbox}
                     />
@@ -348,7 +451,7 @@ const RoomsManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredRooms.map((room, index) => (
+                {paginatedRooms.map((room, index) => (
                   <tr key={room.maPhong || `room-${index}`} className={Style.tableRow}>
                     <td className={Style.tableCell}>
                       <input
@@ -370,19 +473,16 @@ const RoomsManagementPage = () => {
                     </td>
                     <td className={Style.tableCell}>
                       <div className="w-20 h-20">
-                        <ImageUpload
-                          onImageUpload={(file) => handleImageUpload(room.maPhong, file)}
-                          currentImageUrl={room.hinhAnh}
-                          entityType="room"
-                          entityId={room.maPhong}
-                          className="w-full h-full"
-                        />
+                        <Image src={room.hinhAnh || ''} alt="Room Image" width={80} height={80} />
                       </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.priceInfo}>
                         <div className={Style.currentPrice}>
-                          Chưa có giá
+                          {(() => {
+                            const price = getRoomPrice(room.hangPhong?.maHangPhong);
+                            return price ? formatPrice(price) + '/ngày' : 'Chưa có giá';
+                          })()}
                         </div>
                         <span className={Style.roomType}>
                           {room.hangPhong?.tenHangPhong || 'Chưa phân loại'}
@@ -488,6 +588,53 @@ const RoomsManagementPage = () => {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {filteredRooms.length > 0 && (
+          <div className={Style.pagination}>
+            <div className={Style.paginationInfo}>
+              Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredRooms.length)} trong tổng số {filteredRooms.length} phòng
+            </div>
+            <div className={Style.paginationControls}>
+              <button
+                className={Style.paginationButton}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Trước
+              </button>
+              
+              <div className={Style.paginationNumbers}>
+                {getPageNumbers().map((page, index) => {
+                  if (page === '...') {
+                    return (
+                      <span key={`ellipsis-${index}`} className={Style.paginationEllipsis}>
+                        ...
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      key={page}
+                      className={`${Style.paginationNumber} ${currentPage === page ? Style.paginationNumberActive : ''}`}
+                      onClick={() => setCurrentPage(page as number)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                className={Style.paginationButton}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Tiếp
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Room Form Modal */}
@@ -495,6 +642,7 @@ const RoomsManagementPage = () => {
         <RoomForm
           room={editingRoom}
           roomTypes={roomTypes || []}
+          coSoList={coSoList || []}
           onClose={() => {
             setShowRoomForm(false);
             setEditingRoom(null);

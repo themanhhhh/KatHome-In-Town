@@ -36,6 +36,8 @@ const UsersManagementPage = () => {
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<ApiUser | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'customers'>('users');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Fetch data from API
   const { data: users = [], loading: usersLoading, error: usersError, refetch: refetchUsers } = useApi<ApiUser[]>(
@@ -116,6 +118,53 @@ const UsersManagementPage = () => {
     return matchesSearch && matchesStatus && matchesTab;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Generate page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow + 2) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      
+      if (currentPage <= 3) {
+        for (let i = 2; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, activeTab]);
+
   const handleSelectUser = (userId: string) => {
     setSelectedUsers(prev =>
       prev.includes(userId)
@@ -167,10 +216,10 @@ const UsersManagementPage = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedUsers.length === filteredUsers.length) {
-      setSelectedUsers([]);
+    if (paginatedUsers.length > 0 && paginatedUsers.every(user => selectedUsers.includes(user.id))) {
+      setSelectedUsers(prev => prev.filter(id => !paginatedUsers.map(u => u.id).includes(id)));
     } else {
-      setSelectedUsers(filteredUsers.map(user => user.id));
+      setSelectedUsers(prev => [...new Set([...prev, ...paginatedUsers.map(user => user.id)])]);
     }
   };
 
@@ -351,7 +400,7 @@ const UsersManagementPage = () => {
                   <th className={Style.tableHeadCell}>
                     <input
                       type="checkbox"
-                      checked={selectedUsers.length === filteredUsers.length}
+                      checked={paginatedUsers.length > 0 && paginatedUsers.every(user => selectedUsers.includes(user.id))}
                       onChange={handleSelectAll}
                       className={Style.checkbox}
                     />
@@ -366,7 +415,7 @@ const UsersManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user, index) => (
+                {paginatedUsers.map((user, index) => (
                   <tr key={user.id || `user-${index}`} className={Style.tableRow}>
                     <td className={Style.tableCell}>
                       <input
@@ -485,6 +534,53 @@ const UsersManagementPage = () => {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {filteredUsers.length > 0 && (
+          <div className={Style.pagination}>
+            <div className={Style.paginationInfo}>
+              Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} trong tổng số {filteredUsers.length} người dùng
+            </div>
+            <div className={Style.paginationControls}>
+              <button
+                className={Style.paginationButton}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Trước
+              </button>
+              
+              <div className={Style.paginationNumbers}>
+                {getPageNumbers().map((page, index) => {
+                  if (page === '...') {
+                    return (
+                      <span key={`ellipsis-${index}`} className={Style.paginationEllipsis}>
+                        ...
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      key={page}
+                      className={`${Style.paginationNumber} ${currentPage === page ? Style.paginationNumberActive : ''}`}
+                      onClick={() => setCurrentPage(page as number)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                className={Style.paginationButton}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Tiếp
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* User Form Modal */}

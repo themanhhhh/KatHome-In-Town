@@ -139,9 +139,6 @@ export function Header() {
           
           {isAuthenticated && user ? (
             <div className="flex items-center space-x-3">
-              <span className="hidden md:inline text-sm font-medium" style={{ color: '#3D0301' }}>
-                Xin chào, {user.taiKhoan}!
-              </span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 

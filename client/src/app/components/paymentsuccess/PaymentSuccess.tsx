@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../card/card";
 import { Badge } from "../badge/badge";
 import { Separator } from "../separator/separator";
+import { paymentApi } from "@/lib/api";
+import { toast } from "sonner";
 import { 
   CheckCircle,
   Calendar,
@@ -20,7 +22,8 @@ import {
   CreditCard,
   User,
   Bed,
-  Bath
+  Bath,
+  AlertCircle
 } from "lucide-react";
 
 interface BookingData {
@@ -65,6 +68,142 @@ interface PaymentSuccessProps {
 export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [paymentFinalized, setPaymentFinalized] = useState(false);
+  const [finalizeError, setFinalizeError] = useState<string | null>(null);
+
+  // Send payment confirmation email on component mount
+  useEffect(() => {
+    const verifyAndSendPaymentEmail = async () => {
+      if (emailSent) return; // Prevent duplicate sends
+
+      setIsSendingEmail(true);
+      setEmailError(null);
+
+      try {
+        // Prefer calling backend verify endpoint which can also trigger email
+        const verifyResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/payment/verify`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bookingId: bookingData.bookingId,
+              totalAmount: bookingData.paymentInfo.total,
+              paymentMethod: bookingData.paymentInfo.method,
+              paymentRef: undefined,
+              sendEmail: true,
+              customerEmail: bookingData.guestInfo.email,
+              customerName: `${bookingData.guestInfo.firstName} ${bookingData.guestInfo.lastName}`,
+              roomName: bookingData.roomData.name,
+              checkIn: bookingData.searchData.checkIn,
+              checkOut: bookingData.searchData.checkOut,
+              guests: bookingData.searchData.guests,
+              bookingDate: bookingData.bookingDate,
+            }),
+          }
+        );
+
+        if (!verifyResponse.ok) {
+          const err = await verifyResponse.json().catch(() => ({}));
+          throw new Error(err.message || 'Payment verify failed');
+        }
+
+        const verifyJson = await verifyResponse.json();
+        if (verifyJson.success) {
+          setEmailSent(!!verifyJson.emailSent || true);
+          
+          // ✅ After successful verification, finalize the booking
+          try {
+            const finalizeResponse = await paymentApi.finalizeBooking({
+              bookingId: bookingData.bookingId,
+              totalAmount: bookingData.paymentInfo.total,
+              paymentMethod: bookingData.paymentInfo.method,
+              paymentRef: verifyJson.paymentRef || undefined,
+              paidAt: new Date().toISOString(),
+              sendEmail: false, // Email already sent in verify step
+            }) as { success?: boolean; message?: string; data?: unknown };
+
+            if (finalizeResponse?.success) {
+              setPaymentFinalized(true);
+              console.log('✅ Payment finalized successfully:', finalizeResponse);
+              toast.success('Thanh toán thành công!', {
+                description: `Booking #${bookingData.bookingId} đã được xác nhận và thanh toán.`,
+                duration: 5000,
+              });
+            } else {
+              throw new Error('Finalize booking failed');
+            }
+          } catch (finalizeErr) {
+            console.error('❌ Error finalizing booking:', finalizeErr);
+            
+            // ✅ Check if error is "already paid" - treat as success
+            const errorMessage = finalizeErr instanceof Error ? finalizeErr.message : String(finalizeErr);
+            if (errorMessage.toLowerCase().includes('already paid') || 
+                errorMessage.toLowerCase().includes('đã thanh toán')) {
+              setPaymentFinalized(true);
+              console.log('✅ Payment already finalized (already paid)');
+              toast.info('Thanh toán đã được xác nhận', {
+                description: `Booking #${bookingData.bookingId} đã được thanh toán trước đó.`,
+                duration: 5000,
+              });
+            } else {
+              setFinalizeError(errorMessage);
+              toast.error('Lỗi xử lý thanh toán', {
+                description: errorMessage,
+                duration: 6000,
+              });
+            }
+          }
+
+          return;
+        }
+
+        // Fallback to Next.js route (frontend relay)
+        const fallback = await fetch('/api/payment-confirmation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: bookingData.guestInfo.email,
+            customerName: `${bookingData.guestInfo.firstName} ${bookingData.guestInfo.lastName}`,
+            bookingData: {
+              bookingId: bookingData.bookingId,
+              roomName: bookingData.roomData.name,
+              checkIn: bookingData.searchData.checkIn,
+              checkOut: bookingData.searchData.checkOut,
+              guests: bookingData.searchData.guests,
+              totalAmount: bookingData.paymentInfo.total,
+              paymentMethod: bookingData.paymentInfo.method,
+              bookingDate: bookingData.bookingDate,
+            },
+          }),
+        });
+        const fbJson = await fallback.json();
+        if (!fallback.ok || !fbJson.success) {
+          throw new Error(fbJson.message || 'Failed to send payment confirmation email');
+        }
+        setEmailSent(true);
+        toast.success('Email xác nhận đã được gửi!', {
+          description: `Vui lòng kiểm tra email tại ${bookingData.guestInfo.email}`,
+          duration: 5000,
+        });
+      } catch (error) {
+        console.error('❌ Payment verification/email error:', error);
+        const errorMsg = error instanceof Error ? error.message : 'Failed to verify/send email';
+        setEmailError(errorMsg);
+        toast.error('Lỗi gửi email xác nhận', {
+          description: errorMsg,
+          duration: 6000,
+        });
+      } finally {
+        setIsSendingEmail(false);
+      }
+    };
+
+    verifyAndSendPaymentEmail();
+  }, [bookingData, emailSent]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -120,7 +259,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#fef5f6' }}>
+    <div className="min-h-screen" data-allow-select="true" style={{ backgroundColor: '#fef5f6' }}>
       {/* Success Header */}
       <div className="text-center py-12" style={{ backgroundColor: 'linear-gradient(135deg, #FAD0C4 0%, #E6B2BA 50%, #F2A7C3 100%)' }}>
         <div 
@@ -139,6 +278,64 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
           <Badge className="px-4 py-2 text-lg" style={{ backgroundColor: 'rgba(61, 3, 1, 0.1)', color: '#3D0301' }}>
             Mã đặt phòng: {bookingData.bookingId}
           </Badge>
+        </div>
+      </div>
+
+      {/* Email & Payment Status Notification */}
+      <div className="container mx-auto px-4 py-4">
+        <div className="max-w-4xl mx-auto space-y-3">
+          {isSendingEmail && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-blue-700 font-medium">Đang xác minh thanh toán và gửi email...</span>
+              </div>
+            </div>
+          )}
+          
+          {emailSent && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="text-green-700 font-medium">
+                  ✅ Email xác nhận đã được gửi đến {bookingData.guestInfo.email}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {paymentFinalized && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="text-green-700 font-medium">
+                  ✅ Thanh toán đã được ghi nhận vào hệ thống
+                </span>
+              </div>
+            </div>
+          )}
+          
+          {emailError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+                <span className="text-red-700 font-medium">
+                  ❌ Lỗi gửi email: {emailError}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {finalizeError && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex items-center space-x-3">
+                <AlertCircle className="w-5 h-5 text-yellow-600" />
+                <span className="text-yellow-700 font-medium">
+                  ⚠️ Lưu ý: {finalizeError}. Booking của bạn đã được tạo nhưng có thể cần xác nhận thêm.
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

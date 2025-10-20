@@ -17,13 +17,14 @@ interface BookingFormProps {
 export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
   const [formData, setFormData] = useState({
     ngayDat: '',
-    ngayNhan: '',
-    ngayTra: '',
-    soLuongKhach: 1,
-    tongTien: 0,
-    trangThai: 'pending' as 'confirmed' | 'pending' | 'cancelled' | 'completed',
-    phuongThucThanhToan: 'cash',
-    ghiChu: '',
+    checkinDuKien: '',
+    checkoutDuKien: '',
+    soNguoiLon: 1,
+    soTreEm: 0,
+    totalAmount: 0,
+    trangThai: 'R' as string, // R, CF, AB, CC
+    phuongThucThanhToan: 'Cash',
+    notes: '',
     maKhachHang: '',
     maPhong: ''
   });
@@ -51,17 +52,22 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
 
   useEffect(() => {
     if (booking) {
+      const firstRoom = booking.chiTiet?.[0];
+      const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0), 0);
+      const totalChildren = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soTreEm || 0), 0);
+      
       setFormData({
-        ngayDat: booking.ngayDat || '',
-        ngayNhan: booking.ngayNhan || '',
-        ngayTra: booking.ngayTra || '',
-        soLuongKhach: booking.soLuongKhach || 1,
-        tongTien: booking.tongTien || 0,
-        trangThai: booking.trangThai || 'pending',
-        phuongThucThanhToan: booking.phuongThucThanhToan || 'cash',
-        ghiChu: booking.ghiChu || '',
+        ngayDat: booking.ngayDat?.split('T')[0] || '',
+        checkinDuKien: booking.checkinDuKien?.split('T')[0] || '',
+        checkoutDuKien: booking.checkoutDuKien?.split('T')[0] || '',
+        soNguoiLon: totalGuests || 1,
+        soTreEm: totalChildren || 0,
+        totalAmount: booking.totalAmount || 0,
+        trangThai: booking.trangThai || 'R',
+        phuongThucThanhToan: booking.phuongThucThanhToan || 'Cash',
+        notes: booking.notes || '',
         maKhachHang: booking.khachHang?.maKhachHang || '',
-        maPhong: booking.phong?.maPhong || ''
+        maPhong: firstRoom?.phong?.maPhong || ''
       });
     }
   }, [booking]);
@@ -74,10 +80,14 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
     try {
       if (booking) {
         // Update existing booking
-        await donDatPhongApi.update(booking.maDonDatPhong, formData);
+        await donDatPhongApi.update(booking.maDatPhong, formData);
       } else {
-        // Create new booking
-        await donDatPhongApi.create(formData);
+        // Create new booking - note: API expects different format
+        // This is simplified, in reality you'd need to call the proper create endpoint
+        // with the correct payload structure (coSoId, customerEmail, rooms array, etc.)
+        setError('Chức năng tạo booking mới đang được phát triển. Vui lòng sử dụng trang booking của khách hàng.');
+        setIsSubmitting(false);
+        return;
       }
       onSuccess();
       onClose();
@@ -90,16 +100,16 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
 
   const calculateTotalPrice = useCallback(() => {
     const selectedRoom = rooms.find(room => room.maPhong === formData.maPhong);
-    if (selectedRoom && formData.ngayNhan && formData.ngayTra) {
-      const checkIn = new Date(formData.ngayNhan);
-      const checkOut = new Date(formData.ngayTra);
+    if (selectedRoom && formData.checkinDuKien && formData.checkoutDuKien) {
+      const checkIn = new Date(formData.checkinDuKien);
+      const checkOut = new Date(formData.checkoutDuKien);
       const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
       // Since ApiRoom doesn't have giaPhong, use a default price
       const defaultPrice = 500000; // 500k VND per night
       const total = nights * defaultPrice;
-      setFormData(prev => ({ ...prev, tongTien: total }));
+      setFormData(prev => ({ ...prev, totalAmount: total }));
     }
-  }, [rooms, formData.maPhong, formData.ngayNhan, formData.ngayTra]);
+  }, [rooms, formData.maPhong, formData.checkinDuKien, formData.checkoutDuKien]);
 
   useEffect(() => {
     calculateTotalPrice();
@@ -146,8 +156,8 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                 <label className="block text-sm font-medium mb-2">Ngày nhận phòng</label>
                 <input
                   type="date"
-                  value={formData.ngayNhan}
-                  onChange={(e) => setFormData({ ...formData, ngayNhan: e.target.value })}
+                  value={formData.checkinDuKien}
+                  onChange={(e) => setFormData({ ...formData, checkinDuKien: e.target.value })}
                   className="w-full p-2 border rounded-md"
                   required
                 />
@@ -157,22 +167,33 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                 <label className="block text-sm font-medium mb-2">Ngày trả phòng</label>
                 <input
                   type="date"
-                  value={formData.ngayTra}
-                  onChange={(e) => setFormData({ ...formData, ngayTra: e.target.value })}
+                  value={formData.checkoutDuKien}
+                  onChange={(e) => setFormData({ ...formData, checkoutDuKien: e.target.value })}
                   className="w-full p-2 border rounded-md"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Số lượng khách</label>
+                <label className="block text-sm font-medium mb-2">Số người lớn</label>
                 <input
                   type="number"
                   min="1"
-                  value={formData.soLuongKhach}
-                  onChange={(e) => setFormData({ ...formData, soLuongKhach: Number(e.target.value) })}
+                  value={formData.soNguoiLon}
+                  onChange={(e) => setFormData({ ...formData, soNguoiLon: Number(e.target.value) })}
                   className="w-full p-2 border rounded-md"
                   required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Số trẻ em</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.soTreEm}
+                  onChange={(e) => setFormData({ ...formData, soTreEm: Number(e.target.value) })}
+                  className="w-full p-2 border rounded-md"
                 />
               </div>
 
@@ -181,8 +202,8 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                 <input
                   type="number"
                   min="0"
-                  value={formData.tongTien}
-                  onChange={(e) => setFormData({ ...formData, tongTien: Number(e.target.value) })}
+                  value={formData.totalAmount}
+                  onChange={(e) => setFormData({ ...formData, totalAmount: Number(e.target.value) })}
                   className="w-full p-2 border rounded-md"
                   required
                 />
@@ -192,13 +213,13 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                 <label className="block text-sm font-medium mb-2">Trạng thái</label>
                 <select
                   value={formData.trangThai}
-                  onChange={(e) => setFormData({ ...formData, trangThai: e.target.value as 'confirmed' | 'pending' | 'cancelled' | 'completed' })}
+                  onChange={(e) => setFormData({ ...formData, trangThai: e.target.value })}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="pending">Chờ xác nhận</option>
-                  <option value="confirmed">Đã xác nhận</option>
-                  <option value="cancelled">Đã hủy</option>
-                  <option value="completed">Hoàn thành</option>
+                  <option value="R">Chờ xác nhận</option>
+                  <option value="CF">Đã xác nhận</option>
+                  <option value="AB">Đã hủy</option>
+                  <option value="CC">Hoàn thành</option>
                 </select>
               </div>
 
@@ -209,11 +230,8 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                   onChange={(e) => setFormData({ ...formData, phuongThucThanhToan: e.target.value })}
                   className="w-full p-2 border rounded-md"
                 >
-                  <option value="cash">Tiền mặt</option>
-                  <option value="bank_transfer">Chuyển khoản</option>
-                  <option value="credit_card">Thẻ tín dụng</option>
-                  <option value="momo">MoMo</option>
-                  <option value="zalopay">ZaloPay</option>
+                  <option value="Cash">Tiền mặt</option>
+                  <option value="Card">Thẻ</option>
                 </select>
               </div>
 
@@ -255,8 +273,8 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
             <div>
               <label className="block text-sm font-medium mb-2">Ghi chú</label>
               <textarea
-                value={formData.ghiChu}
-                onChange={(e) => setFormData({ ...formData, ghiChu: e.target.value })}
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 className="w-full p-2 border rounded-md"
                 rows={3}
                 placeholder="Ghi chú đặc biệt..."

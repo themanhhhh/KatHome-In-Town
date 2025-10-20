@@ -12,11 +12,18 @@ import { phongApi } from '../../lib/api';
 interface RoomFormProps {
   room?: ApiRoom | null;
   roomTypes: ApiRoomType[];
+  coSoList: Array<{
+    maCoSo: string;
+    tenCoSo: string;
+    diaChi: string;
+    sdt: string;
+    hinhAnh?: string;
+  }>;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (isEdit: boolean) => void;
 }
 
-export function RoomForm({ room, roomTypes, onClose, onSuccess }: RoomFormProps) {
+export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: RoomFormProps) {
   const [formData, setFormData] = useState({
     moTa: '',
     maHangPhong: '',
@@ -42,6 +49,8 @@ export function RoomForm({ room, roomTypes, onClose, onSuccess }: RoomFormProps)
     setError(null);
 
     try {
+      const isEdit = !!room;
+      
       if (room) {
         // Update existing room
         await phongApi.update(room.maPhong, formData);
@@ -56,7 +65,7 @@ export function RoomForm({ room, roomTypes, onClose, onSuccess }: RoomFormProps)
           await phongApi.create(formData);
         }
       }
-      onSuccess();
+      onSuccess(isEdit);
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
@@ -70,8 +79,14 @@ export function RoomForm({ room, roomTypes, onClose, onSuccess }: RoomFormProps)
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white shadow-xl border-0">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <Card 
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white shadow-xl border-0"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
@@ -130,9 +145,14 @@ export function RoomForm({ room, roomTypes, onClose, onSuccess }: RoomFormProps)
                   value={formData.maCoSo}
                   onChange={(e) => setFormData({ ...formData, maCoSo: e.target.value })}
                   className="w-full p-2 border rounded-md"
+                  required
                 >
                   <option value="">Chọn cơ sở</option>
-                  {/* TODO: Load coSo data */}
+                  {coSoList.map((coSo) => (
+                    <option key={coSo.maCoSo} value={coSo.maCoSo}>
+                      {coSo.tenCoSo} - {coSo.diaChi}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>

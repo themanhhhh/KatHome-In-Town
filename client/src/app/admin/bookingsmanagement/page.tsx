@@ -53,10 +53,10 @@ const BookingsManagementPage = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      confirmed: { label: 'Đã xác nhận', className: Style.badgeConfirmed },
-      pending: { label: 'Chờ xác nhận', className: Style.badgePending },
-      cancelled: { label: 'Đã hủy', className: Style.badgeCancelled },
-      completed: { label: 'Hoàn thành', className: Style.badgeCompleted }
+      CF: { label: 'Đã xác nhận', className: Style.badgeConfirmed },
+      R: { label: 'Chờ xác nhận', className: Style.badgePending },
+      AB: { label: 'Đã hủy', className: Style.badgeCancelled },
+      CC: { label: 'Hoàn thành', className: Style.badgeCompleted }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || { label: status, className: Style.badge };
@@ -112,13 +112,13 @@ const BookingsManagementPage = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'confirmed':
+      case 'CF': // Confirmed
         return <CheckCircle className={`${Style.statusIcon} text-green-500`} />;
-      case 'pending':
+      case 'R': // Reserved/Pending
         return <Clock className={`${Style.statusIcon} text-yellow-500`} />;
-      case 'cancelled':
+      case 'AB': // Aborted/Cancelled
         return <XCircle className={`${Style.statusIcon} text-red-500`} />;
-      case 'completed':
+      case 'CC': // Checked-out/Completed
         return <CheckCircle className={`${Style.statusIcon} text-blue-500`} />;
       default:
         return <Clock className={`${Style.statusIcon} text-gray-500`} />;
@@ -126,9 +126,9 @@ const BookingsManagementPage = () => {
   };
 
   const filteredBookings = (bookings || []).filter(booking => {
-    const guestName = booking.khachHang?.tenKhachHang || '';
-    const email = booking.khachHang?.email || '';
-    const bookingId = booking.maDonDatPhong || '';
+    const guestName = booking.khachHang?.tenKhachHang || booking.customerName || '';
+    const email = booking.khachHang?.email || booking.customerEmail || '';
+    const bookingId = booking.maDatPhong || '';
     
     const matchesSearch = guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,7 +149,7 @@ const BookingsManagementPage = () => {
     if (selectedBookings.length === filteredBookings.length) {
       setSelectedBookings([]);
     } else {
-      setSelectedBookings(filteredBookings.map(booking => booking.maDonDatPhong));
+      setSelectedBookings(filteredBookings.map(booking => booking.maDatPhong));
     }
   };
 
@@ -225,10 +225,10 @@ const BookingsManagementPage = () => {
                   className={Style.selectTrigger}
                 >
                   <option value="all">Tất cả</option>
-                  <option value="pending">Chờ xác nhận</option>
-                  <option value="confirmed">Đã xác nhận</option>
-                  <option value="completed">Hoàn thành</option>
-                  <option value="cancelled">Đã hủy</option>
+                  <option value="R">Chờ xác nhận</option>
+                  <option value="CF">Đã xác nhận</option>
+                  <option value="CC">Hoàn thành</option>
+                  <option value="AB">Đã hủy</option>
                 </select>
               </div>
             </div>
@@ -252,7 +252,7 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(bookings || []).filter(b => b.trangThai === 'pending').length}
+              {(bookings || []).filter(b => b.trangThai === 'R').length}
             </div>
             <div className={Style.statLabel}>
               Chờ xác nhận
@@ -263,7 +263,7 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(bookings || []).filter(b => b.trangThai === 'confirmed').length}
+              {(bookings || []).filter(b => b.trangThai === 'CF').length}
             </div>
             <div className={Style.statLabel}>
               Đã xác nhận
@@ -274,7 +274,7 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {formatPrice((bookings || []).reduce((sum, b) => sum + b.tongTien, 0))}
+              {formatPrice((bookings || []).reduce((sum, b) => sum + (b.totalAmount || 0), 0))}
             </div>
             <div className={Style.statLabel}>
               Tổng doanh thu
@@ -329,93 +329,102 @@ const BookingsManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredBookings.map((booking, index) => (
-                  <tr key={booking.maDonDatPhong || `booking-${index}`} className={Style.tableRow}>
-                    <td className={Style.tableCell}>
-                      <input
-                        type="checkbox"
-                        checked={selectedBookings.includes(booking.maDonDatPhong)}
-                        onChange={() => handleSelectBooking(booking.maDonDatPhong)}
-                        className={Style.checkbox}
-                      />
-                    </td>
-                    <td className={Style.tableCell}>
-                      <div>
-                        <div className={Style.bookingId}>
-                          {booking.maDonDatPhong}
+                {filteredBookings.map((booking, index) => {
+                  // Get total guests from chiTiet
+                  const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => 
+                    sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0
+                  );
+                  // Get room info from first chiTiet
+                  const firstRoom = booking.chiTiet?.[0];
+                  
+                  return (
+                    <tr key={booking.maDatPhong || `booking-${index}`} className={Style.tableRow}>
+                      <td className={Style.tableCell}>
+                        <input
+                          type="checkbox"
+                          checked={selectedBookings.includes(booking.maDatPhong)}
+                          onChange={() => handleSelectBooking(booking.maDatPhong)}
+                          className={Style.checkbox}
+                        />
+                      </td>
+                      <td className={Style.tableCell}>
+                        <div>
+                          <div className={Style.bookingId}>
+                            {booking.maDatPhong}
+                          </div>
+                          <div className={Style.bookingDate}>
+                            {formatDate(booking.ngayDat)}
+                          </div>
                         </div>
-                        <div className={Style.bookingDate}>
-                          {formatDate(booking.ngayDat)}
+                      </td>
+                      <td className={Style.tableCell}>
+                        <div>
+                          <div className={Style.guestName}>
+                            {booking.khachHang?.tenKhachHang || booking.customerName || 'N/A'}
+                          </div>
+                          <div className={Style.contactInfo}>
+                            <Mail className={Style.contactIcon} />
+                            <span>{booking.khachHang?.email || booking.customerEmail || 'N/A'}</span>
+                          </div>
+                          <div className={Style.contactInfo}>
+                            <Phone className={Style.contactIcon} />
+                            <span>{booking.khachHang?.soDienThoai || booking.customerPhone || 'N/A'}</span>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className={Style.tableCell}>
-                      <div>
-                        <div className={Style.guestName}>
-                          {booking.khachHang?.tenKhachHang || 'N/A'}
+                      </td>
+                      <td className={Style.tableCell}>
+                        <div>
+                          <div className={Style.roomName}>
+                            {firstRoom?.phong?.moTa || 'N/A'}
+                          </div>
+                          <div className={Style.guestCount}>
+                            <Users className={Style.contactIcon} />
+                            <span>{totalGuests || 0} khách</span>
+                          </div>
                         </div>
-                        <div className={Style.contactInfo}>
-                          <Mail className={Style.contactIcon} />
-                          <span>{booking.khachHang?.email || 'N/A'}</span>
+                      </td>
+                      <td className={Style.tableCell}>
+                        <div className={Style.dateInfo}>
+                          <div>Nhận: {formatDate(booking.checkinDuKien)}</div>
+                          <div>Trả: {formatDate(booking.checkoutDuKien)}</div>
                         </div>
-                        <div className={Style.contactInfo}>
-                          <Phone className={Style.contactIcon} />
-                          <span>{booking.khachHang?.soDienThoai || 'N/A'}</span>
+                      </td>
+                      <td className={Style.tableCell}>
+                        <div className={Style.totalAmount}>
+                          {formatPrice(booking.totalAmount || 0)}
                         </div>
-                      </div>
-                    </td>
-                    <td className={Style.tableCell}>
-                      <div>
-                        <div className={Style.roomName}>
-                          {booking.phong?.moTa || 'N/A'}
+                        <div className={Style.paymentMethod}>
+                          {booking.phuongThucThanhToan || booking.paymentMethod || 'N/A'}
                         </div>
-                        <div className={Style.guestCount}>
-                          <Users className={Style.contactIcon} />
-                          <span>{booking.soLuongKhach || 0} khách</span>
+                      </td>
+                      <td className={Style.tableCell}>
+                        <div className={Style.statusContainer}>
+                          {getStatusIcon(booking.trangThai)}
+                          {getStatusBadge(booking.trangThai)}
                         </div>
-                      </div>
-                    </td>
-                    <td className={Style.tableCell}>
-                      <div className={Style.dateInfo}>
-                        <div>Nhận: {formatDate(booking.ngayNhan)}</div>
-                        <div>Trả: {formatDate(booking.ngayTra)}</div>
-                      </div>
-                    </td>
-                    <td className={Style.tableCell}>
-                      <div className={Style.totalAmount}>
-                        {formatPrice(booking.tongTien)}
-                      </div>
-                      <div className={Style.paymentMethod}>
-                        {booking.phuongThucThanhToan || 'N/A'}
-                      </div>
-                    </td>
-                    <td className={Style.tableCell}>
-                      <div className={Style.statusContainer}>
-                        {getStatusIcon(booking.trangThai)}
-                        {getStatusBadge(booking.trangThai)}
-                      </div>
-                    </td>
-                    <td className={Style.tableCell}>
-                      <div className={Style.actions}>
-                        <button className={Style.actionButton}>
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button 
-                          className={Style.actionButton}
-                          onClick={() => handleEditBooking(booking)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button 
-                          className={`${Style.actionButton} ${Style.actionButtonDanger}`}
-                          onClick={() => handleDeleteBooking(booking.maDonDatPhong)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className={Style.tableCell}>
+                        <div className={Style.actions}>
+                          <button className={Style.actionButton}>
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button 
+                            className={Style.actionButton}
+                            onClick={() => handleEditBooking(booking)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button 
+                            className={`${Style.actionButton} ${Style.actionButtonDanger}`}
+                            onClick={() => handleDeleteBooking(booking.maDatPhong)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             

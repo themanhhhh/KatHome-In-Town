@@ -78,7 +78,7 @@ export default function PaymentSuccessPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" data-allow-select="true">
       <Header />
       <main className="flex-1">
         <PaymentSuccess 

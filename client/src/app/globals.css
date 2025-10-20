@@ -59,7 +59,7 @@
   --secondary: #FDF7F7;
   --secondary-foreground: #82213D;
   --muted: #FFF5F5;
-  --muted-foreground: #B8899A;
+  --muted-foreground: rgba(184, 137, 154, 0.55);
   --accent: #F8E8EC;
   --accent-foreground: #82213D;
   --destructive: #dc2626;
@@ -194,6 +194,55 @@
     [data-aichat="true"] p {
       color: inherit;
     }
+
+/* Allow text selection inside explicitly marked containers */
+[data-allow-select="true"],
+[data-allow-select="true"] * {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+/* Hard override for form controls */
+[data-allow-select="true"] input,
+[data-allow-select="true"] input *,
+[data-allow-select="true"] input,
+[data-allow-select="true"] input *,
+[data-allow-select="true"] textarea,
+[data-allow-select="true"] textarea * {
+  -webkit-user-select: auto !important;
+  -moz-user-select: auto !important;
+  -ms-user-select: auto !important;
+  user-select: auto !important;
+}
+
+/* Global safety: always allow selecting inside inputs across the app */
+input, input * {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+/* Improve visibility of text selection in inputs and textareas */
+input::selection,
+textarea::selection,
+[contenteditable="true"]::selection {
+  background: rgba(130, 33, 61, 0.25) !important; /* #82213D at 25% */
+  color: #3D0301 !important;
+}
+input::-moz-selection,
+textarea::-moz-selection,
+[contenteditable="true"]::-moz-selection {
+  background: rgba(130, 33, 61, 0.25) !important;
+  color: #3D0301 !important;
+}
+
+/* Dimmer placeholders for Checkout form only */
+[data-checkout="true"] input::placeholder,
+[data-checkout="true"] textarea::placeholder {
+  color: rgba(61, 3, 1, 0.2) !important; /* nearly transparent to match theme */
+}
 
     label {
       font-family: var(--font-family);

@@ -43,7 +43,7 @@ const AdminPage = () => {
   );
 
   // Calculate statistics from real data
-  const totalRevenue = (bookings || []).reduce((sum, booking) => sum + (booking.tongTien || 0), 0);
+  const totalRevenue = (bookings || []).reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
   const totalBookings = (bookings || []).length;
   const totalUsers = (users || []).length;
   const totalCustomers = (customers || []).length;
@@ -63,29 +63,39 @@ const AdminPage = () => {
   };
 
   // Get recent bookings (last 3)
-  const recentBookings = (bookings || []).slice(0, 3).map(booking => ({
-    id: booking.maDonDatPhong,
-    guestName: booking.khachHang?.tenKhachHang || 'N/A',
-    room: booking.phong?.moTa || 'N/A',
-    checkIn: booking.ngayNhan,
-    checkOut: booking.ngayTra,
-    total: booking.tongTien,
-    status: booking.trangThai
-  }));
+  const recentBookings = (bookings || []).slice(0, 3).map(booking => {
+    const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0);
+    const firstRoom = booking.chiTiet?.[0];
+    
+    return {
+      id: booking.maDatPhong,
+      guestName: booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
+      room: firstRoom?.phong?.moTa || 'N/A',
+      checkIn: booking.checkinDuKien,
+      checkOut: booking.checkoutDuKien,
+      total: booking.totalAmount || 0,
+      status: booking.trangThai
+    };
+  });
 
   // Get upcoming check-ins (today's check-ins)
   const today = new Date().toISOString().split('T')[0];
   const upcomingCheckIns = (bookings || [])
-    .filter(booking => booking.ngayNhan === today)
+    .filter(booking => booking.checkinDuKien?.startsWith(today))
     .slice(0, 2)
-    .map(booking => ({
-      id: booking.maDonDatPhong,
-      guestName: booking.khachHang?.tenKhachHang || 'N/A',
-      room: booking.phong?.moTa || 'N/A',
-      checkIn: `${booking.ngayNhan} 14:00`,
-      phone: booking.khachHang?.soDienThoai || 'N/A',
-      guests: booking.soLuongKhach
-    }));
+    .map(booking => {
+      const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0);
+      const firstRoom = booking.chiTiet?.[0];
+      
+      return {
+        id: booking.maDatPhong,
+        guestName: booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
+        room: firstRoom?.phong?.moTa || 'N/A',
+        checkIn: `${booking.checkinDuKien} 14:00`,
+        phone: booking.khachHang?.soDienThoai || booking.customerPhone || 'N/A',
+        guests: totalGuests
+      };
+    });
 
   // Loading and error states
   const isLoading = bookingsLoading || roomsLoading || customersLoading || usersLoading;
@@ -117,12 +127,14 @@ const AdminPage = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'confirmed':
+      case 'CF': // Confirmed
         return <span className={`${Style.badge} ${Style.badgeConfirmed}`}>Đã xác nhận</span>;
-      case 'pending':
+      case 'R': // Reserved/Pending
         return <span className={`${Style.badge} ${Style.badgePending}`}>Chờ xác nhận</span>;
-      case 'cancelled':
+      case 'AB': // Aborted/Cancelled
         return <span className={`${Style.badge} ${Style.badgeCancelled}`}>Đã hủy</span>;
+      case 'CC': // Checked-out/Completed
+        return <span className={`${Style.badge} ${Style.badgeConfirmed}`}>Hoàn thành</span>;
       default:
         return <span className={Style.badge}>{status}</span>;
     }

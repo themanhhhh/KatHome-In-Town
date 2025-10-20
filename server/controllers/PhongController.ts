@@ -3,6 +3,7 @@ import { AppDataSource } from '../data/datasource';
 import { Phong } from '../entities/Phong';
 import { DonDatPhong } from '../entities/DonDatPhong';
 import { ChiTietDonDatPhong } from '../entities/ChiTietDonDatPhong';
+import { BookingService } from '../services/BookingService';
 
 const phongRepository = AppDataSource.getRepository(Phong);
 
@@ -79,6 +80,7 @@ export class PhongController {
 
       const checkInDate = new Date(checkIn);
       const checkOutDate = new Date(checkOut);
+      
       if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
         return res.status(400).json({ message: 'Định dạng ngày không hợp lệ' });
       }
@@ -88,31 +90,13 @@ export class PhongController {
 
       const requiredGuests = guests ? parseInt(guests, 10) : undefined;
 
-      const overlappingBookings = await AppDataSource.getRepository(DonDatPhong)
-        .createQueryBuilder('ddp')
-        .leftJoinAndSelect('ddp.chiTiet', 'ct')
-        .leftJoinAndSelect('ct.phong', 'phong')
-        .where('ddp.checkinDuKien < :requestedCheckout', { requestedCheckout: checkOutDate })
-        .andWhere('ddp.checkoutDuKien > :requestedCheckin', { requestedCheckin: checkInDate })
-        .getMany();
-
-      const occupiedRoomIds = new Set(
-        overlappingBookings.flatMap(b => (b.chiTiet || []).map(ct => ct.phong?.maPhong)).filter(Boolean) as string[]
+      // Use BookingService to get available rooms
+      const availableRooms = await BookingService.getAvailableRooms(
+        checkInDate,
+        checkOutDate,
+        coSoId,
+        requiredGuests
       );
-// Step 2: query all rooms (optionally by coSo), include hangPhong for capacity
-      const phongQB = AppDataSource.getRepository(Phong)
-        .createQueryBuilder('p')
-        .leftJoinAndSelect('p.hangPhong', 'hp')
-        .leftJoinAndSelect('hp.donGia', 'dg')
-        .leftJoinAndSelect('p.coSo', 'cs');
-      if (coSoId) {
-        phongQB.where('cs.id = :coSoId', { coSoId });
-      }
-      const allRooms = await phongQB.getMany();
-
-      // Step 3: filter out occupied rooms and capacity if provided
-      const availableRooms = allRooms.filter(r => !occupiedRoomIds.has(r.maPhong))
-        .filter(r => (requiredGuests ? (r.hangPhong?.sucChua ?? 0) >= requiredGuests : true));
 
       return res.json(availableRooms);
     } catch (error) {

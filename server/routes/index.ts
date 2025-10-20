@@ -16,6 +16,8 @@ import { CaLamController } from '../controllers/CaLamController';
 import { DangKyCaLamController } from '../controllers/DangKyCaLamController';
 import { TheoDoiCaLamController } from '../controllers/TheoDoiCaLamController';
 import { KhieuNaiController } from '../controllers/KhieuNaiController';
+import { RevenueController } from '../controllers/RevenueController';
+import { ReportController } from '../controllers/ReportController';
 
 const router = Router();
 
@@ -98,6 +100,14 @@ router.post('/dondatphong', DonDatPhongController.create);
 router.put('/dondatphong/:id', DonDatPhongController.update);
 router.delete('/dondatphong/:id', DonDatPhongController.delete);
 
+// Booking management routes
+router.post('/bookings/:bookingId/verify-otp', DonDatPhongController.verifyOTP);
+router.post('/bookings/:bookingId/confirm-payment', DonDatPhongController.confirmPayment);
+router.post('/bookings/:bookingId/check-in', DonDatPhongController.checkIn);
+router.post('/bookings/:bookingId/check-out', DonDatPhongController.checkOut);
+router.post('/bookings/:bookingId/cancel', DonDatPhongController.cancelBooking);
+router.post('/bookings/:bookingId/finalize', DonDatPhongController.finalizePayment);
+
 // ChiTietDonDatPhong routes
 router.get('/chitietdondatphong', ChiTietDonDatPhongController.getAll);
 router.get('/chitietdondatphong/:id', ChiTietDonDatPhongController.getById);
@@ -146,6 +156,132 @@ router.get('/khieunai/:id', KhieuNaiController.getById);
 router.post('/khieunai', KhieuNaiController.create);
 router.put('/khieunai/:id', KhieuNaiController.update);
 router.delete('/khieunai/:id', KhieuNaiController.delete);
+
+// Revenue routes
+router.get('/revenue', RevenueController.getAll);
+router.get('/revenue/summary', RevenueController.getSummary);
+router.get('/revenue/:id', RevenueController.getById);
+
+// ========== REPORT ROUTES ==========
+router.get('/reports', ReportController.getAll);
+router.get('/reports/:id', ReportController.getById);
+router.post('/reports', ReportController.create);
+router.put('/reports/:id', ReportController.update);
+router.delete('/reports/:id', ReportController.delete);
+router.post('/reports/bulk-delete', ReportController.bulkDelete);
+router.post('/reports/:id/complete', ReportController.markCompleted);
+
+// Email service routes
+router.post('/send-payment-confirmation', async (req, res) => {
+  try {
+    const { email, customerName, bookingData } = req.body;
+
+    if (!email || !customerName || !bookingData) {
+      return res.status(400).json({
+        error: 'Email, customer name, and booking data are required'
+      });
+    }
+
+    const { EmailService } = await import('../services/EmailService');
+    const result = await EmailService.sendPaymentConfirmationEmail(
+      email,
+      customerName,
+      bookingData
+    );
+
+    if (result.success) {
+      res.json({
+        success: true,
+        message: 'Payment confirmation email sent successfully',
+        messageId: result.messageId
+      });
+    } else {
+      res.status(500).json({
+        error: 'Failed to send payment confirmation email',
+        details: result.error
+      });
+    }
+  } catch (error) {
+    console.error('Payment confirmation route error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+// Payment verification route (dev-friendly)
+router.post('/payment/verify', async (req, res) => {
+  try {
+    const {
+      bookingId,
+      totalAmount,
+      paymentMethod,
+      paymentRef,
+      sendEmail,
+      customerEmail,
+      customerName,
+      roomName,
+      checkIn,
+      checkOut,
+      guests,
+      bookingDate,
+    } = req.body || {};
+
+    if (!bookingId || !totalAmount || !paymentMethod) {
+      return res.status(400).json({
+        error: 'bookingId, totalAmount, paymentMethod are required',
+      });
+    }
+
+    // In real integration, verify with gateway webhook/signature here.
+    const verified = true;
+
+    // Optionally send confirmation email if details provided
+    let emailResult: any = null;
+    if (
+      verified &&
+      sendEmail &&
+      customerEmail &&
+      customerName &&
+      roomName &&
+      checkIn &&
+      checkOut &&
+      typeof guests === 'number' &&
+      bookingDate
+    ) {
+      const { EmailService } = await import('../services/EmailService');
+      emailResult = await EmailService.sendPaymentConfirmationEmail(
+        customerEmail,
+        customerName,
+        {
+          bookingId,
+          roomName,
+          checkIn,
+          checkOut,
+          guests,
+          totalAmount,
+          paymentMethod,
+          bookingDate,
+        }
+      );
+    }
+
+    return res.json({
+      success: true,
+      verified,
+      paymentRef: paymentRef || null,
+      emailSent: !!(emailResult && emailResult.success),
+      messageId: emailResult?.messageId,
+    });
+  } catch (error) {
+    console.error('Payment verify route error:', error);
+    return res.status(500).json({
+      error: 'Internal server error',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
 
 export default router;
 

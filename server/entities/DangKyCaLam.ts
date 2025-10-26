@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { NhanVien } from "./NhanVien";
 import { CaLam } from "./CaLam";
 
@@ -8,9 +8,11 @@ export class DangKyCaLam {
   maDangKy!: string;
 
   @ManyToOne(() => NhanVien)
+  @JoinColumn({ name: 'nhanVienMaNhanVien' })
   nhanVien!: NhanVien;
 
   @ManyToOne(() => CaLam)
+  @JoinColumn({ name: 'caLamMaCaLam' })
   caLam!: CaLam;
 
   @Column({ type: "date" })

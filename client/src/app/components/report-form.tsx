@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './button/button';
 import { Card } from './card/card';
-import { Alert, AlertDescription } from './alert/alert';
 import { X, Save, FileText } from 'lucide-react';
 import { reportsApi, type ApiReport } from '../../lib/api';
+import { toast } from 'sonner';
 
 interface ReportFormProps {
   report?: ApiReport | null;
@@ -25,7 +25,6 @@ export function ReportForm({ report, onClose, onSuccess }: ReportFormProps) {
     status: 'processing' as const
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (report) {
@@ -45,21 +44,29 @@ export function ReportForm({ report, onClose, onSuccess }: ReportFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError(null);
 
     try {
       const isEdit = !!report;
       
       if (report) {
         await reportsApi.update(report.id, formData);
+        toast.success('Cập nhật báo cáo thành công!', {
+          description: `Báo cáo "${formData.title}" đã được cập nhật thành công.`
+        });
       } else {
         await reportsApi.create(formData);
+        toast.success('Tạo báo cáo thành công!', {
+          description: `Báo cáo "${formData.title}" đã được tạo thành công.`
+        });
       }
       
       onSuccess(isEdit);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
+      const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra';
+      toast.error('Lỗi khi xử lý báo cáo', {
+        description: errorMessage
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -75,27 +82,26 @@ export function ReportForm({ report, onClose, onSuccess }: ReportFormProps) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-2">
-              <FileText className="w-6 h-6" />
-              {report ? 'Chỉnh sửa báo cáo' : 'Tạo báo cáo mới'}
-            </h2>
+          <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-200">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                <FileText className="w-6 h-6" />
+                {report ? 'Chỉnh sửa báo cáo' : 'Tạo báo cáo mới'}
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {report ? 'Cập nhật thông tin báo cáo hiện tại' : 'Nhập thông tin để tạo báo cáo mới'}
+              </p>
+            </div>
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="p-2"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5 text-gray-500" />
             </Button>
           </div>
-
-          {error && (
-            <Alert className="mb-4 bg-red-50 border-red-200">
-              <AlertDescription className="text-red-800">{error}</AlertDescription>
-            </Alert>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Title */}
@@ -213,22 +219,25 @@ export function ReportForm({ report, onClose, onSuccess }: ReportFormProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting}
+                className="px-6 py-2 text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="w-4 h-4" />
-                <span>{isSubmitting ? 'Đang lưu...' : (report ? 'Cập nhật' : 'Tạo mới')}</span>
+                <span className="font-medium">
+                  {isSubmitting ? 'Đang lưu...' : (report ? 'Cập nhật báo cáo' : 'Tạo báo cáo mới')}
+                </span>
               </Button>
             </div>
           </form>

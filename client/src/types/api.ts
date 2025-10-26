@@ -41,9 +41,11 @@ export interface ApiBooking {
   isVerified?: boolean;
   khachHang?: {
     maKhachHang: string;
-    tenKhachHang: string;
+    ten: string;  // Field name from entity
+    tenKhachHang?: string;  // Optional for backward compatibility
     email: string;
-    soDienThoai: string;
+    sdt: string;  // Field name from entity
+    soDienThoai?: string;  // Optional for backward compatibility
   };
   coSo?: {
     maCoSo: string;
@@ -74,14 +76,34 @@ export interface ApiBooking {
 }
 
 export interface ApiUser {
-  id: number;
+  id: string;
   taiKhoan: string;
-  email: string;
+  gmail: string;
   vaiTro: string;
+  soDienThoai?: string;
+  isEmailVerified: boolean;
   avatar?: string;
-  trangThai: 'active' | 'inactive' | 'banned';
-  ngayTao: string;
-  lanDangNhapCuoi?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApiNhanVien {
+  maNhanVien: string;
+  ten: string;
+  ngaySinh: string;
+  gioiTinh: string;
+  diaChi: string;
+  email: string;
+  sdt: string;
+  maSoThue: string;
+  ngayBatDau: string;
+  ngayNghi?: string;
+  hinhAnh?: string;
+  chucVu?: {
+    maChucVu: string;
+    tenChucVu: string;
+    moTa?: string;
+  };
 }
 
 export interface ApiCustomer {
@@ -104,7 +126,7 @@ export interface ApiCoSo {
   maCoSo: string;
   tenCoSo: string;
   diaChi?: string;
-  soDienThoai?: string;
+  soDienThoai: string;
   email?: string;
   moTa?: string;
   hinhAnh?: string;

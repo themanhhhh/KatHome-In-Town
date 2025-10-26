@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, OneToMany } from "typeorm";
+import { Entity, PrimaryColumn, Column, ManyToOne, OneToMany, JoinColumn } from "typeorm";
 import { CoSo } from "./CoSo";
 import { NhanVien } from "./NhanVien";
 import { KhachHang } from "./KhachHang";
@@ -10,12 +10,15 @@ export class DonDatPhong {
   maDatPhong!: string;
 
   @ManyToOne(() => CoSo)
+  @JoinColumn({ name: 'coSoMaCoSo' })
   coSo!: CoSo;
 
   @ManyToOne(() => NhanVien)
+  @JoinColumn({ name: 'nhanVienMaNhanVien' })
   nhanVien!: NhanVien;
 
   @ManyToOne(() => KhachHang)
+  @JoinColumn({ name: 'khachHangMaKhachHang' })
   khachHang!: KhachHang;
 
   @Column({ type: "enum", enum: ["R", "CF", "CC", "AB"] })

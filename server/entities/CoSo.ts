@@ -4,7 +4,7 @@ import { Phong } from "./Phong";
 @Entity()
 export class CoSo {
   @PrimaryColumn()
-  maCoSo!: string;  // ví dụ: 145AC, 7ADT
+  maCoSo!: string;
 
   @Column({ length: 50 })
   tenCoSo!: string;
@@ -13,7 +13,13 @@ export class CoSo {
   diaChi!: string;
 
   @Column({ length: 15 })
-  sdt!: string;
+  soDienThoai!: string;
+
+  @Column({ length: 100, nullable: true })
+  email?: string;
+
+  @Column({ type: 'text', nullable: true })
+  moTa?: string;
 
   @Column({ nullable: true })
   hinhAnh?: string;

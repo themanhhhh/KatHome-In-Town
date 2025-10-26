@@ -1,240 +1,207 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { 
-  Search,
-  Filter,
-  Calendar,
   Download,
-  TrendingUp,
-  TrendingDown,
   DollarSign,
-  Users,
+  Calendar,
   Bed,
-  Star,
-  BarChart3,
-  PieChart,
-  FileText,
-  Eye,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  FileSpreadsheet,
+  BarChart3
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import * as XLSX from 'xlsx';
 
 import Style from "../../styles/reportsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
-import { donDatPhongApi, phongApi, khachHangApi, usersApi, revenueApi, reportsApi, type RevenueSummary, type ApiReport } from "../../../lib/api";
-import { ApiBooking, ApiRoom, ApiCustomer, ApiUser } from "../../../types/api";
+import { revenueApi, type RevenueSummaryResponse, type TrendDataResponse, type StatusStatsResponse, type BookingsDetailResponse } from "../../../lib/api";
 import LoadingSpinner from "../../components/loading-spinner";
-import { ReportForm } from "../../components/report-form";
 import { toast } from "sonner";
 
-// Remove ReportData interface - using ApiReport from api.ts now
-
 const ReportsManagementPage = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [periodFilter, setPeriodFilter] = useState("all");
-  const [selectedReports, setSelectedReports] = useState<string[]>([]);
-  const [showReportForm, setShowReportForm] = useState(false);
-  const [editingReport, setEditingReport] = useState<ApiReport | null>(null);
+  const [dateRange, setDateRange] = useState<'week' | 'month' | 'quarter' | 'year'>('month');
 
-  // Fetch data from API
-  const { data: bookings = [], loading: bookingsLoading, error: bookingsError } = useApi<ApiBooking[]>(
-    () => donDatPhongApi.getAll(),
+  // Fetch data from new Reports API
+  const { data: summaryData, loading: summaryLoading, error: summaryError, refetch: refetchSummary } = useApi<RevenueSummaryResponse>(
+    () => revenueApi.getSummary(),
     []
   );
 
-  const { data: rooms = [], loading: roomsLoading, error: roomsError } = useApi<ApiRoom[]>(
-    () => phongApi.getAll(),
+  const { data: trendData, loading: trendLoading, error: trendError, refetch: refetchTrend } = useApi<TrendDataResponse>(
+    () => revenueApi.getTrend(dateRange, dateRange === 'week' ? 8 : dateRange === 'quarter' ? 4 : dateRange === 'year' ? 3 : 6),
+    [dateRange]
+  );
+
+  const { data: statusStatsData, loading: statusLoading, error: statusError, refetch: refetchStatus } = useApi<StatusStatsResponse>(
+    () => revenueApi.getStatusStats(),
     []
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: customers = [], loading: customersLoading, error: customersError } = useApi<ApiCustomer[]>(
-    () => khachHangApi.getAll(),
+  const { data: bookingsDetailData, loading: bookingsDetailLoading, error: bookingsDetailError } = useApi<BookingsDetailResponse>(
+    () => revenueApi.getBookingsDetail(),
     []
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: _users = [], loading: usersLoading, error: usersError } = useApi<ApiUser[]>(
-    () => usersApi.getAll(),
-    []
-  );
+  // Debug: Log API responses
+  console.log('🔍 Summary data:', summaryData);
+  console.log('🔍 Trend data:', trendData);
+  console.log('🔍 Status stats:', statusStatsData);
+  console.log('🔍 Bookings detail:', bookingsDetailData);
 
-  // Fetch revenue summary data
-  const { data: revenueSummaryRaw, loading: revenueLoading, error: revenueError } = useApi(
-    () => revenueApi.getSummary({ groupBy: 'month' })
-  );
-
-  const revenueSummary = revenueSummaryRaw as RevenueSummary | undefined;
-
-  // Fetch reports from API
-  const { data: reports = [], loading: reportsLoading, error: reportsError, refetch: refetchReports } = useApi<ApiReport[]>(
-    () => reportsApi.getAll(),
-    []
-  );
-
-  // Calculate statistics from real data
-  const totalRevenue = revenueSummary?.summary?.totalRevenue || (bookings || []).reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
-  const totalBookings = revenueSummary?.summary?.totalBookings || (bookings || []).length;
-  const totalRooms = (rooms || []).length;
-  // const totalCustomers = (customers || []).length; // Unused variable
-  // const totalUsers = (users || []).length; // Unused variable
-  const roomsWithHangPhong = (rooms || []).filter(room => room.hangPhong?.tenHangPhong).length;
-  const occupancyRate = totalRooms > 0 ? (roomsWithHangPhong / totalRooms) * 100 : 0;
-  const averageRevenue = revenueSummary?.summary?.averageRevenue || 0;
-
-  // Quick stats data
-  const quickStats = {
-    totalReports: (reports || []).length,
-    completedReports: (reports || []).filter(r => r.status === 'completed').length,
-    processingReports: (reports || []).filter(r => r.status === 'processing').length,
-    totalRevenue: totalRevenue,
-    totalBookings: totalBookings,
-    occupancyRate: occupancyRate,
-    customerSatisfaction: 4.8
-  };
-
-  // CRUD Handlers
-  const handleCreateReport = () => {
-    setEditingReport(null);
-    setShowReportForm(true);
-  };
-
-  const handleEditReport = (report: ApiReport) => {
-    setEditingReport(report);
-    setShowReportForm(true);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleDeleteReport = async (reportId: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa báo cáo này?')) {
-      try {
-        await reportsApi.delete(reportId);
-        await refetchReports();
-        toast.success('Xóa báo cáo thành công!', {
-          description: `Báo cáo đã được xóa khỏi hệ thống.`,
-          duration: 4000,
-        });
-      } catch (error) {
-        console.error('Error deleting report:', error);
-        toast.error('Lỗi xóa báo cáo', {
-          description: error instanceof Error ? error.message : 'Có lỗi xảy ra khi xóa báo cáo',
-          duration: 5000,
-        });
-      }
-    }
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedReports.length === 0) return;
-    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedReports.length} báo cáo đã chọn?`)) {
-      const deleteToast = toast.loading(`Đang xóa ${selectedReports.length} báo cáo...`);
-      try {
-        await reportsApi.bulkDelete(selectedReports);
-        await refetchReports();
-        setSelectedReports([]);
-        toast.success('Xóa báo cáo thành công!', {
-          id: deleteToast,
-          description: `Đã xóa ${selectedReports.length} báo cáo khỏi hệ thống.`,
-          duration: 4000,
-        });
-      } catch (error) {
-        console.error('Error deleting reports:', error);
-        toast.error('Lỗi xóa báo cáo', {
-          id: deleteToast,
-          description: error instanceof Error ? error.message : 'Có lỗi xảy ra khi xóa báo cáo',
-          duration: 5000,
-        });
-      }
-    }
-  };
-
-  const handleFormSuccess = (isEdit: boolean) => {
-    refetchReports();
-    setShowReportForm(false);
-    setEditingReport(null);
+  // Process data from API responses
+  const stats = useMemo(() => {
+    console.log('📊 Processing API data...');
     
-    if (isEdit) {
-      toast.success('Cập nhật báo cáo thành công!', {
-        description: 'Thông tin báo cáo đã được cập nhật.',
-        duration: 4000,
-      });
-    } else {
-      toast.success('Tạo báo cáo thành công!', {
-        description: 'Báo cáo mới đã được thêm vào hệ thống.',
-        duration: 4000,
-      });
-    }
-  };
-
-  const handleDownload = async (report: ApiReport) => {
-    if (report.status !== 'completed') {
-      toast.warning('Không thể tải xuống', {
-        description: 'Chỉ có thể tải xuống báo cáo đã hoàn thành.',
-        duration: 4000,
-      });
-      return;
-    }
-
-    const downloadToast = toast.loading('Đang tạo file tải xuống...');
+    // Get data from API responses
+    const summary = summaryData?.data || {
+      totalRevenue: 0,
+      totalBookings: 0,
+      averageRevenue: 0,
+      confirmedBookings: 0,
+      cancelledBookings: 0,
+      completedBookings: 0,
+      successRate: 0
+    };
     
-    // Simulate download delay
-    setTimeout(() => {
-      // Create mock CSV/JSON data
-      const data = {
-        id: report.id,
-        title: report.title,
-        type: report.type,
-        period: report.period,
-        value: report.value,
-        change: report.change,
-        trend: report.trend,
-        createdAt: report.createdAt,
-      };
-      
-      const jsonStr = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `report-${report.id}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      toast.success('Tải xuống thành công!', {
-        id: downloadToast,
-        description: `File ${link.download} đã được tải xuống.`,
-        duration: 4000,
-      });
-    }, 1000);
-  };
+    const trend = trendData?.data || [];
+    const statusStats = statusStatsData?.data || [];
+    
+    console.log('📈 Processed data:', { summary, trend, statusStats });
+    
+    // Calculate trend percentage
+    const currentPeriodRevenue = trend[trend.length - 1]?.revenue || 0;
+    const previousPeriodRevenue = trend[trend.length - 2]?.revenue || 1;
+    const revenueTrend = previousPeriodRevenue > 0 
+      ? ((currentPeriodRevenue - previousPeriodRevenue) / previousPeriodRevenue * 100)
+      : 0;
 
-  const handleMarkCompleted = async (reportId: string) => {
+    return {
+      totalRevenue: summary.totalRevenue,
+      totalBookings: summary.totalBookings,
+      averageRevenue: summary.averageRevenue,
+      confirmedBookings: summary.confirmedBookings,
+      cancelledBookings: summary.cancelledBookings,
+      completedBookings: summary.completedBookings,
+      monthlyRevenue: trend.map(t => ({
+        month: t.period,
+        revenue: t.revenue,
+        bookings: t.bookings
+      })),
+      statusData: statusStats,
+      revenueTrend: revenueTrend
+    };
+  }, [summaryData, trendData, statusStatsData]);
+
+  // Export to Excel
+  const handleExportExcel = () => {
     try {
-      await reportsApi.markCompleted(reportId);
-      await refetchReports();
-      toast.success('Đã đánh dấu hoàn thành!', {
-        description: 'Báo cáo đã được đánh dấu hoàn thành.',
+      // Prepare summary data
+      const summaryData = [
+        { 'Chỉ số': 'Tổng doanh thu', 'Giá trị': stats.totalRevenue },
+        { 'Chỉ số': 'Tổng booking', 'Giá trị': stats.totalBookings },
+        { 'Chỉ số': 'Doanh thu trung bình', 'Giá trị': stats.averageRevenue },
+        { 'Chỉ số': 'Booking đã xác nhận', 'Giá trị': stats.confirmedBookings },
+        { 'Chỉ số': 'Booking hoàn thành', 'Giá trị': stats.completedBookings },
+        { 'Chỉ số': 'Booking đã hủy', 'Giá trị': stats.cancelledBookings },
+      ];
+
+      // Prepare monthly revenue data
+      const monthlyData = stats.monthlyRevenue.map(item => ({
+        'Tháng': item.month,
+        'Doanh thu': item.revenue,
+        'Số booking': item.bookings
+      }));
+
+      // Prepare detailed bookings data from API
+      const bookingsData = (bookingsDetailData?.data || []).map(booking => ({
+        'Mã booking': booking.maDatPhong,
+        'Khách hàng': booking.customerName,
+        'Email': booking.customerEmail,
+        'Số điện thoại': booking.customerPhone,
+        'Ngày đặt': new Date(booking.ngayDat).toLocaleDateString('vi-VN'),
+        'Check-in': new Date(booking.checkinDuKien).toLocaleDateString('vi-VN'),
+        'Check-out': new Date(booking.checkoutDuKien).toLocaleDateString('vi-VN'),
+        'Trạng thái': booking.trangThai === 'CF' ? 'Đã xác nhận' : 
+                     booking.trangThai === 'R' ? 'Chờ xác nhận' :
+                     booking.trangThai === 'AB' ? 'Đã hủy' :
+                     booking.trangThai === 'CC' ? 'Hoàn thành' : booking.trangThai,
+        'Tổng tiền': booking.totalAmount,
+        'Phương thức thanh toán': booking.paymentMethod,
+        'Trạng thái thanh toán': booking.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán',
+        'Cơ sở': booking.coSo
+      }));
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+
+      // Add summary sheet
+      const ws1 = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, ws1, 'Tổng quan');
+
+      // Add monthly revenue sheet
+      const ws2 = XLSX.utils.json_to_sheet(monthlyData);
+      XLSX.utils.book_append_sheet(wb, ws2, 'Doanh thu theo tháng');
+
+      // Add bookings detail sheet
+      const ws3 = XLSX.utils.json_to_sheet(bookingsData);
+      XLSX.utils.book_append_sheet(wb, ws3, 'Chi tiết booking');
+
+      // Generate filename with current date
+      const filename = `BaoCaoDoanhThu_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      // Write file
+      XLSX.writeFile(wb, filename);
+
+      toast.success('Xuất Excel thành công!', {
+        description: `File ${filename} đã được tải xuống.`,
         duration: 4000,
       });
     } catch (error) {
-      console.error('Error marking report completed:', error);
-      toast.error('Lỗi cập nhật trạng thái', {
+      console.error('Error exporting Excel:', error);
+      toast.error('Lỗi xuất Excel', {
         description: error instanceof Error ? error.message : 'Có lỗi xảy ra',
         duration: 5000,
       });
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      await Promise.all([
+        refetchSummary(),
+        refetchTrend(),
+        refetchStatus()
+      ]);
+      toast.success('Đã làm mới dữ liệu!');
+    } catch {
+      toast.error('Lỗi khi làm mới dữ liệu');
+    }
+  };
+
   // Loading and error states
-  const isLoading = bookingsLoading || roomsLoading || customersLoading || usersLoading || revenueLoading || reportsLoading;
-  const hasError = bookingsError || roomsError || customersError || usersError || revenueError || reportsError;
+  const isLoading = summaryLoading || trendLoading || statusLoading || bookingsDetailLoading;
+  const hasError = summaryError || trendError || statusError || bookingsDetailError;
 
   if (isLoading) {
-    return <LoadingSpinner text="Đang tải ..." />;
+    return <LoadingSpinner text="Đang tải báo cáo..." />;
   }
 
   if (hasError) {
@@ -243,7 +210,7 @@ const ReportsManagementPage = () => {
         <div className={Style.errorContainer}>
           <AlertCircle className={Style.errorIcon} />
           <h3>Lỗi tải dữ liệu</h3>
-          <p>{bookingsError || roomsError || customersError || usersError || revenueError}</p>
+          <p>{summaryError || trendError || statusError || bookingsDetailError || 'Có lỗi xảy ra'}</p>
           <button onClick={() => window.location.reload()} className={Style.retryButton}>
             <RefreshCw className="w-4 h-4" />
             Thử lại
@@ -253,99 +220,8 @@ const ReportsManagementPage = () => {
     );
   }
 
-  // Filter functions
-  const filteredReports = (reports || []).filter(report => {
-    const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (report.description?.toLowerCase() || '').includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === "all" || report.type === typeFilter;
-    const matchesPeriod = periodFilter === "all" || report.period === periodFilter;
-    
-    return matchesSearch && matchesType && matchesPeriod;
-  });
-
-  // Selection functions
-  const handleSelectAll = () => {
-    if (selectedReports.length === filteredReports.length) {
-      setSelectedReports([]);
-    } else {
-      setSelectedReports(filteredReports.map(report => report.id));
-    }
-  };
-
-  const handleSelectReport = (reportId: string) => {
-    setSelectedReports(prev => 
-      prev.includes(reportId) 
-        ? prev.filter(id => id !== reportId)
-        : [...prev, reportId]
-    );
-  };
-
-  // Utility functions
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN');
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return <span className={`${Style.badge} ${Style.badgeCompleted}`}>Hoàn thành</span>;
-      case 'processing':
-        return <span className={`${Style.badge} ${Style.badgeProcessing}`}>Đang xử lý</span>;
-      case 'failed':
-        return <span className={`${Style.badge} ${Style.badgeFailed}`}>Lỗi</span>;
-      default:
-        return <span className={Style.badge}>{status}</span>;
-    }
-  };
-
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'revenue':
-        return <DollarSign className="w-4 h-4" />;
-      case 'bookings':
-        return <Calendar className="w-4 h-4" />;
-      case 'occupancy':
-        return <Bed className="w-4 h-4" />;
-      case 'customer':
-        return <Users className="w-4 h-4" />;
-      case 'rooms':
-        return <Star className="w-4 h-4" />;
-      default:
-        return <FileText className="w-4 h-4" />;
-    }
-  };
-
-  const getTypeName = (type: string) => {
-    switch (type) {
-      case 'revenue':
-        return 'Doanh thu';
-      case 'bookings':
-        return 'Đặt phòng';
-      case 'occupancy':
-        return 'Lấp đầy';
-      case 'customer':
-        return 'Khách hàng';
-      case 'rooms':
-        return 'Phòng';
-      default:
-        return type;
-    }
-  };
-
-  const getTrendIcon = (trend: string) => {
-    if (trend === 'up') {
-      return <TrendingUp className="w-3 h-3 text-green-500" />;
-    } else if (trend === 'down') {
-      return <TrendingDown className="w-3 h-3 text-red-500" />;
-    }
-    return null;
+    return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   };
 
   return (
@@ -354,44 +230,45 @@ const ReportsManagementPage = () => {
       <div className={Style.header}>
         <div className={Style.headerContent}>
           <div className={Style.headerInfo}>
-            <h1>Báo cáo & Thống kê</h1>
-            <p>Tạo và quản lý các báo cáo kinh doanh của KatHome In Town</p>
+            <h1>Báo cáo Doanh thu</h1>
+            <p>Thống kê và phân tích doanh thu của KatHome In Town</p>
           </div>
           <div className={Style.headerActions}>
-            <button className={Style.refreshButton} onClick={refetchReports}>
+            <button className={Style.refreshButton} onClick={handleRefresh}>
               <RefreshCw className="w-4 h-4" />
               <span>Làm mới</span>
             </button>
-            <button className={Style.createButton} onClick={handleCreateReport}>
-              <FileText className="w-4 h-4" />
-              <span>Tạo báo cáo</span>
+            <button className={Style.exportButton} onClick={handleExportExcel}>
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Xuất Excel</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Quick Stats Overview */}
+      {/* Quick Stats */}
       <div className={Style.quickStatsGrid}>
-        <div className={Style.statCard}>
-          <div className={Style.statContent}>
-            <div className={`${Style.statIcon} ${Style.statIconBlue}`}>
-              <BarChart3 className="w-5 h-5 text-blue-600" />
-            </div>
-            <div className={Style.statInfo}>
-              <div className={Style.statValue}>{quickStats.totalReports}</div>
-              <div className={Style.statLabel}>Tổng báo cáo</div>
-            </div>
-          </div>
-        </div>
-
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={`${Style.statIcon} ${Style.statIconGreen}`}>
               <DollarSign className="w-5 h-5 text-green-600" />
             </div>
             <div className={Style.statInfo}>
-              <div className={Style.statValueLarge}>{formatPrice(quickStats.totalRevenue)}</div>
-              <div className={Style.statLabel}>Doanh thu tháng</div>
+              <div className={Style.statValueLarge}>{formatPrice(stats.totalRevenue)}</div>
+              <div className={Style.statLabel}>Tổng doanh thu</div>
+              
+            </div>
+          </div>
+        </div>
+
+        <div className={Style.statCard}>
+          <div className={Style.statContent}>
+            <div className={`${Style.statIcon} ${Style.statIconBlue}`}>
+              <Calendar className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className={Style.statInfo}>
+              <div className={Style.statValue}>{stats.totalBookings}</div>
+              <div className={Style.statLabel}>Tổng booking</div>
             </div>
           </div>
         </div>
@@ -399,11 +276,11 @@ const ReportsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={`${Style.statIcon} ${Style.statIconPurple}`}>
-              <Calendar className="w-5 h-5 text-purple-600" />
+              <BarChart3 className="w-5 h-5 text-purple-600" />
             </div>
             <div className={Style.statInfo}>
-              <div className={Style.statValue}>{quickStats.totalBookings}</div>
-              <div className={Style.statLabel}>Booking tháng</div>
+              <div className={Style.statValueLarge}>{formatPrice(stats.averageRevenue)}</div>
+              <div className={Style.statLabel}>Trung bình/booking</div>
             </div>
           </div>
         </div>
@@ -414,278 +291,188 @@ const ReportsManagementPage = () => {
               <Bed className="w-5 h-5 text-orange-600" />
             </div>
             <div className={Style.statInfo}>
-              <div className={Style.statValue}>{quickStats.occupancyRate.toFixed(1)}%</div>
-              <div className={Style.statLabel}>Tỷ lệ lấp đầy</div>
-            </div>
-          </div>
-        </div>
-
-        <div className={Style.statCard}>
-          <div className={Style.statContent}>
-            <div className={`${Style.statIcon} ${Style.statIconTeal}`}>
-              <TrendingUp className="w-5 h-5 text-teal-600" />
-            </div>
-            <div className={Style.statInfo}>
-              <div className={Style.statValueLarge}>{formatPrice(averageRevenue)}</div>
-              <div className={Style.statLabel}>Trung bình/booking</div>
+              <div className={Style.statValue}>{stats.confirmedBookings}</div>
+              <div className={Style.statLabel}>Booking đã xác nhận</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Date Range Filter */}
       <div className={Style.filtersCard}>
         <div className={Style.filtersContent}>
-          <div className={Style.filtersRow}>
-            <div className={Style.searchContainer}>
-              <Search className={Style.searchIcon} />
-              <input
-                type="text"
-                placeholder="Tìm theo tên báo cáo, mô tả..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={Style.searchInput}
-              />
+          <div className={Style.filterLabel}>
+            <Calendar className="w-4 h-4" />
+            <span>Khoảng thời gian:</span>
             </div>
-            
-            <div className={Style.filterControls}>
-              <div className={Style.filterGroup}>
-                <Filter className={Style.filterIcon} />
-                <select 
-                  value={typeFilter} 
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                  className={Style.selectTrigger}
-                >
-                  <option value="all">Tất cả</option>
-                  <option value="revenue">Doanh thu</option>
-                  <option value="bookings">Đặt phòng</option>
-                  <option value="occupancy">Lấp đầy</option>
-                  <option value="customer">Khách hàng</option>
-                  <option value="rooms">Phòng</option>
-                </select>
-              </div>
-              
-              <select 
-                value={periodFilter} 
-                onChange={(e) => setPeriodFilter(e.target.value)}
-                className={`${Style.selectTrigger} ${Style.selectTriggerSmall}`}
-              >
-                <option value="all">Tất cả</option>
-                <option value="daily">Hàng ngày</option>
-                <option value="weekly">Hàng tuần</option>
-                <option value="monthly">Hàng tháng</option>
-                <option value="quarterly">Hàng quý</option>
-                <option value="yearly">Hàng năm</option>
-              </select>
-            </div>
+          <div className={Style.dateRangeButtons}>
+            <button 
+              className={`${Style.dateRangeButton} ${dateRange === 'week' ? Style.active : ''}`}
+              onClick={() => setDateRange('week')}
+            >
+              Tuần
+            </button>
+            <button 
+              className={`${Style.dateRangeButton} ${dateRange === 'month' ? Style.active : ''}`}
+              onClick={() => setDateRange('month')}
+            >
+              Tháng
+            </button>
+            <button 
+              className={`${Style.dateRangeButton} ${dateRange === 'quarter' ? Style.active : ''}`}
+              onClick={() => setDateRange('quarter')}
+            >
+              Quý
+            </button>
+            <button 
+              className={`${Style.dateRangeButton} ${dateRange === 'year' ? Style.active : ''}`}
+              onClick={() => setDateRange('year')}
+            >
+              Năm
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Reports Grid */}
-      <div className={Style.reportsSection}>
-        {/* Header with bulk actions */}
-        <div className={Style.sectionHeader}>
-          <h2 className={Style.sectionTitle}>
-            Danh sách báo cáo ({filteredReports.length})
-          </h2>
-          {selectedReports.length > 0 && (
-            <div className={Style.bulkActions}>
-              <span className={Style.bulkText}>
-                Đã chọn {selectedReports.length} báo cáo
-              </span>
-              <button className={Style.bulkButton} onClick={handleBulkDelete}>
-                <Download className="w-4 h-4" />
-                <span>Xóa hàng loạt</span>
-              </button>
+      {/* Charts Section */}
+      <div className={Style.chartsGrid}>
+        {/* Revenue Bar Chart */}
+        <div className={Style.chartCard}>
+          <div className={Style.chartHeader}>
+            <h3 className={Style.chartTitle}>Doanh thu theo {dateRange === 'week' ? 'tuần' : dateRange === 'quarter' ? 'quý' : dateRange === 'year' ? 'năm' : 'tháng'}</h3>
+            <Download className="w-4 h-4 text-gray-400 cursor-pointer" onClick={handleExportExcel} />
+          </div>
+          <div className={Style.chartContainer}>
+            {stats.monthlyRevenue && stats.monthlyRevenue.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.monthlyRevenue}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value: number) => formatPrice(value)}
+                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb' }}
+                />
+                <Legend />
+                <Bar dataKey="revenue" fill="#10b981" name="Doanh thu" />
+              </BarChart>
+            </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px', color: '#6b7280' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <p>Không có dữ liệu</p>
+                  <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                    Bookings: {bookingsDetailData?.data?.length || 0} | 
+                    Stats data: {stats.monthlyRevenue?.length || 0}
+                  </p>
+                </div>
             </div>
           )}
         </div>
-
-        {/* Select All */}
-        <div className={Style.selectAllCard}>
-          <input
-            type="checkbox"
-            checked={selectedReports.length === filteredReports.length && filteredReports.length > 0}
-            onChange={handleSelectAll}
-            className={Style.checkbox}
-          />
-          <span className={Style.selectAllText}>
-            Chọn tất cả báo cáo
-          </span>
         </div>
 
-        {/* Reports Cards */}
-        <div className={Style.reportsGrid}>
-          {filteredReports.map((report, index) => (
-            <div key={report.id || `report-${index}`} className={Style.reportCard}>
-              <div className={Style.reportContent}>
-                {/* Header with checkbox and type */}
-                <div className={Style.reportHeader}>
-                  <div className={Style.reportHeaderLeft}>
-                    <input
-                      type="checkbox"
-                      checked={selectedReports.includes(report.id)}
-                      onChange={() => handleSelectReport(report.id)}
-                      className={`${Style.checkbox} ${Style.reportCheckbox}`}
-                    />
-                    <div className={Style.reportInfo}>
-                      <h3 className={Style.reportTitle}>
-                        {report.title}
-                      </h3>
-                      <p className={Style.reportDescription}>
-                        {report.description}
-                      </p>
+        {/* Bookings Line Chart */}
+        <div className={Style.chartCard}>
+          <div className={Style.chartHeader}>
+            <h3 className={Style.chartTitle}>Số lượng booking theo {dateRange === 'week' ? 'tuần' : dateRange === 'quarter' ? 'quý' : dateRange === 'year' ? 'năm' : 'tháng'}</h3>
+            <Download className="w-4 h-4 text-gray-400 cursor-pointer" onClick={handleExportExcel} />
+          </div>
+          <div className={Style.chartContainer}>
+            {stats.monthlyRevenue && stats.monthlyRevenue.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={stats.monthlyRevenue}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb' }} />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="bookings" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2}
+                  name="Số booking"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px', color: '#6b7280' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <p>Không có dữ liệu booking</p>
                     </div>
                   </div>
-                  <div className={Style.reportHeaderRight}>
-                    {getStatusBadge(report.status)}
-                    <div className={Style.reportType}>
-                      {getTypeIcon(report.type)}
-                      <span>{getTypeName(report.type)}</span>
-                    </div>
+            )}
                   </div>
                 </div>
 
-                {/* Main data section */}
-                {report.status === 'completed' && (
-                  <div className={Style.reportDataSection}>
-                    <div className={Style.reportDataContent}>
-                      <div className={Style.reportDataInfo}>
-                        <div className={Style.reportDataValue}>
-                          {report.type === 'revenue' && formatPrice(report.value)}
-                          {report.type === 'bookings' && `${report.value} booking`}
-                          {report.type === 'occupancy' && `${report.value}%`}
-                          {report.type === 'customer' && `${report.value} khách VIP`}
-                          {report.type === 'rooms' && `${report.value} phòng`}
+        {/* Booking Status Pie Chart */}
+        <div className={Style.chartCard}>
+          <div className={Style.chartHeader}>
+            <h3 className={Style.chartTitle}>Phân bố trạng thái booking</h3>
+            <Download className="w-4 h-4 text-gray-400 cursor-pointer" onClick={handleExportExcel} />
                         </div>
-                        <div className={Style.reportDataTrend}>
-                          {getTrendIcon(report.trend)}
-                          <span className={`${Style.trendText} ${
-                            report.trend === 'up' ? Style.trendUp : 
-                            report.trend === 'down' ? Style.trendDown : Style.trendStable
-                          }`}>
-                            {report.change > 0 ? '+' : ''}{report.change}% so với kỳ trước
-                          </span>
+          <div className={Style.chartContainer}>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={stats.statusData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {stats.statusData.map((entry: { name: string; value: number; color: string }, index: number) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
                         </div>
                       </div>
-                      <div className={Style.reportDataChart}>
-                        <PieChart className={Style.chartIcon} />
+
+        {/* Summary Stats Card */}
+        <div className={Style.chartCard}>
+          <div className={Style.chartHeader}>
+            <h3 className={Style.chartTitle}>Tổng quan thống kê</h3>
                       </div>
+          <div className={Style.summaryStats}>
+            <div className={Style.summaryItem}>
+              <div className={Style.summaryLabel}>Booking đã xác nhận</div>
+              <div className={Style.summaryValue}>{stats.confirmedBookings}</div>
+              <div className={Style.summaryPercent}>
+                {((stats.confirmedBookings / stats.totalBookings) * 100).toFixed(1)}%
                     </div>
                   </div>
-                )}
-
-                {report.status === 'processing' && (
-                  <div className={Style.processingSection}>
-                    <RefreshCw className={Style.processingIcon} />
-                    <div className={Style.processingInfo}>
-                      <div className={Style.processingTitle}>Đang xử lý báo cáo...</div>
-                      <div className={Style.processingSubtitle}>Vui lòng chờ trong giây lát</div>
+            <div className={Style.summaryItem}>
+              <div className={Style.summaryLabel}>Booking hoàn thành</div>
+              <div className={Style.summaryValue}>{stats.completedBookings}</div>
+              <div className={Style.summaryPercent}>
+                {((stats.completedBookings / stats.totalBookings) * 100).toFixed(1)}%
                     </div>
                   </div>
-                )}
-
-                {report.status === 'failed' && (
-                  <div className={Style.errorSection}>
-                    <div className={Style.errorIcon}>
-                      !
-                    </div>
-                    <div className={Style.errorInfo}>
-                      <div className={Style.errorTitle}>Xử lý thất bại</div>
-                      <div className={Style.errorSubtitle}>Có lỗi xảy ra khi tạo báo cáo</div>
+            <div className={Style.summaryItem}>
+              <div className={Style.summaryLabel}>Booking đã hủy</div>
+              <div className={Style.summaryValue}>{stats.cancelledBookings}</div>
+              <div className={Style.summaryPercent}>
+                {((stats.cancelledBookings / stats.totalBookings) * 100).toFixed(1)}%
                     </div>
                   </div>
-                )}
-
-                {/* Footer with metadata and actions */}
-                <div className={Style.reportFooter}>
-                  <div className={Style.reportMetadata}>
-                    <div className={Style.metadataItem}>
-                      <Calendar className={Style.metadataIcon} />
-                      <span>{formatDate(report.createdAt)}</span>
+            <div className={Style.summaryItem}>
+              <div className={Style.summaryLabel}>Tỷ lệ thành công</div>
+              <div className={Style.summaryValue}>
+                {(((stats.confirmedBookings + stats.completedBookings) / stats.totalBookings) * 100).toFixed(1)}%
                     </div>
-                    <span className={Style.periodBadge}>
-                      {report.period === 'daily' && 'Hàng ngày'}
-                      {report.period === 'weekly' && 'Hàng tuần'}
-                      {report.period === 'monthly' && 'Hàng tháng'}
-                      {report.period === 'quarterly' && 'Hàng quý'}
-                      {report.period === 'yearly' && 'Hàng năm'}
-                    </span>
-                    <span className={Style.fileSize}>{report.fileSize || '0 KB'}</span>
-                  </div>
-                  
-                  <div className={Style.reportActions}>
-                    <button 
-                      className={Style.actionButton}
-                      onClick={() => handleEditReport(report)}
-                      title="Xem/Chỉnh sửa"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    {report.status === 'completed' && (
-                      <button 
-                        className={Style.actionButton}
-                        onClick={() => handleDownload(report)}
-                        title="Tải xuống"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
-                    )}
-                    {report.status === 'processing' && (
-                      <button 
-                        className={Style.actionButton}
-                        onClick={() => handleMarkCompleted(report.id)}
-                        title="Đánh dấu hoàn thành"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                      </button>
-                    )}
-                    {report.status === 'failed' && (
-                      <button 
-                        className={Style.actionButton}
-                        onClick={() => handleMarkCompleted(report.id)}
-                        title="Thử lại"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                      </button>
-                    )}
+              <div className={Style.summaryPercent}>
+                {stats.confirmedBookings + stats.completedBookings}/{stats.totalBookings}
                   </div>
                 </div>
               </div>
             </div>
-          ))}
         </div>
-
-        {/* Empty state */}
-        {filteredReports.length === 0 && (
-          <div className={Style.emptyState}>
-            <FileText className={Style.emptyIcon} />
-            <h3 className={Style.emptyTitle}>
-              Không tìm thấy báo cáo nào
-            </h3>
-            <p className={Style.emptyDescription}>
-              Thử thay đổi bộ lọc hoặc tạo báo cáo mới
-            </p>
-            <button className={Style.emptyButton} onClick={handleCreateReport}>
-              <FileText className="w-4 h-4" />
-              Tạo báo cáo đầu tiên
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Report Form Modal */}
-      {showReportForm && (
-        <ReportForm
-          report={editingReport}
-          onClose={() => {
-            setShowReportForm(false);
-            setEditingReport(null);
-          }}
-          onSuccess={handleFormSuccess}
-        />
-      )}
     </div>
   );
 };

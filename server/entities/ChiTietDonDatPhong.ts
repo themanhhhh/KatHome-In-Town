@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { DonDatPhong } from "./DonDatPhong";
 import { Phong } from "./Phong";
 
@@ -8,9 +8,11 @@ export class ChiTietDonDatPhong {
   maChiTiet!: string;
 
   @ManyToOne(() => DonDatPhong, (ddp) => ddp.chiTiet)
+  @JoinColumn({ name: 'donDatPhongMaDatPhong' })
   donDatPhong!: DonDatPhong;
 
   @ManyToOne(() => Phong)
+  @JoinColumn({ name: 'phongMaPhong' })
   phong!: Phong;
 
   @Column()

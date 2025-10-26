@@ -39,7 +39,8 @@ export class BookingService {
     // Exclude cancelled bookings
     const conflictingBookings = await chiTietRepo
       .createQueryBuilder('ct')
-      .where('ct.phongMaPhong IN (:...roomIds)', { roomIds })
+      .leftJoin('ct.phong', 'phong')
+      .where('phong.maPhong IN (:...roomIds)', { roomIds })
       .andWhere('ct.trangThai NOT IN (:...excludedStatuses)', { 
         excludedStatuses: ['cancelled'] 
       })
@@ -401,9 +402,11 @@ export class BookingService {
     const chiTietRepo = AppDataSource.getRepository(ChiTietDonDatPhong);
     
     // Get rooms that are booked in this date range
+    // Join with phong table to get the actual room IDs
     const bookedRoomIds = await chiTietRepo
       .createQueryBuilder('ct')
-      .select('ct.phongMaPhong')
+      .leftJoin('ct.phong', 'phong')
+      .select('phong.maPhong')
       .where('ct.trangThai NOT IN (:...excludedStatuses)', { 
         excludedStatuses: ['cancelled'] 
       })
@@ -411,7 +414,7 @@ export class BookingService {
         (ct.checkInDate < :checkOut AND ct.checkOutDate > :checkIn)
       `, { checkIn, checkOut })
       .getRawMany()
-      .then(results => results.map(r => r.ct_phongMaPhong));
+      .then(results => results.map(r => r.phong_maPhong).filter(id => id !== null));
 
     // Query available rooms
     const phongRepo = AppDataSource.getRepository(Phong);

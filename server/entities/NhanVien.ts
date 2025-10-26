@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, ManyToOne } from "typeorm";
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from "typeorm";
 import { ChucVu } from "./ChucVu";
 
 @Entity()
@@ -7,6 +7,7 @@ export class NhanVien {
   maNhanVien!: string;
 
   @ManyToOne(() => ChucVu)
+  @JoinColumn({ name: 'chucVuMaChucVu' })
   chucVu!: ChucVu;
 
   @Column({ length: 50 })

@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from './button/button';
 import { Card } from './card/card';
-import { Alert, AlertDescription } from './alert/alert';
 import { X, Save } from 'lucide-react';
 import { ImageUpload } from './image-upload';
 import { ApiRoom, ApiRoomType } from '../../types/api';
 import { phongApi } from '../../lib/api';
+import { toast } from 'sonner';
 
 interface RoomFormProps {
   room?: ApiRoom | null;
@@ -26,19 +26,18 @@ interface RoomFormProps {
 export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: RoomFormProps) {
   const [formData, setFormData] = useState({
     moTa: '',
-    maHangPhong: '',
-    maCoSo: ''
+    hangPhongMaHangPhong: '',
+    coSoMaCoSo: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (room) {
       setFormData({
         moTa: room.moTa || '',
-        maHangPhong: room.hangPhong?.maHangPhong || '',
-        maCoSo: room.coSo?.maCoSo || ''
+        hangPhongMaHangPhong: room.hangPhong?.maHangPhong || '',
+        coSoMaCoSo: room.coSo?.maCoSo || ''
       });
     }
   }, [room]);
@@ -46,7 +45,6 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setError(null);
 
     try {
       const isEdit = !!room;
@@ -57,6 +55,9 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
         if (imageFile) {
           await phongApi.uploadImage(room.maPhong, imageFile);
         }
+        toast.success('Cập nhật phòng thành công!', {
+          description: `Phòng đã được cập nhật thành công.`
+        });
       } else {
         // Create new room
         if (imageFile) {
@@ -64,11 +65,17 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
         } else {
           await phongApi.create(formData);
         }
+        toast.success('Tạo phòng thành công!', {
+          description: `Phòng mới đã được tạo thành công.`
+        });
       }
       onSuccess(isEdit);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
+      const errorMessage = err instanceof Error ? err.message : 'Có lỗi xảy ra';
+      toast.error('Lỗi khi xử lý phòng', {
+        description: errorMessage
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -76,6 +83,9 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
 
   const handleImageUpload = async (file: File) => {
     setImageFile(file);
+    toast.success('Hình ảnh đã được chọn', {
+      description: 'Hình ảnh sẽ được tải lên khi bạn lưu phòng.'
+    });
   };
 
   return (
@@ -88,25 +98,24 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">
-              {room ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}
-            </h2>
+          <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-200">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {room ? 'Chỉnh sửa phòng' : 'Thêm phòng mới'}
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                {room ? 'Cập nhật thông tin phòng hiện tại' : 'Nhập thông tin để tạo phòng mới'}
+              </p>
+            </div>
             <Button
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="p-2"
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5 text-gray-500" />
             </Button>
           </div>
-
-          {error && (
-            <Alert className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -125,8 +134,8 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
               <div>
                 <label className="block text-sm font-medium mb-2">Hạng phòng</label>
                 <select
-                  value={formData.maHangPhong}
-                  onChange={(e) => setFormData({ ...formData, maHangPhong: e.target.value })}
+                  value={formData.hangPhongMaHangPhong}
+                  onChange={(e) => setFormData({ ...formData, hangPhongMaHangPhong: e.target.value })}
                   className="w-full p-2 border rounded-md"
                   required
                 >
@@ -142,8 +151,8 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
               <div>
                 <label className="block text-sm font-medium mb-2">Cơ sở</label>
                 <select
-                  value={formData.maCoSo}
-                  onChange={(e) => setFormData({ ...formData, maCoSo: e.target.value })}
+                  value={formData.coSoMaCoSo}
+                  onChange={(e) => setFormData({ ...formData, coSoMaCoSo: e.target.value })}
                   className="w-full p-2 border rounded-md"
                   required
                 >
@@ -167,22 +176,25 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
               />
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
+            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
               <Button
                 type="button"
                 variant="outline"
                 onClick={onClose}
                 disabled={isSubmitting}
+                className="px-6 py-2 text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
               >
                 Hủy
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Save className="w-4 h-4" />
-                <span>{isSubmitting ? 'Đang lưu...' : (room ? 'Cập nhật' : 'Tạo mới')}</span>
+                <span className="font-medium">
+                  {isSubmitting ? 'Đang lưu...' : (room ? 'Cập nhật phòng' : 'Tạo phòng mới')}
+                </span>
               </Button>
             </div>
           </form>

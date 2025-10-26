@@ -12,7 +12,6 @@ import {
   Edit,
   Trash2,
   Download,
-  UserPlus,
   Calendar,
   DollarSign,
   Star,
@@ -173,10 +172,6 @@ const UsersManagementPage = () => {
     );
   };
 
-  const handleCreateUser = () => {
-    setEditingUser(null);
-    setShowUserForm(true);
-  };
 
   const handleEditUser = (user: ApiUser) => {
     setEditingUser(user);
@@ -261,10 +256,6 @@ const UsersManagementPage = () => {
             <button className={Style.exportButton}>
               <Download className="w-4 h-4" />
               <span>Xuất Excel</span>
-            </button>
-            <button className={Style.addButton} onClick={handleCreateUser}>
-              <UserPlus className="w-4 h-4" />
-              <span>Thêm người dùng</span>
             </button>
           </div>
         </div>

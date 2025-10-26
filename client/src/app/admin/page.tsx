@@ -62,26 +62,59 @@ const AdminPage = () => {
     roomsWithCoSo
   };
 
-  // Get recent bookings (last 3)
-  const recentBookings = (bookings || []).slice(0, 3).map(booking => {
-    const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0);
-    const firstRoom = booking.chiTiet?.[0];
-    
-    return {
-      id: booking.maDatPhong,
-      guestName: booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
-      room: firstRoom?.phong?.moTa || 'N/A',
-      checkIn: booking.checkinDuKien,
-      checkOut: booking.checkoutDuKien,
-      total: booking.totalAmount || 0,
-      status: booking.trangThai
-    };
-  });
+  // Get recent bookings (last 3) - sorted by booking date (newest first)
+  const recentBookings = (bookings || [])
+    .sort((a, b) => {
+      const dateA = new Date(a.ngayDat || 0).getTime();
+      const dateB = new Date(b.ngayDat || 0).getTime();
+      return dateB - dateA; // Descending order (newest first)
+    })
+    .slice(0, 3)
+    .map(booking => {
+      const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0);
+      const firstRoom = booking.chiTiet?.[0];
+      
+      return {
+        id: booking.maDatPhong,
+        guestName: booking.khachHang?.ten || booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
+        room: firstRoom?.phong?.moTa || 'N/A',
+        checkIn: booking.checkinDuKien,
+        checkOut: booking.checkoutDuKien,
+        total: booking.totalAmount || 0,
+        status: booking.trangThai
+      };
+    });
 
   // Get upcoming check-ins (today's check-ins)
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of today
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1); // Set to start of tomorrow
+  
   const upcomingCheckIns = (bookings || [])
-    .filter(booking => booking.checkinDuKien?.startsWith(today))
+    .filter(booking => {
+      // Only include confirmed or reserved bookings (not cancelled or completed)
+      if (!['CF', 'R'].includes(booking.trangThai)) {
+        return false;
+      }
+      
+      if (!booking.checkinDuKien) {
+        return false;
+      }
+      
+      // Parse the check-in date
+      const checkinDate = new Date(booking.checkinDuKien);
+      checkinDate.setHours(0, 0, 0, 0); // Normalize to start of day
+      
+      // Check if check-in is today
+      return checkinDate.getTime() === today.getTime();
+    })
+    .sort((a, b) => {
+      // Sort by check-in time if available
+      const dateA = new Date(a.checkinDuKien || 0).getTime();
+      const dateB = new Date(b.checkinDuKien || 0).getTime();
+      return dateA - dateB;
+    })
     .slice(0, 2)
     .map(booking => {
       const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0);
@@ -89,10 +122,10 @@ const AdminPage = () => {
       
       return {
         id: booking.maDatPhong,
-        guestName: booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
+        guestName: booking.khachHang?.ten || booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
         room: firstRoom?.phong?.moTa || 'N/A',
         checkIn: `${booking.checkinDuKien} 14:00`,
-        phone: booking.khachHang?.soDienThoai || booking.customerPhone || 'N/A',
+        phone: booking.khachHang?.sdt || booking.khachHang?.soDienThoai || booking.customerPhone || 'N/A',
         guests: totalGuests
       };
     });

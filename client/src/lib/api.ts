@@ -430,7 +430,62 @@ export const coSoApi = {
   delete: (id: string) => api.delete(`coso/${id}`),
 };
 
-// Revenue
+// New Reports API Types
+export interface RevenueSummaryResponse {
+  success: boolean;
+  data: {
+    totalRevenue: number;
+    totalBookings: number;
+    averageRevenue: number;
+    confirmedBookings: number;
+    cancelledBookings: number;
+    completedBookings: number;
+    successRate: number;
+  };
+}
+
+export interface TrendDataResponse {
+  success: boolean;
+  data: Array<{
+    period: string;
+    revenue: number;
+    bookings: number;
+    monthKey?: string;
+    year?: number;
+    quarter?: number;
+    startDate?: string;
+    endDate?: string;
+  }>;
+}
+
+export interface StatusStatsResponse {
+  success: boolean;
+  data: Array<{
+    name: string;
+    value: number;
+    color: string;
+  }>;
+}
+
+export interface BookingsDetailResponse {
+  success: boolean;
+  data: Array<{
+    maDatPhong: string;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+    ngayDat: string;
+    checkinDuKien: string;
+    checkoutDuKien: string;
+    totalAmount: number;
+    trangThai: string;
+    paymentStatus: string;
+    paymentMethod: string;
+    coSo: string;
+  }>;
+}
+
+// Legacy Revenue Types (for backward compatibility)
 export interface RevenueSummary {
   summary: {
     totalRevenue: number;
@@ -449,7 +504,16 @@ export interface RevenueSummary {
 export const revenueApi = {
   getAll: () => api.get('revenue'),
   getById: (id: number) => api.get(`revenue/${id}`),
-  getSummary: (params?: {
+  
+  // New Reports API
+  getSummary: () => api.get<RevenueSummaryResponse>('revenue/summary'),
+  getTrend: (period: 'week' | 'month' | 'quarter' | 'year' = 'month', limit: number = 6) => 
+    api.get<TrendDataResponse>(`revenue/trend?period=${period}&limit=${limit}`),
+  getStatusStats: () => api.get<StatusStatsResponse>('revenue/status-stats'),
+  getBookingsDetail: () => api.get<BookingsDetailResponse>('revenue/bookings-detail'),
+  
+  // Legacy API (for backward compatibility)
+  getSummaryLegacy: (params?: {
     startDate?: string;
     endDate?: string;
     groupBy?: 'day' | 'month' | 'year';

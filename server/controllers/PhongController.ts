@@ -11,7 +11,7 @@ export class PhongController {
   static async getAll(req: Request, res: Response) {
     try {
       const phongs = await phongRepository.find({
-        relations: ['hangPhong', 'hangPhong.donGia', 'coSo']
+        relations: ['hangPhong', 'coSo']
       });
       res.json(phongs);
     } catch (error) {
@@ -22,7 +22,7 @@ export class PhongController {
     try {
       const phong = await phongRepository.findOne({
         where: { maPhong: req.params.id },
-        relations: ['hangPhong', 'hangPhong.donGia', 'coSo']
+        relations: ['hangPhong', 'coSo']
       });
       if (!phong) {
         return res.status(404).json({ message: 'Không tìm thấy phòng' });
@@ -34,9 +34,40 @@ export class PhongController {
   }
   static async create(req: Request, res: Response) {
     try {
-      const phong = phongRepository.create(req.body);
+      const { moTa, hinhAnh, hangPhongMaHangPhong, coSoMaCoSo } = req.body;
+      
+      // Validate required fields
+      if (!moTa || !hangPhongMaHangPhong || !coSoMaCoSo) {
+        return res.status(400).json({ 
+          message: 'Thiếu thông tin bắt buộc: moTa, hangPhongMaHangPhong, coSoMaCoSo' 
+        });
+      }
+      
+      // Generate maPhong
+      const phongCount = await phongRepository.count();
+      const maPhong = `P${String(phongCount + 1).padStart(4, '0')}`;
+      
+      const phong = phongRepository.create({
+        maPhong,
+        moTa,
+        hinhAnh
+      });
+      
       const result = await phongRepository.save(phong);
-      res.status(201).json(result);
+      
+      // Update with relations using raw SQL
+      await phongRepository.query(
+        `UPDATE phong SET "hangPhongMaHangPhong" = $1, "coSoMaCoSo" = $2 WHERE "maPhong" = $3`,
+        [hangPhongMaHangPhong, coSoMaCoSo, maPhong]
+      );
+      
+      // Return the updated phong
+      const updatedPhong = await phongRepository.findOne({
+        where: { maPhong },
+        relations: ['hangPhong', 'coSo']
+      });
+      
+      res.status(201).json(updatedPhong);
     } catch (error) {
       res.status(500).json({ message: 'Lỗi khi tạo phòng', error });
     }

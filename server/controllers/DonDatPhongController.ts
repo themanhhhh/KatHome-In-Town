@@ -10,11 +10,21 @@ const revenueRepository = AppDataSource.getRepository(Revenue);
 export class DonDatPhongController {
   static async getAll(req: Request, res: Response) {
     try {
+      console.log('🔍 Fetching all bookings...');
+      
+      // Try without relations first to see if that's the issue
       const donDatPhongs = await donDatPhongRepository.find({
-        relations: ['coSo', 'nhanVien', 'khachHang', 'chiTiet', 'chiTiet.phong', 'chiTiet.phong.hangPhong']
+        order: {
+          ngayDat: 'DESC' // Sắp xếp theo ngày đặt mới nhất
+        }
       });
+      
+      console.log(`📊 Found ${donDatPhongs.length} bookings`);
+      console.log('📋 Sample booking:', donDatPhongs[0]?.maDatPhong);
+      
       res.json(donDatPhongs);
     } catch (error) {
+      console.error('❌ Error fetching bookings:', error);
       res.status(500).json({ message: 'Lỗi khi lấy danh sách đơn đặt phòng', error });
     }
   }
@@ -65,12 +75,28 @@ export class DonDatPhongController {
         });
       }
 
-      // Parse dates in rooms
-      const parsedRooms = rooms.map((room: any) => ({
-        ...room,
-        checkIn: new Date(room.checkIn),
-        checkOut: new Date(room.checkOut),
-      }));
+      // Parse dates in rooms with validation
+      const parsedRooms = rooms.map((room: any) => {
+        const checkInDate = new Date(room.checkIn);
+        const checkOutDate = new Date(room.checkOut);
+        
+        // Validate dates
+        if (isNaN(checkInDate.getTime())) {
+          throw new Error(`Invalid checkIn date: ${room.checkIn}`);
+        }
+        if (isNaN(checkOutDate.getTime())) {
+          throw new Error(`Invalid checkOut date: ${room.checkOut}`);
+        }
+        if (checkOutDate <= checkInDate) {
+          throw new Error('checkOut must be after checkIn');
+        }
+        
+        return {
+          ...room,
+          checkIn: checkInDate,
+          checkOut: checkOutDate,
+        };
+      });
 
       // Create booking using BookingService
       const booking = await BookingService.createBooking({

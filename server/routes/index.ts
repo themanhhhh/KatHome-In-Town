@@ -160,6 +160,9 @@ router.delete('/khieunai/:id', KhieuNaiController.delete);
 // Revenue routes
 router.get('/revenue', RevenueController.getAll);
 router.get('/revenue/summary', RevenueController.getSummary);
+router.get('/revenue/trend', RevenueController.getTrend);
+router.get('/revenue/status-stats', RevenueController.getStatusStats);
+router.get('/revenue/bookings-detail', RevenueController.getBookingsDetail);
 router.get('/revenue/:id', RevenueController.getById);
 
 // ========== REPORT ROUTES ==========

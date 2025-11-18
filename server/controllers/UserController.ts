@@ -9,7 +9,7 @@ export class UserController {
   // GET /api/users - Lấy tất cả users
   static async getAll(req: Request, res: Response) {
     try {
-      const users = await userRepository.find();
+      const users = await userRepository.find({ relations: ['chucVu'] });
       // Loại bỏ password khỏi response
       const usersWithoutPassword = users.map(({ matKhau, ...user }) => user as any);
       res.json(usersWithoutPassword);
@@ -21,7 +21,10 @@ export class UserController {
   // GET /api/users/:id - Lấy user theo ID
   static async getById(req: Request, res: Response) {
     try {
-      const user = await userRepository.findOneBy({ id: req.params.id });
+      const user = await userRepository.findOne({ 
+        where: { id: req.params.id },
+        relations: ['chucVu']
+      });
       if (!user) {
         return res.status(404).json({ message: 'Không tìm thấy user' });
       }
@@ -155,6 +158,52 @@ export class UserController {
       });
     } catch (error) {
       res.status(500).json({ message: 'Lỗi khi cập nhật avatar', error });
+    }
+  }
+
+  // PUT /api/users/:id/image - Cập nhật hình ảnh nhân viên (tương thích với NhanVienController)
+  static async updateImage(req: Request, res: Response) {
+    try {
+      const userId = req.params.id;
+      const { imageUrl } = req.body;
+
+      if (!imageUrl) {
+        return res.status(400).json({ message: 'Image URL is required' });
+      }
+
+      const user = await userRepository.findOneBy({ id: userId });
+      if (!user) {
+        return res.status(404).json({ message: 'Không tìm thấy user' });
+      }
+
+      user.hinhAnh = imageUrl;
+      const result = await userRepository.save(user);
+      
+      res.json({ 
+        success: true, 
+        message: 'Employee image updated successfully',
+        user: result 
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Lỗi khi cập nhật hình ảnh nhân viên', error });
+    }
+  }
+
+  // GET /api/users/by-manhanvien/:maNhanVien - Lấy user theo mã nhân viên
+  static async getByMaNhanVien(req: Request, res: Response) {
+    try {
+      const user = await userRepository.findOne({ 
+        where: { maNhanVien: req.params.maNhanVien },
+        relations: ['chucVu']
+      });
+      if (!user) {
+        return res.status(404).json({ message: 'Không tìm thấy nhân viên' });
+      }
+      // Loại bỏ password khỏi response
+      const { matKhau, ...userWithoutPassword } = user as any;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: 'Lỗi khi lấy thông tin nhân viên', error });
     }
   }
 }

@@ -2,22 +2,18 @@ import { Router } from 'express';
 import { UserController } from '../controllers/UserController';
 import { AuthController } from '../controllers/AuthController';
 import { CoSoController } from '../controllers/CoSoController';
-import { HangPhongController } from '../controllers/HangPhongController';
 import { PhongController } from '../controllers/PhongController';
 import { KhachHangController } from '../controllers/KhachHangController';
-import { NhanVienController } from '../controllers/NhanVienController';
 import { ChucVuController } from '../controllers/ChucVuController';
 import { DichVuController } from '../controllers/DichVuController';
 import { DonDatPhongController } from '../controllers/DonDatPhongController';
 import { ChiTietDonDatPhongController } from '../controllers/ChiTietDonDatPhongController';
-import { DonGiaController } from '../controllers/DonGiaController';
 import { DonDatDichVuController } from '../controllers/DonDatDichVuController';
-import { CaLamController } from '../controllers/CaLamController';
-import { DangKyCaLamController } from '../controllers/DangKyCaLamController';
 import { TheoDoiCaLamController } from '../controllers/TheoDoiCaLamController';
 import { KhieuNaiController } from '../controllers/KhieuNaiController';
 import { RevenueController } from '../controllers/RevenueController';
 import { ReportController } from '../controllers/ReportController';
+import { authenticate, requireStaff, optionalAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -30,13 +26,23 @@ router.post('/auth/forgot-password', AuthController.forgotPassword);
 router.post('/auth/reset-password', AuthController.resetPassword);
 router.get('/auth/me', AuthController.getCurrentUser);
 
-// User routes
+// User routes (đã gộp với NhanVien)
 router.get('/users', UserController.getAll);
 router.get('/users/:id', UserController.getById);
+router.get('/users/by-manhanvien/:maNhanVien', UserController.getByMaNhanVien);
 router.post('/users', UserController.create);
 router.put('/users/:id', UserController.update);
 router.delete('/users/:id', UserController.delete);
 router.put('/users/:id/avatar', UserController.updateAvatar);
+router.put('/users/:id/image', UserController.updateImage);
+
+// NhanVien routes (tương thích ngược - redirect đến UserController)
+router.get('/nhanvien', UserController.getAll);
+router.get('/nhanvien/:id', UserController.getById);
+router.post('/nhanvien', UserController.create);
+router.put('/nhanvien/:id', UserController.update);
+router.delete('/nhanvien/:id', UserController.delete);
+router.put('/nhanvien/:id/image', UserController.updateImage);
 
 // CoSo routes
 router.get('/coso', CoSoController.getAll);
@@ -45,14 +51,6 @@ router.post('/coso', CoSoController.create);
 router.put('/coso/:id', CoSoController.update);
 router.delete('/coso/:id', CoSoController.delete);
 router.put('/coso/:id/image', CoSoController.updateImage);
-
-// HangPhong routes
-router.get('/hangphong', HangPhongController.getAll);
-router.get('/hangphong/:id', HangPhongController.getById);
-router.post('/hangphong', HangPhongController.create);
-router.put('/hangphong/:id', HangPhongController.update);
-router.delete('/hangphong/:id', HangPhongController.delete);
-router.put('/hangphong/:id/image', HangPhongController.updateImage);
 
 // Phong routes
 router.get('/phong', PhongController.getAll);
@@ -69,14 +67,6 @@ router.get('/khachhang/:id', KhachHangController.getById);
 router.post('/khachhang', KhachHangController.create);
 router.put('/khachhang/:id', KhachHangController.update);
 router.delete('/khachhang/:id', KhachHangController.delete);
-
-// NhanVien routes
-router.get('/nhanvien', NhanVienController.getAll);
-router.get('/nhanvien/:id', NhanVienController.getById);
-router.post('/nhanvien', NhanVienController.create);
-router.put('/nhanvien/:id', NhanVienController.update);
-router.delete('/nhanvien/:id', NhanVienController.delete);
-router.put('/nhanvien/:id/image', NhanVienController.updateImage);
 
 // ChucVu routes
 router.get('/chucvu', ChucVuController.getAll);
@@ -96,17 +86,23 @@ router.put('/dichvu/:id/image', DichVuController.updateImage);
 // DonDatPhong routes
 router.get('/dondatphong', DonDatPhongController.getAll);
 router.get('/dondatphong/:id', DonDatPhongController.getById);
-router.post('/dondatphong', DonDatPhongController.create);
-router.put('/dondatphong/:id', DonDatPhongController.update);
-router.delete('/dondatphong/:id', DonDatPhongController.delete);
+// THEO FLOWCHART: Kiểm tra authentication (optional - cho phép guest booking)
+router.post('/dondatphong', optionalAuth, DonDatPhongController.create);
+router.put('/dondatphong/:id', authenticate, DonDatPhongController.update);
+router.delete('/dondatphong/:id', authenticate, DonDatPhongController.delete);
 
 // Booking management routes
-router.post('/bookings/:bookingId/verify-otp', DonDatPhongController.verifyOTP);
+// Confirmation slip (không cần authentication - khách hàng có thể xem)
+router.get('/bookings/:bookingId/confirmation-slip', DonDatPhongController.getConfirmationSlip);
+
+// Payment finalization (yêu cầu nhân viên CSKH)
+router.post('/bookings/:bookingId/finalize', authenticate, requireStaff, DonDatPhongController.finalizePayment);
+
+// Other booking management routes
 router.post('/bookings/:bookingId/confirm-payment', DonDatPhongController.confirmPayment);
 router.post('/bookings/:bookingId/check-in', DonDatPhongController.checkIn);
 router.post('/bookings/:bookingId/check-out', DonDatPhongController.checkOut);
 router.post('/bookings/:bookingId/cancel', DonDatPhongController.cancelBooking);
-router.post('/bookings/:bookingId/finalize', DonDatPhongController.finalizePayment);
 
 // ChiTietDonDatPhong routes
 router.get('/chitietdondatphong', ChiTietDonDatPhongController.getAll);
@@ -115,33 +111,12 @@ router.post('/chitietdondatphong', ChiTietDonDatPhongController.create);
 router.put('/chitietdondatphong/:id', ChiTietDonDatPhongController.update);
 router.delete('/chitietdondatphong/:id', ChiTietDonDatPhongController.delete);
 
-// DonGia routes (composite key: maHangPhong + donViTinh)
-router.get('/dongia', DonGiaController.getAll);
-router.get('/dongia/:maHangPhong/:donViTinh', DonGiaController.getById);
-router.post('/dongia', DonGiaController.create);
-router.put('/dongia/:maHangPhong/:donViTinh', DonGiaController.update);
-router.delete('/dongia/:maHangPhong/:donViTinh', DonGiaController.delete);
-
 // DonDatDichVu routes
 router.get('/dondatdichvu', DonDatDichVuController.getAll);
 router.get('/dondatdichvu/:id', DonDatDichVuController.getById);
 router.post('/dondatdichvu', DonDatDichVuController.create);
 router.put('/dondatdichvu/:id', DonDatDichVuController.update);
 router.delete('/dondatdichvu/:id', DonDatDichVuController.delete);
-
-// CaLam routes
-router.get('/calam', CaLamController.getAll);
-router.get('/calam/:id', CaLamController.getById);
-router.post('/calam', CaLamController.create);
-router.put('/calam/:id', CaLamController.update);
-router.delete('/calam/:id', CaLamController.delete);
-
-// DangKyCaLam routes
-router.get('/dangkycalam', DangKyCaLamController.getAll);
-router.get('/dangkycalam/:id', DangKyCaLamController.getById);
-router.post('/dangkycalam', DangKyCaLamController.create);
-router.put('/dangkycalam/:id', DangKyCaLamController.update);
-router.delete('/dangkycalam/:id', DangKyCaLamController.delete);
 
 // TheoDoiCaLam routes
 router.get('/theodoicalam', TheoDoiCaLamController.getAll);

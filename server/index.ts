@@ -4,6 +4,8 @@ import express from 'express';
 import cors from 'cors';
 import apiRoutes from './routes';
 import dotenv from 'dotenv';
+import { BookingCleanupService } from './services/BookingCleanupService';
+import { EmailService } from './services/EmailService';
 
 const app = express();
 const port = 3001;
@@ -24,6 +26,18 @@ AppDataSource.initialize()
   .then(async () => {
     console.log("✅ Kết nối DB thành công!");
 
+    // THEO FLOWCHART: Start booking cleanup job (chạy mỗi 5 phút)
+    console.log("🧹 Starting booking cleanup service...");
+    BookingCleanupService.startCleanupJob();
+
+    // Test email service
+    const emailReady = await EmailService.testConnection();
+    if (emailReady) {
+      console.log("✉️ Email service is ready");
+    } else {
+      console.warn("⚠️ Email service is not configured properly");
+    }
+
     // Routes
     app.use('/api', apiRoutes);
 
@@ -31,8 +45,16 @@ AppDataSource.initialize()
     app.get('/', (req, res) => {
       res.json({ 
         message: 'Booking Website API',
-        version: '1.0.0',
-        endpoints: '/api'
+        version: '2.0.0 - Theo Flowchart',
+        endpoints: '/api',
+        features: [
+          'Optimistic locking',
+          'Booking timeout (15 min)',
+          'Server-side pricing',
+          'Email with QR code',
+          'Staff notifications',
+          'Auto cleanup expired bookings'
+        ]
       });
     });
 
@@ -40,6 +62,7 @@ AppDataSource.initialize()
     app.listen(port, () => {
       console.log(`🚀 Server đang chạy tại http://localhost:${port}`);
       console.log(`📚 API endpoint: http://localhost:${port}/api`);
+      console.log(`🔄 Booking cleanup job is running every 5 minutes`);
     });
   })
   .catch((error) => console.log("❌ Lỗi kết nối DB:", error));

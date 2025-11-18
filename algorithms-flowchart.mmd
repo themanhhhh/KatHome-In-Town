@@ -1,0 +1,400 @@
+# GIẢI THUẬT HỆ THỐNG ĐẶT PHÒNG
+
+## 1. GIẢI THUẬT ĐĂNG NHẬP
+
+```mermaid
+flowchart TD
+    Start([Bắt đầu đăng nhập]) --> Input[Nhập email hoặc username và password]
+    Input --> Normalize[Chuẩn hóa dữ liệu: trim, lowercase]
+    Normalize --> CheckUser{User tồn tại<br/>trong DB?}
+    
+    CheckUser -->|Không| ErrorUser[Trả lỗi: User không tồn tại]
+    ErrorUser --> EndFail1([Kết thúc - Thất bại])
+    
+    CheckUser -->|Có| CheckLocked{Tài khoản<br/>bị khoá?}
+    CheckLocked -->|Có| ErrorLocked[Trả lỗi: Tài khoản bị khoá]
+    ErrorLocked --> EndFail2([Kết thúc - Thất bại])
+    
+    CheckLocked -->|Không| HashCompare[So sánh hash của password<br/>với hash trong DB]
+    HashCompare --> ValidPass{Password<br/>đúng?}
+    
+    ValidPass -->|Không| IncFail[Tăng số lần đăng nhập thất bại]
+    IncFail --> CheckFailCount{Thất bại<br/>nhiều hơn 5 lần?}
+    CheckFailCount -->|Có| LockAccount[Khoá tài khoản]
+    LockAccount --> ErrorWrongPass[Trả lỗi: Sai mật khẩu,<br/>tài khoản đã bị khoá]
+    ErrorWrongPass --> EndFail3([Kết thúc - Thất bại])
+    CheckFailCount -->|Không| ErrorWrongPass2[Trả lỗi: Sai mật khẩu]
+    ErrorWrongPass2 --> EndFail4([Kết thúc - Thất bại])
+    
+    ValidPass -->|Có| ResetFailCount[Reset số lần thất bại về 0]
+    ResetFailCount --> CheckMFA{Yêu cầu<br/>MFA hoặc 2FA?}
+    
+    CheckMFA -->|Có| SendOTP[Gửi mã OTP qua SMS hoặc Email]
+    SendOTP --> InputOTP[Nhập mã OTP]
+    InputOTP --> ValidOTP{OTP<br/>đúng?}
+    ValidOTP -->|Không| ErrorOTP[Trả lỗi: OTP không đúng]
+    ErrorOTP --> EndFail5([Kết thúc - Thất bại])
+    ValidOTP -->|Có| CreateToken
+    
+    CheckMFA -->|Không| CreateToken[Tạo JWT token với:<br/>userId, role, expiry time]
+    
+    CreateToken --> SaveSession[Lưu session vào DB hoặc Redis]
+    SaveSession --> LogLogin[Ghi log đăng nhập thành công:<br/>IP address, Device, Timestamp]
+    LogLogin --> ReturnToken[Trả về token cho client]
+    ReturnToken --> EndSuccess([Kết thúc - Thành công])
+
+    style Start fill:#90EE90
+    style EndSuccess fill:#90EE90
+    style EndFail1 fill:#FFB6C6
+    style EndFail2 fill:#FFB6C6
+    style EndFail3 fill:#FFB6C6
+    style EndFail4 fill:#FFB6C6
+    style EndFail5 fill:#FFB6C6
+    style ErrorUser fill:#FF6B6B
+    style ErrorLocked fill:#FF6B6B
+    style ErrorWrongPass fill:#FF6B6B
+    style ErrorWrongPass2 fill:#FF6B6B
+    style ErrorOTP fill:#FF6B6B
+    style CreateToken fill:#87CEEB
+    style SaveSession fill:#87CEEB
+```
+
+---
+
+## 2. GIẢI THUẬT ĐẶT PHÒNG
+
+```mermaid
+flowchart TD
+    Start([Bắt đầu đặt phòng]) --> ReceiveReq[Nhận request:<br/>Loại phòng, Ngày check-in và check-out<br/>Số người lớn và trẻ em<br/>Yêu cầu đặc biệt]
+    
+    ReceiveReq --> CheckAuth{User đã<br/>đăng nhập?}
+    CheckAuth -->|Không| Error401[Trả lỗi 401: Unauthorized]
+    Error401 --> EndFail1([Kết thúc - Thất bại])
+    
+    CheckAuth -->|Có| Validate[Validate dữ liệu:<br/>Ngày check-out lớn hơn check-in<br/>Số người lớn hơn 0<br/>Loại phòng hợp lệ]
+    Validate --> ValidOK{Dữ liệu<br/>hợp lệ?}
+    
+    ValidOK -->|Không| Error400[Trả lỗi 400: Dữ liệu không hợp lệ]
+    Error400 --> EndFail2([Kết thúc - Thất bại])
+    
+    ValidOK -->|Có| QueryRoom[(Query DB: Tìm phòng trống<br/>trong khoảng thời gian)]
+    QueryRoom --> FilterRoom[Lọc bỏ phòng:<br/>Đang bảo trì<br/>Bị block<br/>Không đủ sức chứa]
+    
+    FilterRoom --> HasRoom{Có phòng<br/>trống?}
+    HasRoom -->|Không| ErrorNoRoom[Trả lỗi: Hết phòng]
+    ErrorNoRoom --> EndFail3([Kết thúc - Thất bại])
+    
+    HasRoom -->|Có| StartTx[Bắt đầu Transaction]
+    StartTx --> CreateHold[Tạo booking HOLD:<br/>Trạng thái PENDING<br/>Timeout 15 phút]
+    CreateHold --> LockRoom[Lock phòng tạm thời<br/>với optimistic locking]
+    
+    LockRoom --> LockSuccess{Lock<br/>thành công?}
+    LockSuccess -->|Không| RollbackTx1[Rollback Transaction]
+    RollbackTx1 --> ErrorConflict[Trả lỗi: Phòng vừa được đặt]
+    ErrorConflict --> EndFail4([Kết thúc - Thất bại])
+    
+    LockSuccess -->|Có| CalcPrice[Tính giá:<br/>1. Giá base theo loại phòng<br/>2. Giá theo mùa và sự kiện<br/>3. Phụ phí người thêm<br/>4. Thuế VAT<br/>5. Giảm giá khuyến mãi]
+    
+    CalcPrice --> SaveBooking[(Lưu booking vào DB:<br/>Status PENDING<br/>Total price<br/>Customer info)]
+    
+    SaveBooking --> CheckPayment{Thanh toán<br/>online?}
+    
+    CheckPayment -->|Không| ConfirmBooking[Cập nhật status thành CONFIRMED]
+    
+    CheckPayment -->|Có| CallPaymentGW[Gọi Payment Gateway:<br/>VNPay hoặc MoMo hoặc Stripe<br/>Tạo payment URL]
+    CallPaymentGW --> PaymentSuccess{Thanh toán<br/>thành công?}
+    
+    PaymentSuccess -->|Không| RollbackTx2[Rollback Transaction]
+    RollbackTx2 --> ReleaseRoom1[Giải phóng phòng]
+    ReleaseRoom1 --> ErrorPayment[Trả lỗi: Thanh toán thất bại]
+    ErrorPayment --> EndFail5([Kết thúc - Thất bại])
+    
+    PaymentSuccess -->|Có| SavePayment[(Lưu payment transaction)]
+    SavePayment --> ConfirmBooking
+    
+    ConfirmBooking --> UpdateRoom[(Cập nhật trạng thái phòng:<br/>BOOKED)]
+    UpdateRoom --> CommitTx[Commit Transaction]
+    CommitTx --> SendEmail[Gửi email xác nhận:<br/>Booking details<br/>QR code<br/>Hướng dẫn check-in]
+    
+    SendEmail --> NotifyStaff[Thông báo cho bộ phận:<br/>Housekeeping<br/>Reception]
+    
+    NotifyStaff --> ReturnBooking[Trả về booking details:<br/>Booking ID<br/>Room number<br/>Total price<br/>Check-in và out dates]
+    
+    ReturnBooking --> EndSuccess([Kết thúc - Thành công])
+    
+    style Start fill:#90EE90
+    style EndSuccess fill:#90EE90
+    style EndFail1 fill:#FFB6C6
+    style EndFail2 fill:#FFB6C6
+    style EndFail3 fill:#FFB6C6
+    style EndFail4 fill:#FFB6C6
+    style EndFail5 fill:#FFB6C6
+    style StartTx fill:#FFD700
+    style CommitTx fill:#FFD700
+    style RollbackTx1 fill:#FFA500
+    style RollbackTx2 fill:#FFA500
+    style QueryRoom fill:#87CEEB
+    style SaveBooking fill:#87CEEB
+    style UpdateRoom fill:#87CEEB
+```
+
+---
+
+## 3. GIẢI THUẬT TUỲ CHỈNH PHÒNG
+
+```mermaid
+flowchart TD
+    Start([Bắt đầu tuỳ chỉnh]) --> ReceiveReq[Nhận request:<br/>bookingId<br/>customizations: view type, bed type<br/>breakfast, late checkout<br/>airport pickup]
+    
+    ReceiveReq --> CheckBooking{Booking<br/>tồn tại?}
+    CheckBooking -->|Không| Error404[Trả lỗi 404: Booking không tồn tại]
+    Error404 --> EndFail1([Kết thúc - Thất bại])
+    
+    CheckBooking -->|Có| CheckOwner{User là chủ<br/>booking hoặc<br/>admin?}
+    CheckOwner -->|Không| Error403[Trả lỗi 403: Không có quyền]
+    Error403 --> EndFail2([Kết thúc - Thất bại])
+    
+    CheckOwner -->|Có| CheckStatus{Booking status<br/>là CONFIRMED hoặc<br/>PENDING?}
+    CheckStatus -->|Không| ErrorCancelled[Trả lỗi: Không thể tuỳ chỉnh<br/>booking đã huỷ hoặc hoàn thành]
+    ErrorCancelled --> EndFail3([Kết thúc - Thất bại])
+    
+    CheckStatus -->|Có| InitVars[Khởi tạo:<br/>errorList rỗng<br/>additionalCost bằng 0<br/>serviceList rỗng]
+    
+    InitVars --> LoopStart{Còn customization<br/>chưa xử lý?}
+    
+    LoopStart -->|Không| CheckErrors{errorList<br/>rỗng?}
+    
+    LoopStart -->|Có| GetNext[Lấy customization tiếp theo]
+    GetNext --> CheckCompatible{Tuỳ chỉnh tương thích<br/>với loại phòng?}
+    
+    CheckCompatible -->|Không| AddError[Thêm vào errorList<br/>VD: Phòng Standard không có jacuzzi]
+    AddError --> LoopStart
+    
+    CheckCompatible -->|Có| CalcFee[Tính phí bổ sung:<br/>Lấy giá từ bảng ServicePrice<br/>Áp dụng giảm giá theo membership]
+    
+    CalcFee --> AddCost[Cộng phí vào additionalCost<br/>Thêm service vào serviceList]
+    AddCost --> LoopStart
+    
+    CheckErrors -->|Không| ReturnErrors[Trả về danh sách lỗi]
+    ReturnErrors --> EndFail4([Kết thúc - Thất bại])
+    
+    CheckErrors -->|Có| CheckInventory[(Query DB: Kiểm tra tồn kho dịch vụ<br/>VD: Số suất ăn sáng còn)]
+    
+    CheckInventory --> HasInventory{Đủ tồn kho<br/>tất cả dịch vụ?}
+    HasInventory -->|Không| ErrorInventory[Trả lỗi: Dịch vụ đã hết]
+    ErrorInventory --> EndFail5([Kết thúc - Thất bại])
+    
+    HasInventory -->|Có| StartTx[Bắt đầu Transaction]
+    StartTx --> UpdateBooking[(Cập nhật booking:<br/>Thêm customizations<br/>totalPrice cộng additionalCost)]
+    
+    UpdateBooking --> DecreaseInventory[(Trừ tồn kho dịch vụ)]
+    DecreaseInventory --> SaveServices[(Lưu booking_services)]
+    SaveServices --> CommitTx[Commit Transaction]
+    
+    CommitTx --> SendEmail[Gửi email xác nhận thay đổi:<br/>Chi tiết tuỳ chỉnh<br/>Tổng giá mới]
+    
+    SendEmail --> NotifyDept[Thông báo bộ phận liên quan:<br/>F&B nếu có breakfast<br/>Concierge nếu có pickup]
+    
+    NotifyDept --> ReturnBooking[Trả về booking đã cập nhật]
+    ReturnBooking --> EndSuccess([Kết thúc - Thành công])
+    
+    style Start fill:#90EE90
+    style EndSuccess fill:#90EE90
+    style EndFail1 fill:#FFB6C6
+    style EndFail2 fill:#FFB6C6
+    style EndFail3 fill:#FFB6C6
+    style EndFail4 fill:#FFB6C6
+    style EndFail5 fill:#FFB6C6
+    style StartTx fill:#FFD700
+    style CommitTx fill:#FFD700
+    style LoopStart fill:#DDA0DD
+    style CheckInventory fill:#87CEEB
+    style UpdateBooking fill:#87CEEB
+```
+
+---
+
+## 4. GIẢI THUẬT HUỶ ĐẶT PHÒNG
+
+```mermaid
+flowchart TD
+    Start([Bắt đầu huỷ booking]) --> ReceiveReq[Nhận request:<br/>bookingId<br/>cancellationReason]
+    
+    ReceiveReq --> CheckBooking{Booking<br/>tồn tại?}
+    CheckBooking -->|Không| Error404[Trả lỗi 404: Booking không tồn tại]
+    Error404 --> EndFail1([Kết thúc - Thất bại])
+    
+    CheckBooking -->|Có| CheckOwner{User là chủ booking<br/>hoặc admin hoặc staff<br/>có quyền?}
+    CheckOwner -->|Không| Error403[Trả lỗi 403: Không có quyền huỷ]
+    Error403 --> EndFail2([Kết thúc - Thất bại])
+    
+    CheckOwner -->|Có| CheckStatus{Booking status<br/>là CONFIRMED hoặc<br/>PENDING?}
+    CheckStatus -->|Không| ErrorAlready[Trả lỗi: Booking đã bị huỷ<br/>hoặc đã hoàn thành]
+    ErrorAlready --> EndFail3([Kết thúc - Thất bại])
+    
+    CheckStatus -->|Có| GetPolicy[Lấy cancellation policy<br/>của booking]
+    GetPolicy --> CalcDays[Tính số ngày còn lại<br/>đến check-in date:<br/>daysLeft bằng checkIn trừ today]
+    
+    CalcDays --> CheckPolicy{Loại<br/>policy?}
+    
+    CheckPolicy -->|Non-refundable| SetFee1[cancellationFee là 100%<br/>refundAmount là 0]
+    CheckPolicy -->|Flexible| CheckFlexDays{daysLeft lớn hơn<br/>hoặc bằng 7?}
+    CheckFlexDays -->|Có| SetFee2[cancellationFee là 0%<br/>refundAmount là 100%]
+    CheckFlexDays -->|Không| CheckFlexDays2{daysLeft lớn hơn<br/>hoặc bằng 3?}
+    CheckFlexDays2 -->|Có| SetFee3[cancellationFee là 30%<br/>refundAmount là 70%]
+    CheckFlexDays2 -->|Không| SetFee4[cancellationFee là 50%<br/>refundAmount là 50%]
+    
+    CheckPolicy -->|Moderate| CheckModDays{daysLeft lớn hơn<br/>hoặc bằng 14?}
+    CheckModDays -->|Có| SetFee5[cancellationFee là 0%<br/>refundAmount là 100%]
+    CheckModDays -->|Không| CheckModDays2{daysLeft lớn hơn<br/>hoặc bằng 7?}
+    CheckModDays2 -->|Có| SetFee6[cancellationFee là 50%<br/>refundAmount là 50%]
+    CheckModDays2 -->|Không| SetFee7[cancellationFee là 100%<br/>refundAmount là 0]
+    
+    SetFee1 --> CalcRefund
+    SetFee2 --> CalcRefund
+    SetFee3 --> CalcRefund
+    SetFee4 --> CalcRefund
+    SetFee5 --> CalcRefund
+    SetFee6 --> CalcRefund
+    SetFee7 --> CalcRefund[Tính số tiền hoàn:<br/>refundAmount bằng totalPaid nhân refundPercent<br/>feeAmount bằng totalPaid trừ refundAmount]
+    
+    CalcRefund --> StartTx[Bắt đầu Transaction]
+    StartTx --> UpdateBooking[(Cập nhật booking:<br/>status là CANCELLED<br/>cancellationReason<br/>cancellationDate<br/>cancellationFee<br/>refundAmount)]
+    
+    UpdateBooking --> ReleaseRoom[(Cập nhật phòng:<br/>status là AVAILABLE)]
+    
+    ReleaseRoom --> GetServices[(Lấy danh sách dịch vụ<br/>của booking)]
+    GetServices --> CancelServices[Huỷ tất cả dịch vụ:<br/>Spa appointments<br/>Airport pickup<br/>Restaurant bookings]
+    
+    CancelServices --> RestoreInventory[(Hoàn lại tồn kho dịch vụ)]
+    RestoreInventory --> CheckRefund{refundAmount<br/>lớn hơn 0?}
+    
+    CheckRefund -->|Có| CallRefundAPI[Gọi Refund API:<br/>VNPay hoặc MoMo hoặc Stripe<br/>Tạo refund transaction]
+    CallRefundAPI --> RefundSuccess{Refund<br/>thành công?}
+    
+    RefundSuccess -->|Không| RollbackTx[Rollback Transaction]
+    RollbackTx --> ErrorRefund[Trả lỗi: Không thể hoàn tiền]
+    ErrorRefund --> EndFail4([Kết thúc - Thất bại])
+    
+    RefundSuccess -->|Có| SaveRefund[(Lưu refund transaction)]
+    SaveRefund --> CommitTx
+    
+    CheckRefund -->|Không| CommitTx[Commit Transaction]
+    
+    CommitTx --> SendEmail[Gửi email xác nhận huỷ:<br/>Lý do huỷ<br/>Phí huỷ<br/>Số tiền hoàn<br/>Thời gian hoàn tiền]
+    
+    SendEmail --> NotifyStaff[Thông báo staff:<br/>Housekeeping<br/>Reception<br/>F&B]
+    
+    NotifyStaff --> UpdateReport[(Cập nhật báo cáo:<br/>Tăng số lượng huỷ<br/>Trừ doanh thu dự kiến)]
+    
+    UpdateReport --> ReturnResult[Trả về thông tin huỷ:<br/>Cancellation details<br/>Refund info]
+    
+    ReturnResult --> EndSuccess([Kết thúc - Thành công])
+    
+    style Start fill:#90EE90
+    style EndSuccess fill:#90EE90
+    style EndFail1 fill:#FFB6C6
+    style EndFail2 fill:#FFB6C6
+    style EndFail3 fill:#FFB6C6
+    style EndFail4 fill:#FFB6C6
+    style StartTx fill:#FFD700
+    style CommitTx fill:#FFD700
+    style RollbackTx fill:#FFA500
+    style GetServices fill:#87CEEB
+    style UpdateBooking fill:#87CEEB
+    style ReleaseRoom fill:#87CEEB
+```
+
+---
+
+## 5. GIẢI THUẬT TRUY XUẤT BÁO CÁO
+
+```mermaid
+flowchart TD
+    Start([Bắt đầu truy xuất báo cáo]) --> ReceiveReq[Nhận request:<br/>reportType<br/>startDate, endDate<br/>filters: branch, roomType, channel<br/>format: JSON hoặc CSV hoặc PDF]
+    
+    ReceiveReq --> CheckAuth{User có quyền<br/>xem báo cáo?}
+    CheckAuth -->|Không| Error403[Trả lỗi 403: Không có quyền]
+    Error403 --> EndFail1([Kết thúc - Thất bại])
+    
+    CheckAuth -->|Có| ValidateDates[Validate khoảng thời gian]
+    ValidateDates --> DateValid{Hợp lệ?<br/>endDate lớn hơn startDate<br/>không quá 1 năm}
+    
+    DateValid -->|Không| Error400[Trả lỗi 400: Thời gian không hợp lệ]
+    Error400 --> EndFail2([Kết thúc - Thất bại])
+    
+    DateValid -->|Có| CreateCacheKey[Tạo cache key:<br/>hash reportType cùng dates và filters]
+    CreateCacheKey --> CheckCache{Cache<br/>tồn tại và<br/>còn hiệu lực?}
+    
+    CheckCache -->|Có| ReturnCache[Trả dữ liệu từ cache]
+    ReturnCache --> EndSuccess1([Kết thúc - Thành công])
+    
+    CheckCache -->|Không| DetermineType{Loại báo cáo?}
+    
+    DetermineType -->|Báo cáo doanh thu| QueryRevenue[(Query bookings và payments:<br/>WHERE createdAt BETWEEN dates<br/>AND status là COMPLETED)]
+    
+    DetermineType -->|Báo cáo tỉ lệ lấp đầy| QueryOccupancy[(Query bookings và rooms:<br/>COUNT occupied rooms<br/>chia total available rooms)]
+    
+    DetermineType -->|Báo cáo huỷ| QueryCancellation[(Query bookings:<br/>WHERE status là CANCELLED<br/>AND cancellationDate BETWEEN dates)]
+    
+    DetermineType -->|Báo cáo theo kênh| QueryChannel[(Query bookings:<br/>GROUP BY bookingChannel<br/>OTA, Direct, Agent, etc)]
+    
+    DetermineType -->|Báo cáo khách hàng| QueryCustomer[(Query users và bookings:<br/>New customers, returning<br/>Booking frequency)]
+    
+    QueryRevenue --> ProcessRevenue[Tính toán:<br/>Total revenue<br/>ADR: Average Daily Rate<br/>RevPAR: Revenue per Available Room<br/>Revenue by room type]
+    ProcessRevenue --> GroupData
+    
+    QueryOccupancy --> ProcessOccupancy[Tính toán:<br/>Occupancy rate phần trăm<br/>Available room nights<br/>Sold room nights<br/>By room type, by date]
+    ProcessOccupancy --> GroupData
+    
+    QueryCancellation --> ProcessCancel[Tính toán:<br/>Cancellation rate phần trăm<br/>Total cancellations<br/>Refund amount<br/>Cancellation reasons distribution]
+    ProcessCancel --> GroupData
+    
+    QueryChannel --> ProcessChannel[Tính toán:<br/>Revenue by channel<br/>Bookings count by channel<br/>Commission by channel<br/>Conversion rate]
+    ProcessChannel --> GroupData
+    
+    QueryCustomer --> ProcessCustomer[Tính toán:<br/>New vs returning phần trăm<br/>Customer lifetime value<br/>Top customers<br/>Booking patterns]
+    ProcessCustomer --> GroupData
+    
+    GroupData[Nhóm dữ liệu theo:<br/>Ngày hoặc Tuần hoặc Tháng<br/>Chi nhánh<br/>Loại phòng]
+    
+    GroupData --> CalcKPI[Tính các KPI tổng hợp:<br/>YoY growth phần trăm<br/>MoM growth phần trăm<br/>Trends<br/>Forecasts]
+    
+    CalcKPI --> FormatData{Format<br/>output?}
+    
+    FormatData -->|JSON| FormatJSON[Format dữ liệu JSON:<br/>Structured data<br/>Charts data ready]
+    FormatData -->|CSV| FormatCSV[Format CSV:<br/>Flat table<br/>Headers]
+    FormatData -->|PDF| FormatPDF[Render PDF:<br/>Charts và graphs<br/>Tables<br/>Summary]
+    
+    FormatJSON --> SaveCache
+    FormatCSV --> SaveCache
+    FormatPDF --> SaveCache
+    
+    SaveCache[(Lưu vào cache:<br/>TTL là 1 giờ<br/>hoặc 15 phút nếu realtime)]
+    
+    SaveCache --> LogAudit[(Ghi audit log:<br/>User xem báo cáo<br/>Thời gian<br/>Parameters)]
+    
+    LogAudit --> CheckSchedule{Báo cáo<br/>định kỳ?}
+    
+    CheckSchedule -->|Có| SaveSchedule[(Lưu vào scheduled_reports<br/>để gửi email tự động)]
+    CheckSchedule -->|Không| ReturnReport
+    SaveSchedule --> ReturnReport[Trả về dữ liệu báo cáo]
+    
+    ReturnReport --> EndSuccess2([Kết thúc - Thành công])
+    
+    style Start fill:#90EE90
+    style EndSuccess1 fill:#90EE90
+    style EndSuccess2 fill:#90EE90
+    style EndFail1 fill:#FFB6C6
+    style EndFail2 fill:#FFB6C6
+    style QueryRevenue fill:#87CEEB
+    style QueryOccupancy fill:#87CEEB
+    style QueryCancellation fill:#87CEEB
+    style QueryChannel fill:#87CEEB
+    style QueryCustomer fill:#87CEEB
+    style SaveCache fill:#DDA0DD
+    style CheckCache fill:#DDA0DD
+```
+
+---
+

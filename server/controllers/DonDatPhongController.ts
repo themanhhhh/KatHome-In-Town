@@ -33,7 +33,7 @@ export class DonDatPhongController {
     try {
       const donDatPhong = await donDatPhongRepository.findOne({
         where: { maDatPhong: req.params.id },
-        relations: ['coSo', 'nhanVien', 'khachHang', 'chiTiet', 'chiTiet.phong', 'chiTiet.phong.hangPhong']
+        relations: ['coSo', 'nhanVien', 'khachHang', 'chiTiet', 'chiTiet.phong']
       });
       if (!donDatPhong) {
         return res.status(404).json({ message: 'Không tìm thấy đơn đặt phòng' });
@@ -151,10 +151,13 @@ export class DonDatPhongController {
   }
 
   /**
-   * Finalize payment for a booking
+   * Finalize payment for a booking (chỉ nhân viên CSKH mới có thể gọi)
    * - Updates booking payment status
    * - Creates revenue record
+   * - Creates HoaDon (Invoice)
    * - Uses transaction to ensure atomicity
+   * 
+   * Yêu cầu: req.user phải là nhân viên (có maNhanVien)
    */
   static async finalizePayment(req: Request, res: Response) {
     const queryRunner = AppDataSource.createQueryRunner();
@@ -163,7 +166,7 @@ export class DonDatPhongController {
 
     try {
       const { bookingId } = req.params;
-      const { totalAmount, paymentMethod, paymentRef, paidAt, sendEmail } = req.body;
+      const { totalAmount, paymentMethod, paymentRef, paidAt, ghiChu } = req.body;
 
       // Validate required fields
       if (!totalAmount || !paymentMethod) {
@@ -174,10 +177,10 @@ export class DonDatPhongController {
         });
       }
 
-      // Get booking
+      // Get booking with all relations
       const booking = await queryRunner.manager.findOne(DonDatPhong, {
         where: { maDatPhong: bookingId },
-        relations: ['coSo', 'khachHang']
+        relations: ['coSo', 'khachHang', 'chiTiet', 'chiTiet.phong']
       });
 
       if (!booking) {
@@ -197,12 +200,27 @@ export class DonDatPhongController {
         });
       }
 
+      // Get staff user (nhan viên CSKH)
+      const nhanVien = req.user;
+      if (!nhanVien || !nhanVien.maNhanVien) {
+        await queryRunner.rollbackTransaction();
+        return res.status(403).json({
+          success: false,
+          message: 'Chỉ nhân viên CSKH mới có thể xác nhận thanh toán'
+        });
+      }
+
+      const paidDate = paidAt ? new Date(paidAt) : new Date();
+
       // Update booking payment fields
       booking.paymentStatus = 'paid';
       booking.paymentMethod = paymentMethod;
       booking.paymentRef = paymentRef || null;
-      booking.paidAt = paidAt ? new Date(paidAt) : new Date();
+      booking.paidAt = paidDate;
       booking.totalPaid = totalAmount;
+      booking.trangThai = 'CF'; // Confirmed
+      booking.ngayXacNhan = paidDate;
+      booking.nhanVien = nhanVien; // Gán nhân viên đã xác nhận
 
       await queryRunner.manager.save(DonDatPhong, booking);
 
@@ -211,32 +229,62 @@ export class DonDatPhongController {
         donDatPhong: booking,
         amount: totalAmount,
         paymentMethod,
-        paymentDate: booking.paidAt,
+        paymentDate: paidDate,
         paymentRef: paymentRef || null
       });
 
       await queryRunner.manager.save(Revenue, revenue);
 
+      // Create HoaDon (Invoice)
+      const { HoaDon } = await import('../entities/HoaDon');
+      const hoaDonRepo = queryRunner.manager.getRepository(HoaDon);
+      const hoaDonCount = await hoaDonRepo.count();
+      const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const maHoaDon = `HD-${today}-${String(hoaDonCount + 1).padStart(4, '0')}`;
+
+      const hoaDon = hoaDonRepo.create({
+        maHoaDon,
+        donDatPhong: booking,
+        tongTien: totalAmount,
+        phuongThucThanhToan: paymentMethod,
+        paymentRef: paymentRef || null,
+        nhanVien: nhanVien,
+        ngayThanhToan: paidDate,
+        ghiChu: ghiChu || null
+      });
+
+      await queryRunner.manager.save(HoaDon, hoaDon);
+
       // Commit transaction
       await queryRunner.commitTransaction();
 
-      // Optional: Send email confirmation (can be handled separately)
-      if (sendEmail) {
-        // Email logic can be added here or handled by frontend
-        console.log('✅ Email notification requested for booking:', bookingId);
-      }
-
       return res.json({
         success: true,
-        message: 'Payment finalized successfully',
+        message: 'Thanh toán đã được xác nhận và hóa đơn đã được tạo',
         data: {
-          booking,
+          booking: {
+            maDatPhong: booking.maDatPhong,
+            paymentStatus: booking.paymentStatus,
+            paymentMethod: booking.paymentMethod,
+            totalPaid: booking.totalPaid,
+            paidAt: booking.paidAt
+          },
+          hoaDon: {
+            id: hoaDon.id,
+            maHoaDon: hoaDon.maHoaDon,
+            tongTien: hoaDon.tongTien,
+            phuongThucThanhToan: hoaDon.phuongThucThanhToan,
+            ngayThanhToan: hoaDon.ngayThanhToan,
+            nhanVien: {
+              maNhanVien: nhanVien.maNhanVien,
+              ten: nhanVien.ten
+            }
+          },
           revenue: {
             id: revenue.id,
             amount: revenue.amount,
             paymentMethod: revenue.paymentMethod,
-            paymentDate: revenue.paymentDate,
-            paymentRef: revenue.paymentRef
+            paymentDate: revenue.paymentDate
           }
         }
       });
@@ -245,7 +293,7 @@ export class DonDatPhongController {
       console.error('❌ Error finalizing payment:', error);
       return res.status(500).json({
         success: false,
-        message: 'Error finalizing payment',
+        message: 'Lỗi khi xác nhận thanh toán',
         error: error instanceof Error ? error.message : 'Unknown error'
       });
     } finally {
@@ -254,27 +302,49 @@ export class DonDatPhongController {
   }
 
   /**
-   * Confirm payment for cash payment
-   * For cash payments, staff confirms receipt manually
+   * User xác nhận đã chuyển khoản
+   * Chỉ cập nhật trạng thái thành "waiting_confirmation" - chờ nhân viên xác nhận
    */
   static async confirmPayment(req: Request, res: Response) {
     try {
       const { bookingId } = req.params;
-      const { paymentMethod = 'Cash' } = req.body;
+      const { paymentMethod = 'Bank Transfer', paymentRef } = req.body;
 
-      if (paymentMethod !== 'Cash') {
-        return res.status(400).json({
+      const donDatPhongRepo = AppDataSource.getRepository(DonDatPhong);
+      const booking = await donDatPhongRepo.findOne({
+        where: { maDatPhong: bookingId },
+        relations: ['coSo', 'khachHang', 'chiTiet']
+      });
+
+      if (!booking) {
+        return res.status(404).json({
           success: false,
-          message: 'Only cash payment is supported currently'
+          message: 'Không tìm thấy đơn đặt phòng'
         });
       }
 
-      const booking = await BookingService.confirmPayment(bookingId, paymentMethod);
+      if (booking.paymentStatus === 'paid') {
+        return res.status(400).json({
+          success: false,
+          message: 'Đơn đặt phòng đã được thanh toán'
+        });
+      }
+
+      // Cập nhật trạng thái chờ xác nhận
+      booking.paymentStatus = 'waiting_confirmation';
+      booking.paymentMethod = paymentMethod;
+      booking.paymentRef = paymentRef || null;
+      
+      await donDatPhongRepo.save(booking);
 
       res.json({
         success: true,
-        message: 'Payment confirmed successfully',
-        data: booking,
+        message: 'Đã ghi nhận. Vui lòng đợi nhân viên xác nhận thanh toán.',
+        data: {
+          maDatPhong: booking.maDatPhong,
+          paymentStatus: booking.paymentStatus,
+          message: 'Chúng tôi sẽ xác nhận trong vòng 5-10 phút'
+        },
       });
     } catch (error) {
       console.error('Error confirming payment:', error);
@@ -356,7 +426,104 @@ export class DonDatPhongController {
   }
 
   /**
-   * Verify OTP and confirm booking
+   * Get confirmation slip with QR codes
+   * Trả về thông tin booking + QR code chuyển khoản
+   */
+  static async getConfirmationSlip(req: Request, res: Response) {
+    try {
+      const { bookingId } = req.params;
+
+      const booking = await donDatPhongRepository.findOne({
+        where: { maDatPhong: bookingId },
+        relations: ['coSo', 'khachHang', 'chiTiet', 'chiTiet.phong']
+      });
+
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          message: 'Không tìm thấy đơn đặt phòng'
+        });
+      }
+
+      // Lấy thông tin QR code từ ảnh có sẵn
+      const { QRCodeService } = await import('../services/QRCodeService');
+      const paymentInfo = QRCodeService.getPaymentInfo(booking);
+
+      // Format confirmation slip data
+      const confirmationSlip = {
+        maDatPhong: booking.maDatPhong,
+        ngayDat: booking.ngayDat,
+        trangThai: booking.trangThai,
+        paymentStatus: booking.paymentStatus,
+        expiresAt: booking.expiresAt, // Thời gian hết hạn
+        
+        thongTinKhachHang: {
+          ten: booking.customerName || booking.khachHang?.ten,
+          email: booking.customerEmail || booking.khachHang?.email,
+          soDienThoai: booking.customerPhone || booking.khachHang?.sdt
+        },
+        
+        thongTinCoSo: {
+          tenCoSo: booking.coSo?.tenCoSo,
+          diaChi: booking.coSo?.diaChi,
+          soDienThoai: booking.coSo?.soDienThoai
+        },
+        
+        thongTinPhong: booking.chiTiet?.map(ct => ({
+          maPhong: ct.phong?.maPhong,
+          tenPhong: ct.phong?.tenPhong,
+          checkIn: ct.checkInDate,
+          checkOut: ct.checkOutDate,
+          soNguoiLon: ct.soNguoiLon,
+          soTreEm: ct.soTreEm,
+          donGia: ct.donGia,
+          thanhTien: ct.thanhTien
+        })) || [],
+        
+        // Chi tiết giá
+        chiTietGia: {
+          giaGoc: booking.basePrice,
+          phiMuaCaoDiem: booking.seasonalSurcharge,
+          phiNguoiThem: booking.guestSurcharge,
+          VAT: booking.vatAmount,
+          giamGia: booking.discount,
+          maKhuyenMai: booking.promotionCode,
+          tongCong: booking.totalAmount,
+        },
+        
+        // QR code chuyển khoản (đường dẫn ảnh)
+        qrCodeUrl: paymentInfo.qrCodeUrl,
+        
+        // Thông tin chuyển khoản
+        thongTinChuyenKhoan: booking.paymentStatus === 'pending' || booking.paymentStatus === 'waiting_confirmation' ? {
+          nganHang: paymentInfo.nganHang,
+          soTaiKhoan: paymentInfo.soTaiKhoan,
+          chuTaiKhoan: paymentInfo.chuTaiKhoan,
+          soTien: paymentInfo.soTien,
+          noiDung: paymentInfo.noiDung,
+          ghiChu: 'Vui lòng chuyển khoản đúng nội dung để được xác nhận tự động'
+        } : null,
+        
+        ghiChu: booking.notes,
+      };
+
+      return res.json({
+        success: true,
+        message: 'Thông tin đặt phòng và QR code thanh toán',
+        data: confirmationSlip
+      });
+    } catch (error) {
+      console.error('Error getting confirmation slip:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Lỗi khi lấy phiếu xác nhận',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * Verify OTP and confirm booking (DEPRECATED - Không còn sử dụng)
    */
   static async verifyOTP(req: Request, res: Response) {
     try {

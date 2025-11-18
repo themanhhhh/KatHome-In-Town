@@ -1,14 +1,14 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn } from "typeorm";
-import { NhanVien } from "./NhanVien";
+import { User } from "./User";
 
 @Entity()
 export class TheoDoiCaLam {
   @PrimaryColumn()
   maChiTiet!: string;
 
-  @ManyToOne(() => NhanVien)
-  @JoinColumn({ name: 'nhanVienMaNhanVien' })
-  nhanVien!: NhanVien;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  nhanVien!: User;
 
   @Column({ type: "date" })
   ngayLam!: Date;

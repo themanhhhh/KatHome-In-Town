@@ -11,11 +11,12 @@ export const AppDataSource = new DataSource({
   database: "postgres",
   synchronize: false,   // Tắt auto-sync, sử dụng migrations
   logging: true,
-  entities: [
-    entities.User, entities.CoSo, entities.Phong, entities.HangPhong, entities.DonDatPhong, entities.ChiTietDonDatPhong, entities.DonGia,
-    entities.DichVu, entities.DonDatDichVu, entities.NhanVien, entities.ChucVu, entities.CaLam, entities.DangKyCaLam,
-    entities.TheoDoiCaLam, entities.KhachHang, entities.KhieuNai, entities.Revenue , entities.Report
-  ],
+    entities: [
+      entities.User, entities.CoSo, entities.Phong, entities.DonDatPhong, entities.ChiTietDonDatPhong,
+      entities.DichVu, entities.DonDatDichVu, entities.ChucVu,
+      entities.TheoDoiCaLam, entities.KhachHang, entities.KhieuNai, entities.Revenue, entities.Report,
+      entities.HoaDon
+    ],
   migrations: ["src/migrations/*.ts"], // Đường dẫn đến migrations
   migrationsTableName: "migrations", // Tên bảng lưu trữ migration history
 });

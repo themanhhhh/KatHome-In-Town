@@ -1,0 +1,12 @@
+{
+  "note": "Thêm các dependencies sau vào package.json của server:",
+  "dependencies": {
+    "nodemailer": "^6.9.7",
+    "qrcode": "^1.5.3"
+  },
+  "devDependencies": {
+    "@types/nodemailer": "^6.4.14",
+    "@types/qrcode": "^1.5.5"
+  }
+}
+

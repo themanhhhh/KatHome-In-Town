@@ -5,13 +5,12 @@ import { Button } from './button/button';
 import { Card } from './card/card';
 import { X, Save } from 'lucide-react';
 import { ImageUpload } from './image-upload';
-import { ApiRoom, ApiRoomType } from '../../types/api';
+import { ApiRoom } from '../../types/api';
 import { phongApi } from '../../lib/api';
 import { toast } from 'sonner';
 
 interface RoomFormProps {
   room?: ApiRoom | null;
-  roomTypes: ApiRoomType[];
   coSoList: Array<{
     maCoSo: string;
     tenCoSo: string;
@@ -23,10 +22,13 @@ interface RoomFormProps {
   onSuccess: (isEdit: boolean) => void;
 }
 
-export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: RoomFormProps) {
+export function RoomForm({ room, coSoList, onClose, onSuccess }: RoomFormProps) {
   const [formData, setFormData] = useState({
+    tenPhong: '',
     moTa: '',
-    hangPhongMaHangPhong: '',
+    sucChua: '2',
+    donGia4h: '',
+    donGiaQuaDem: '',
     coSoMaCoSo: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,8 +37,11 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
   useEffect(() => {
     if (room) {
       setFormData({
+        tenPhong: room.tenPhong || '',
         moTa: room.moTa || '',
-        hangPhongMaHangPhong: room.hangPhong?.maHangPhong || '',
+        sucChua: String(room.sucChua || 2),
+        donGia4h: String(room.donGia4h || ''),
+        donGiaQuaDem: String(room.donGiaQuaDem || ''),
         coSoMaCoSo: room.coSo?.maCoSo || ''
       });
     }
@@ -49,9 +54,28 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
     try {
       const isEdit = !!room;
       
+      // Validate prices
+      if (parseFloat(formData.donGia4h) <= 0 || parseFloat(formData.donGiaQuaDem) <= 0) {
+        toast.error('Đơn giá không hợp lệ', {
+          description: 'Đơn giá phải lớn hơn 0.'
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Transform data
+      const payload = {
+        tenPhong: formData.tenPhong,
+        moTa: formData.moTa,
+        sucChua: parseInt(formData.sucChua),
+        donGia4h: parseFloat(formData.donGia4h),
+        donGiaQuaDem: parseFloat(formData.donGiaQuaDem),
+        coSoMaCoSo: formData.coSoMaCoSo
+      };
+      
       if (room) {
         // Update existing room
-        await phongApi.update(room.maPhong, formData);
+        await phongApi.update(room.maPhong, payload);
         if (imageFile) {
           await phongApi.uploadImage(room.maPhong, imageFile);
         }
@@ -61,9 +85,9 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
       } else {
         // Create new room
         if (imageFile) {
-          await phongApi.createWithImage(formData, imageFile);
+          await phongApi.createWithImage(payload, imageFile);
         } else {
-          await phongApi.create(formData);
+          await phongApi.create(payload);
         }
         toast.success('Tạo phòng thành công!', {
           description: `Phòng mới đã được tạo thành công.`
@@ -120,36 +144,71 @@ export function RoomForm({ room, roomTypes, coSoList, onClose, onSuccess }: Room
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Mô tả phòng</label>
+                <label className="block text-sm font-medium mb-2">Tên phòng *</label>
                 <input
                   type="text"
-                  value={formData.moTa}
-                  onChange={(e) => setFormData({ ...formData, moTa: e.target.value })}
+                  value={formData.tenPhong}
+                  onChange={(e) => setFormData({ ...formData, tenPhong: e.target.value })}
+                  className="w-full p-2 border rounded-md"
+                  placeholder="VD: Phòng đôi tiêu chuẩn"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Sức chứa (người) *</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.sucChua}
+                  onChange={(e) => setFormData({ ...formData, sucChua: e.target.value })}
                   className="w-full p-2 border rounded-md"
                   required
                 />
               </div>
 
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Hạng phòng</label>
-                <select
-                  value={formData.hangPhongMaHangPhong}
-                  onChange={(e) => setFormData({ ...formData, hangPhongMaHangPhong: e.target.value })}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium mb-2">Mô tả phòng *</label>
+                <textarea
+                  value={formData.moTa}
+                  onChange={(e) => setFormData({ ...formData, moTa: e.target.value })}
                   className="w-full p-2 border rounded-md"
+                  rows={3}
+                  placeholder="Mô tả chi tiết về phòng..."
                   required
-                >
-                  <option value="">Chọn hạng phòng</option>
-                  {roomTypes.map((type) => (
-                    <option key={type.maHangPhong} value={type.maHangPhong}>
-                      {type.tenHangPhong}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Cơ sở</label>
+                <label className="block text-sm font-medium mb-2">Đơn giá 4 giờ (VND) *</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={formData.donGia4h}
+                  onChange={(e) => setFormData({ ...formData, donGia4h: e.target.value })}
+                  className="w-full p-2 border rounded-md"
+                  placeholder="VD: 500000"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Đơn giá qua đêm (VND) *</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={formData.donGiaQuaDem}
+                  onChange={(e) => setFormData({ ...formData, donGiaQuaDem: e.target.value })}
+                  className="w-full p-2 border rounded-md"
+                  placeholder="VD: 1000000"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Cơ sở *</label>
                 <select
                   value={formData.coSoMaCoSo}
                   onChange={(e) => setFormData({ ...formData, coSoMaCoSo: e.target.value })}

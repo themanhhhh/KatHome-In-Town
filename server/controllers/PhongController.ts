@@ -11,7 +11,7 @@ export class PhongController {
   static async getAll(req: Request, res: Response) {
     try {
       const phongs = await phongRepository.find({
-        relations: ['hangPhong', 'coSo']
+        relations: ['coSo']
       });
       res.json(phongs);
     } catch (error) {
@@ -22,7 +22,7 @@ export class PhongController {
     try {
       const phong = await phongRepository.findOne({
         where: { maPhong: req.params.id },
-        relations: ['hangPhong', 'coSo']
+        relations: ['coSo']
       });
       if (!phong) {
         return res.status(404).json({ message: 'Không tìm thấy phòng' });
@@ -34,12 +34,12 @@ export class PhongController {
   }
   static async create(req: Request, res: Response) {
     try {
-      const { moTa, hinhAnh, hangPhongMaHangPhong, coSoMaCoSo } = req.body;
+      const { tenPhong, moTa, sucChua, donGia4h, donGiaQuaDem, hinhAnh, coSoMaCoSo } = req.body;
       
       // Validate required fields
-      if (!moTa || !hangPhongMaHangPhong || !coSoMaCoSo) {
+      if (!tenPhong || !moTa || !sucChua || !donGia4h || !donGiaQuaDem || !coSoMaCoSo) {
         return res.status(400).json({ 
-          message: 'Thiếu thông tin bắt buộc: moTa, hangPhongMaHangPhong, coSoMaCoSo' 
+          message: 'Thiếu thông tin bắt buộc: tenPhong, moTa, sucChua, donGia4h, donGiaQuaDem, coSoMaCoSo' 
         });
       }
       
@@ -49,22 +49,26 @@ export class PhongController {
       
       const phong = phongRepository.create({
         maPhong,
+        tenPhong,
         moTa,
+        sucChua: parseInt(sucChua),
+        donGia4h: parseFloat(donGia4h),
+        donGiaQuaDem: parseFloat(donGiaQuaDem),
         hinhAnh
       });
       
-      const result = await phongRepository.save(phong);
-      
       // Update with relations using raw SQL
       await phongRepository.query(
-        `UPDATE phong SET "hangPhongMaHangPhong" = $1, "coSoMaCoSo" = $2 WHERE "maPhong" = $3`,
-        [hangPhongMaHangPhong, coSoMaCoSo, maPhong]
+        `UPDATE phong SET "coSoMaCoSo" = $1 WHERE "maPhong" = $2`,
+        [coSoMaCoSo, maPhong]
       );
+      
+      const result = await phongRepository.save(phong);
       
       // Return the updated phong
       const updatedPhong = await phongRepository.findOne({
         where: { maPhong },
-        relations: ['hangPhong', 'coSo']
+        relations: ['coSo']
       });
       
       res.status(201).json(updatedPhong);

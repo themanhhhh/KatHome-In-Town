@@ -28,13 +28,6 @@ export class SeedAllSampleData1759701000000 implements MigrationInterface {
       ON CONFLICT ("maKhachHang") DO NOTHING;
     `);
 
-    // CaLam
-    await queryRunner.query(`
-      INSERT INTO ca_lam ("maCaLam", "khungGio") VALUES
-      ('C1', '1'), ('C2', '2'), ('C3', '3')
-      ON CONFLICT ("maCaLam") DO NOTHING;
-    `);
-
     // NhanVien
     await queryRunner.query(`
       INSERT INTO nhan_vien ("maNhanVien", "chucVuMaChucVu", ten, "ngaySinh", "gioiTinh", "diaChi", email, sdt, "maSoThue", "ngayBatDau") VALUES
@@ -86,14 +79,6 @@ export class SeedAllSampleData1759701000000 implements MigrationInterface {
       ON CONFLICT (id) DO NOTHING;
     `);
 
-    // DangKyCaLam
-    await queryRunner.query(`
-      INSERT INTO dang_ky_ca_lam ("maDangKy", "nhanVienMaNhanVien", "caLamMaCaLam", "ngayLam") VALUES
-      ('DK001', 'NV001', 'C1', '2025-10-01'),
-      ('DK002', 'NV002', 'C2', '2025-10-01')
-      ON CONFLICT ("maDangKy") DO NOTHING;
-    `);
-
     // TheoDoiCaLam
     await queryRunner.query(`
       INSERT INTO theo_doi_ca_lam ("maChiTiet", "nhanVienMaNhanVien", "ngayLam", "gioVao", "gioRa") VALUES
@@ -114,14 +99,12 @@ export class SeedAllSampleData1759701000000 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`DELETE FROM khieu_nai WHERE "maKhieuNai" IN ('KN001','KN002');`);
     await queryRunner.query(`DELETE FROM theo_doi_ca_lam WHERE "maChiTiet" IN ('TD001','TD002');`);
-    await queryRunner.query(`DELETE FROM dang_ky_ca_lam WHERE "maDangKy" IN ('DK001','DK002');`);
     await queryRunner.query(`DELETE FROM don_dat_dich_vu WHERE id IN ('00000000-0000-0000-0000-00000000d001','00000000-0000-0000-0000-00000000d002');`);
     await queryRunner.query(`DELETE FROM chi_tiet_don_dat_phong WHERE "maChiTiet" IN ('CT001','CT002');`);
     await queryRunner.query(`DELETE FROM don_dat_phong WHERE "maDatPhong" IN ('DDP001','DDP002');`);
     await queryRunner.query(`DELETE FROM don_gia WHERE ("maHangPhong","donViTinh") IN (('VIP','4h'),('VIP','quaDem'),('STD','4h'),('STD','quaDem'));`);
     await queryRunner.query(`DELETE FROM dich_vu WHERE "maDichVu" IN ('DV001','DV002','DV003');`);
     await queryRunner.query(`DELETE FROM nhan_vien WHERE "maNhanVien" IN ('NV001','NV002');`);
-    await queryRunner.query(`DELETE FROM ca_lam WHERE "maCaLam" IN ('C1','C2','C3');`);
     await queryRunner.query(`DELETE FROM khach_hang WHERE "maKhachHang" IN ('KH001','KH002');`);
     await queryRunner.query(`DELETE FROM chuc_vu WHERE "maChucVu" IN ('QL','LT');`);
     await queryRunner.query(`DELETE FROM "user" WHERE id IN ('00000000-0000-0000-0000-000000000001','00000000-0000-0000-0000-000000000002');`);

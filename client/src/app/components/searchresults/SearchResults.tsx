@@ -17,9 +17,7 @@ import {
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import {
   AvailabilityRoom,
-  DonGia,
   availabilityApi,
-  donGiaApi,
 } from "@/lib/api";
 
 interface SearchResultsProps {
@@ -49,7 +47,6 @@ interface UiRoom {
   description?: string;
   available: boolean;
   location?: string;
-  hangPhongCode?: string;
 }
 
 export function SearchResults({
@@ -80,56 +77,18 @@ export function SearchResults({
           return;
         }
 
-        let fallbackPriceMap: Record<string, Record<string, number>> = {};
-        const needsFallback = (data || []).some(
-          (room) => !(room.hangPhong?.donGia && room.hangPhong.donGia.length)
-        );
-
-        if (needsFallback) {
-          const priceList = await donGiaApi.getAll();
-          if (!isMounted) {
-            return;
-          }
-
-          fallbackPriceMap = (priceList as DonGia[]).reduce<
-            Record<string, Record<string, number>>
-          >((acc, item) => {
-            if (!acc[item.maHangPhong]) {
-              acc[item.maHangPhong] = {};
-            }
-            acc[item.maHangPhong][item.donViTinh] = item.donGia;
-            return acc;
-          }, {});
-        }
-
         const mapped: UiRoom[] = (data || []).map((room: AvailabilityRoom) => {
-          const hangPhongCode = room.hangPhong?.maHangPhong;
-
-          const inlinePrice = (room.hangPhong?.donGia || []).reduce<
-            Record<string, number>
-          >((acc, item) => {
-            acc[item.donViTinh] = item.donGia;
-            return acc;
-          }, {});
-
-          const priceByUnit =
-            Object.keys(inlinePrice).length > 0
-              ? inlinePrice
-              : hangPhongCode
-              ? fallbackPriceMap[hangPhongCode]
-              : undefined;
-
-          const price4h = priceByUnit?.["4h"] ?? 0;
-          const priceOvernight = priceByUnit?.["quaDem"] ?? price4h;
-          const capacity =
-            room.hangPhong?.sucChua ?? Math.max(2, searchData.guests || 1);
+          const price4h = room.donGia4h ?? 0;
+          const priceOvernight = room.donGiaQuaDem ?? price4h;
+          const capacity = room.sucChua ?? Math.max(2, searchData.guests || 1);
+          
           return {
             id: room.maPhong,
-            name: room.moTa || room.hangPhong?.tenHangPhong || `Phong ${room.maPhong}`,
-            type: room.hangPhong?.tenHangPhong || "Phong",
+            name: room.tenPhong || room.moTa || `Phong ${room.maPhong}`,
+            type: room.tenPhong || "Phong",
             price: price4h,
             originalPrice: priceOvernight,
-            image: room.hinhAnh || room.hangPhong?.hinhAnh,
+            image: room.hinhAnh,
             maxGuests: capacity,
             beds: Math.max(1, Math.ceil(capacity / 2)),
             bathrooms: 1,
@@ -137,10 +96,9 @@ export function SearchResults({
             amenities: [],
             rating: undefined,
             reviews: undefined,
-            description: room.moTa || room.hangPhong?.moTa,
+            description: room.moTa,
             available: true,
             location: room.coSo?.tenCoSo,
-            hangPhongCode,
           };
         });
 

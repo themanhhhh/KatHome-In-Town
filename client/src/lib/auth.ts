@@ -19,6 +19,21 @@ export interface User {
   isEmailVerified: boolean;
   createdAt: string;
   updatedAt: string;
+  // Thông tin nhân viên (nếu có)
+  maNhanVien?: string;
+  ten?: string;
+  ngaySinh?: string;
+  gioiTinh?: string;
+  diaChi?: string;
+  maSoThue?: string;
+  ngayBatDau?: string;
+  ngayNghi?: string;
+  hinhAnh?: string;
+  avatar?: string;
+  chucVu?: {
+    maChucVu: string;
+    tenChucVu: string;
+  };
 }
 
 export interface RegisterData {

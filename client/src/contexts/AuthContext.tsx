@@ -9,6 +9,10 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isStaff: boolean; // Là nhân viên (có maNhanVien)
+  isManager: boolean; // Là quản lý (chucVu = 'QL')
+  isReceptionist: boolean; // Là lễ tân (chucVu = 'LT')
+  canManage: boolean; // Có quyền quản lý (admin hoặc quản lý)
   
   // Auth actions
   register: (data: RegisterData) => Promise<AuthResponse>;
@@ -119,12 +123,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return await AuthAPI.resetPassword(resetToken, matKhauMoi);
   };
 
+  // Tính toán các quyền dựa trên user
+  const isAdmin = !!user && user.vaiTro === 'admin';
+  const isStaff = !!user && !!user.maNhanVien;
+  const isManager = !!user && user.chucVu?.maChucVu === 'QL';
+  const isReceptionist = !!user && user.chucVu?.maChucVu === 'LT';
+  const canManage = isAdmin || isManager;
+
   const value: AuthContextType = {
     user,
     token,
     isLoading,
     isAuthenticated: !!token && !!user,
-    isAdmin: !!user && user.vaiTro === 'admin',
+    isAdmin,
+    isStaff,
+    isManager,
+    isReceptionist,
+    canManage,
     register,
     login,
     verifyEmail,

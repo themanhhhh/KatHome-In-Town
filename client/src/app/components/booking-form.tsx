@@ -14,6 +14,11 @@ interface BookingFormProps {
   onSuccess: () => void;
 }
 
+const formatPrice = (value: number) => {
+  if (!value) return "0 VND";
+  return `${new Intl.NumberFormat("vi-VN").format(value)} VND`;
+};
+
 export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
   const [formData, setFormData] = useState({
     // Basic booking info
@@ -446,7 +451,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                   <option value="">Chọn phòng</option>
                   {rooms.map((room) => (
                     <option key={room.maPhong} value={room.maPhong}>
-                      {room.moTa} - {room.hangPhong?.tenHangPhong} - 500,000đ/đêm
+                      {room.tenPhong || room.moTa} - {formatPrice(room.donGiaQuaDem || room.donGia4h || 0)}/đêm
                     </option>
                   ))}
                 </select>

@@ -69,21 +69,21 @@ const menuItems = [
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const { user, isAuthenticated, isAdmin, isLoading, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, canManage, isLoading, logout } = useAuth();
 
-  // Redirect nếu không phải admin
+  // Redirect nếu không có quyền quản lý (admin hoặc quản lý)
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
         window.location.href = '/login';
         return;
       }
-      if (!isAdmin) {
+      if (!canManage) {
         window.location.href = '/';
         return;
       }
     }
-  }, [isAuthenticated, isAdmin, isLoading]);
+  }, [isAuthenticated, canManage, isLoading]);
 
   // Open sidebar by default on desktop
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return <LoadingSpinner text="Đang tải..." />;
   }
 
-  if (!isAuthenticated || !isAdmin) {
+  if (!isAuthenticated || !canManage) {
     return null; // đã redirect ở trên
   }
 

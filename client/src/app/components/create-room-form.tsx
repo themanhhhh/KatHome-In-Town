@@ -8,8 +8,8 @@ import { Input } from './input';
 import { Label } from './label';
 import { Textarea } from './textarea';
 import { Upload, X, CheckCircle } from 'lucide-react';
-import { phongApi, hangPhongApi, cosoApi } from '../../lib/api';
-import { ApiHangPhong, ApiCoSo } from '../../types/api';
+import { phongApi, cosoApi } from '../../lib/api';
+import { ApiCoSo } from '../../types/api';
 import { toast } from 'sonner';
 
 interface CreateRoomFormProps {
@@ -19,29 +19,27 @@ interface CreateRoomFormProps {
 
 export function CreateRoomForm({ onSuccess, onCancel }: CreateRoomFormProps) {
   const [formData, setFormData] = useState({
+    tenPhong: '',
     moTa: '',
-    hangPhongMaHangPhong: '',
+    sucChua: '2',
+    donGia4h: '',
+    donGiaQuaDem: '',
     coSoMaCoSo: ''
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hangPhongs, setHangPhongs] = useState<ApiHangPhong[]>([]);
   const [cosos, setCosos] = useState<ApiCoSo[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [hangPhongsData, cososData] = await Promise.all([
-          hangPhongApi.getAll(),
-          cosoApi.getAll()
-        ]);
-        setHangPhongs(Array.isArray(hangPhongsData) ? hangPhongsData : []);
+        const cososData = await cosoApi.getAll();
         setCosos(Array.isArray(cososData) ? cososData : []);
       } catch (err) {
         console.error('Error loading data:', err);
         toast.error('Lỗi khi tải dữ liệu', {
-          description: 'Không thể tải danh sách hạng phòng và cơ sở.'
+          description: 'Không thể tải danh sách cơ sở.'
         });
       }
     };
@@ -92,9 +90,18 @@ export function CreateRoomForm({ onSuccess, onCancel }: CreateRoomFormProps) {
 
     try {
       // Validate required fields
-      if (!formData.moTa || !formData.hangPhongMaHangPhong || !formData.coSoMaCoSo) {
+      if (!formData.tenPhong || !formData.moTa || !formData.sucChua || !formData.donGia4h || !formData.donGiaQuaDem || !formData.coSoMaCoSo) {
         toast.error('Thiếu thông tin bắt buộc', {
-          description: 'Vui lòng điền đầy đủ mô tả, hạng phòng và cơ sở.'
+          description: 'Vui lòng điền đầy đủ tất cả các trường bắt buộc.'
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate prices
+      if (parseFloat(formData.donGia4h) <= 0 || parseFloat(formData.donGiaQuaDem) <= 0) {
+        toast.error('Đơn giá không hợp lệ', {
+          description: 'Đơn giá phải lớn hơn 0.'
         });
         setIsSubmitting(false);
         return;
@@ -104,8 +111,11 @@ export function CreateRoomForm({ onSuccess, onCancel }: CreateRoomFormProps) {
       
       // Transform data to match backend expectations
       const payload = {
+        tenPhong: formData.tenPhong,
         moTa: formData.moTa,
-        hangPhongMaHangPhong: formData.hangPhongMaHangPhong,
+        sucChua: parseInt(formData.sucChua),
+        donGia4h: parseFloat(formData.donGia4h),
+        donGiaQuaDem: parseFloat(formData.donGiaQuaDem),
         coSoMaCoSo: formData.coSoMaCoSo
       };
       
@@ -119,7 +129,7 @@ export function CreateRoomForm({ onSuccess, onCancel }: CreateRoomFormProps) {
       });
       
       // Reset form
-      setFormData({ moTa: '', hangPhongMaHangPhong: '', coSoMaCoSo: '' });
+      setFormData({ tenPhong: '', moTa: '', sucChua: '2', donGia4h: '', donGiaQuaDem: '', coSoMaCoSo: '' });
       setImageFile(null);
       setImagePreview(null);
       
@@ -162,11 +172,11 @@ export function CreateRoomForm({ onSuccess, onCancel }: CreateRoomFormProps) {
           {/* Thông tin cơ bản */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="moTa">Mô tả phòng *</Label>
+              <Label htmlFor="tenPhong">Tên phòng *</Label>
               <Input
-                id="moTa"
-                name="moTa"
-                value={formData.moTa}
+                id="tenPhong"
+                name="tenPhong"
+                value={formData.tenPhong}
                 onChange={handleInputChange}
                 placeholder="VD: Phòng đôi tiêu chuẩn"
                 required
@@ -174,22 +184,59 @@ export function CreateRoomForm({ onSuccess, onCancel }: CreateRoomFormProps) {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="hangPhongMaHangPhong">Hạng phòng *</Label>
-              <select
-                id="hangPhongMaHangPhong"
-                name="hangPhongMaHangPhong"
-                value={formData.hangPhongMaHangPhong}
+              <Label htmlFor="sucChua">Sức chứa (người) *</Label>
+              <Input
+                id="sucChua"
+                name="sucChua"
+                type="number"
+                min="1"
+                value={formData.sucChua}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="VD: 2"
                 required
-              >
-                <option value="">Chọn hạng phòng</option>
-                {hangPhongs.map((hangPhong) => (
-                  <option key={hangPhong.maHangPhong} value={hangPhong.maHangPhong}>
-                    {hangPhong.tenHangPhong} - {hangPhong.sucChua} người
-                  </option>
-                ))}
-              </select>
+              />
+            </div>
+            
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="moTa">Mô tả phòng *</Label>
+              <Textarea
+                id="moTa"
+                name="moTa"
+                value={formData.moTa}
+                onChange={handleInputChange}
+                placeholder="Mô tả chi tiết về phòng..."
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="donGia4h">Đơn giá 4 giờ (VND) *</Label>
+              <Input
+                id="donGia4h"
+                name="donGia4h"
+                type="number"
+                min="0"
+                step="1000"
+                value={formData.donGia4h}
+                onChange={handleInputChange}
+                placeholder="VD: 500000"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="donGiaQuaDem">Đơn giá qua đêm (VND) *</Label>
+              <Input
+                id="donGiaQuaDem"
+                name="donGiaQuaDem"
+                type="number"
+                min="0"
+                step="1000"
+                value={formData.donGiaQuaDem}
+                onChange={handleInputChange}
+                placeholder="VD: 1000000"
+                required
+              />
             </div>
             
             <div className="space-y-2">

@@ -7,7 +7,7 @@ const coSoRepository = AppDataSource.getRepository(CoSo);
 export class CoSoController {
   static async getAll(req: Request, res: Response) {
     try {
-      const coSos = await coSoRepository.find({ relations: ['phong', 'phong.hangPhong'] });
+      const coSos = await coSoRepository.find({ relations: ['phong'] });
       res.json(coSos);
     } catch (error) {
       res.status(500).json({ message: 'Lỗi khi lấy danh sách cơ sở', error });
@@ -18,7 +18,7 @@ export class CoSoController {
     try {
       const coSo = await coSoRepository.findOne({
         where: { maCoSo: req.params.id },
-        relations: ['phong', 'phong.hangPhong']
+        relations: ['phong']
       });
       if (!coSo) {
         return res.status(404).json({ message: 'Không tìm thấy cơ sở' });

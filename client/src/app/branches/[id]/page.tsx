@@ -14,12 +14,12 @@ interface CoSo {
   sdt: string;
   phong?: Array<{
     maPhong: string;
-    hangPhong: {
-      maHangPhong: string;
-      tenHangPhong: string;
-      sucChua: number;
-      moTa: string;
-    };
+    tenPhong: string;
+    moTa: string;
+    sucChua: number;
+    donGia4h: number;
+    donGiaQuaDem: number;
+    hinhAnh?: string;
   }>;
 }
 

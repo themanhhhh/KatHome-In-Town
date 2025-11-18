@@ -17,12 +17,12 @@ interface CoSo {
   sdt: string;
   phong?: Array<{
     maPhong: string;
-    hangPhong: {
-      maHangPhong: string;
-      tenHangPhong: string;
-      sucChua: number;
-      moTa: string;
-    };
+    tenPhong: string;
+    moTa: string;
+    sucChua: number;
+    donGia4h: number;
+    donGiaQuaDem: number;
+    hinhAnh?: string;
   }>;
 }
 
@@ -32,18 +32,24 @@ interface BranchDetailProps {
 }
 
 export function BranchDetail({ coSo }: BranchDetailProps) {
-  // Group rooms by room type
+  // Group rooms by room name (tenPhong)
   const roomsByType = coSo.phong?.reduce((acc, phong) => {
-    const typeName = phong.hangPhong.tenHangPhong;
+    const typeName = phong.tenPhong || 'Chưa có tên';
     if (!acc[typeName]) {
       acc[typeName] = {
-        info: phong.hangPhong,
+        info: {
+          tenPhong: phong.tenPhong,
+          sucChua: phong.sucChua,
+          moTa: phong.moTa,
+          donGia4h: phong.donGia4h,
+          donGiaQuaDem: phong.donGiaQuaDem
+        },
         rooms: []
       };
     }
     acc[typeName].rooms.push(phong);
     return acc;
-  }, {} as Record<string, { info: { maHangPhong: string; tenHangPhong: string; sucChua: number; moTa: string; }, rooms: Array<{ maPhong: string; hangPhong: { maHangPhong: string; tenHangPhong: string; sucChua: number; moTa: string; }; }> }>);
+  }, {} as Record<string, { info: { tenPhong: string; sucChua: number; moTa: string; donGia4h: number; donGiaQuaDem: number; }, rooms: Array<{ maPhong: string; tenPhong: string; moTa: string; sucChua: number; donGia4h: number; donGiaQuaDem: number; hinhAnh?: string; }> }>);
 
   return (
     <div style={{ backgroundColor: '#fef5f6' }}>

@@ -47,9 +47,9 @@ const AdminPage = () => {
   const totalBookings = (bookings || []).length;
   const totalUsers = (users || []).length;
   const totalCustomers = (customers || []).length;
-  const roomsWithHangPhong = (rooms || []).filter(room => room.hangPhong?.tenHangPhong).length;
+  const roomsWithTenPhong = (rooms || []).filter(room => room.tenPhong).length;
   const roomsWithCoSo = (rooms || []).filter(room => room.coSo?.tenCoSo).length;
-  const occupancyRate = (rooms || []).length > 0 ? (roomsWithHangPhong / (rooms || []).length) * 100 : 0;
+  const occupancyRate = (rooms || []).length > 0 ? (roomsWithTenPhong / (rooms || []).length) * 100 : 0;
 
   const stats = {
     totalBookings,
@@ -58,7 +58,7 @@ const AdminPage = () => {
     occupancyRate: Math.round(occupancyRate),
     monthlyGrowth: 12.5,
     averageRating: 4.8,
-    roomsWithHangPhong,
+    roomsWithTenPhong,
     roomsWithCoSo
   };
 
@@ -206,8 +206,8 @@ const AdminPage = () => {
                 <XCircle className="w-5 h-5 text-red-600" />
               </div>
               <div style={{ flex: 1 }}>
-                <div className={Style.statNumber}>{roomsWithHangPhong}</div>
-                <div className={Style.statLabel}>Có hạng phòng</div>
+                <div className={Style.statNumber}>{roomsWithTenPhong}</div>
+                <div className={Style.statLabel}>Có tên phòng</div>
               </div>
             </div>
           </div>

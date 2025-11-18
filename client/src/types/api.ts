@@ -1,14 +1,12 @@
 // API Response Types
 export interface ApiRoom {
   maPhong: string;
+  tenPhong: string;
   moTa: string;
+  sucChua: number;
+  donGia4h: number;
+  donGiaQuaDem: number;
   hinhAnh?: string;
-  hangPhong?: {
-    maHangPhong: string;
-    tenHangPhong: string;
-    sucChua: number;
-    hinhAnh?: string;
-  };
   coSo?: {
     maCoSo: string;
     tenCoSo: string;
@@ -85,6 +83,20 @@ export interface ApiUser {
   avatar?: string;
   createdAt: string;
   updatedAt: string;
+  // Thông tin nhân viên (nếu có)
+  maNhanVien?: string;
+  ten?: string;
+  ngaySinh?: string;
+  gioiTinh?: string;
+  diaChi?: string;
+  maSoThue?: string;
+  ngayBatDau?: string;
+  ngayNghi?: string;
+  hinhAnh?: string;
+  chucVu?: {
+    maChucVu: string;
+    tenChucVu: string;
+  };
 }
 
 export interface ApiNhanVien {

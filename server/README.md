@@ -143,8 +143,6 @@ Server sử dụng TypeORM với các entities:
 - `ChiTietDonDatPhong` - Chi tiết đơn đặt phòng
 - `DonGia` - Đơn giá theo hạng phòng
 - `DonDatDichVu` - Đơn đặt dịch vụ
-- `CaLam` - Ca làm việc
-- `DangKyCaLam` - Đăng ký ca làm
 - `TheoDoiCaLam` - Theo dõi ca làm
 - `KhieuNai` - Khiếu nại từ khách hàng
 

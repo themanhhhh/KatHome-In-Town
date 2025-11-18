@@ -25,20 +25,16 @@ import {
   Shield,
 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
-import { DonGia, phongApi, donGiaApi } from "@/lib/api";
+import { phongApi } from "@/lib/api";
 
 interface PhongDetail {
   maPhong: string;
+  tenPhong: string;
   moTa: string;
+  sucChua: number;
+  donGia4h: number;
+  donGiaQuaDem: number;
   hinhAnh?: string;
-  hangPhong?: {
-    maHangPhong: string;
-    tenHangPhong: string;
-    moTa?: string;
-    sucChua?: number;
-    hinhAnh?: string;
-    donGia?: DonGia[];
-  };
   coSo?: {
     maCoSo: string;
     tenCoSo: string;
@@ -138,50 +134,11 @@ export function RoomDetail({
 
         setRoom(data);
 
-        if (data?.hangPhong?.maHangPhong) {
-          const code = data.hangPhong.maHangPhong;
-          const inlinePrice = (data.hangPhong.donGia || []).reduce<
-            Record<string, number>
-          >((acc, item) => {
-            acc[item.donViTinh] = item.donGia;
-            return acc;
-          }, {});
-
-          let fourHour: number = inlinePrice["4h"] ?? 0;
-          let overnight: number = inlinePrice["quaDem"] ?? 0;
-
-          // Check if we need to fetch fallback prices
-          const needsFourHourFallback = !inlinePrice["4h"];
-          const needsOvernightFallback = !inlinePrice["quaDem"];
-
-          if (needsFourHourFallback || needsOvernightFallback) {
-            const [fallback4h, fallbackOvernight] = await Promise.all([
-              needsFourHourFallback
-                ? donGiaApi.getById(code, "4h").catch(() => null)
-                : Promise.resolve<DonGia | null>(null),
-              needsOvernightFallback
-                ? donGiaApi.getById(code, "quaDem").catch(() => null)
-                : Promise.resolve<DonGia | null>(null),
-            ]);
-
-            if (!active) {
-              return;
-            }
-
-            if (needsFourHourFallback) {
-              fourHour = (fallback4h as DonGia | null)?.donGia ?? 0;
-            }
-            if (needsOvernightFallback) {
-              overnight = (fallbackOvernight as DonGia | null)?.donGia ?? 0;
-            }
-          }
-
-          const resolvedFourHour = fourHour ?? 0;
-          const resolvedOvernight = overnight ?? resolvedFourHour;
-
+        // Sử dụng đơn giá trực tiếp từ phong
+        if (data) {
           setPricing({
-            fourHour: resolvedFourHour,
-            overnight: resolvedOvernight,
+            fourHour: data.donGia4h ?? 0,
+            overnight: data.donGiaQuaDem ?? data.donGia4h ?? 0,
           });
         } else if (active) {
           setPricing({ fourHour: 0, overnight: 0 });
@@ -207,7 +164,7 @@ export function RoomDetail({
 
   const imageSources = useMemo(() => {
     if (!room) return [];
-    const candidates = [room.hinhAnh, room.hangPhong?.hinhAnh].filter(
+    const candidates = [room.hinhAnh].filter(
       (src): src is string => Boolean(src && src.trim())
     );
     return Array.from(new Set(candidates));
@@ -223,9 +180,9 @@ export function RoomDetail({
 
   const hasImages = imageSources.length > 0;
   const displayName =
-    room?.moTa || room?.hangPhong?.tenHangPhong || `Phong ${roomId}`;
-  const displayType = room?.hangPhong?.tenHangPhong || "Phong";
-  const capacity = room?.hangPhong?.sucChua ?? Math.max(2, guests || 1);
+    room?.tenPhong || room?.moTa || `Phong ${roomId}`;
+  const displayType = room?.tenPhong || "Phong";
+  const capacity = room?.sucChua ?? Math.max(2, guests || 1);
   const beds = Math.max(1, Math.ceil(capacity / 2));
   const pricePerNight = pricing.overnight || pricing.fourHour;
   const nights = useMemo(
@@ -249,7 +206,7 @@ export function RoomDetail({
       : "Chua co thong tin co so";
 
   const description =
-    room?.moTa || room?.hangPhong?.moTa || "Thong tin ve phong se duoc cap nhat som.";
+    room?.moTa || "Thong tin ve phong se duoc cap nhat som.";
 
 const amenitiesToShow = useMemo(() => {
   const list = (room as unknown as { tienNghi?: string[] } | null)?.tienNghi;

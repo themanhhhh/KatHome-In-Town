@@ -1,10 +1,14 @@
 import "reflect-metadata";
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from "typeorm";
+import { ChucVu } from "./ChucVu";
 
 @Entity()
 export class User {
   @PrimaryGeneratedColumn("uuid")
   id!: string;
+
+  @Column({ length: 50, unique: true, nullable: true })
+  maNhanVien?: string;
 
   @Column({ length: 50, unique: true })
   taiKhoan!: string;
@@ -21,6 +25,33 @@ export class User {
   @Column({ nullable: true })
   soDienThoai?: string;
 
+  // Thông tin nhân viên (từ NhanVien)
+  @Column({ length: 50, nullable: true })
+  ten?: string;
+
+  @Column({ type: "date", nullable: true })
+  ngaySinh?: Date;
+
+  @Column({ type: "enum", enum: ["Nam", "Nữ"], nullable: true })
+  gioiTinh?: string;
+
+  @Column({ length: 200, nullable: true })
+  diaChi?: string;
+
+  @ManyToOne(() => ChucVu, { nullable: true })
+  @JoinColumn({ name: 'chucVuMaChucVu' })
+  chucVu?: ChucVu;
+
+  @Column({ length: 50, nullable: true })
+  maSoThue?: string;
+
+  @Column({ type: "date", nullable: true })
+  ngayBatDau?: Date;
+
+  @Column({ type: "date", nullable: true })
+  ngayNghi?: Date;
+
+  // Authentication fields
   @Column({ default: false })
   isEmailVerified!: boolean;
 
@@ -38,6 +69,9 @@ export class User {
 
   @Column({ nullable: true })
   avatar?: string;
+
+  @Column({ nullable: true })
+  hinhAnh?: string;
 
   @CreateDateColumn()
   createdAt!: Date;

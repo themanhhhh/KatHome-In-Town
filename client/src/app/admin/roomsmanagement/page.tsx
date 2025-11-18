@@ -27,8 +27,8 @@ import {
 
 import Style from "../../styles/roomsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
-import { phongApi, hangPhongApi, coSoApi, donGiaApi } from "../../../lib/api";
-import { ApiRoom, ApiRoomType } from "../../../types/api";
+import { phongApi, coSoApi } from "../../../lib/api";
+import { ApiRoom } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { RoomForm } from "../../components/room-form";
 import { toast } from "sonner";
@@ -51,11 +51,6 @@ const RoomsManagementPage = () => {
     []
   );
 
-  const { data: roomTypes = [] } = useApi<ApiRoomType[]>(
-    () => hangPhongApi.getAll(),
-    []
-  );
-
   const { data: coSoList = [] } = useApi<Array<{
     maCoSo: string;
     tenCoSo: string;
@@ -67,22 +62,13 @@ const RoomsManagementPage = () => {
     []
   );
 
-  const { data: donGiaList = [] } = useApi<Array<{
-    maHangPhong: string;
-    donViTinh: string;
-    donGia: number;
-  }>>(
-    () => donGiaApi.getAll(),
-    []
-  );
-
 
   // Filter functions
   const filteredRooms = (rooms || []).filter(room => {
     const matchesSearch = room.moTa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (room.hangPhong?.tenHangPhong || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (room.tenPhong || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (room.coSo?.tenCoSo || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === "all" || room.hangPhong?.tenHangPhong === typeFilter;
+    const matchesType = typeFilter === "all" || room.tenPhong === typeFilter;
     
     return matchesSearch && matchesType;
   });
@@ -235,21 +221,16 @@ const RoomsManagementPage = () => {
     }).format(price);
   };
 
-  // Get room price from donGiaList
-  const getRoomPrice = (maHangPhong?: string) => {
-    if (!maHangPhong || !donGiaList || donGiaList.length === 0) return null;
-    
-    // Find price for this room type (prefer daily rate)
-    const priceItem = donGiaList.find(
-      item => item.maHangPhong === maHangPhong && 
-      (item.donViTinh === 'Ngày' || item.donViTinh === 'ngay')
-    );
-    
-    // Fallback to any price for this room type
-    const fallbackPrice = donGiaList.find(item => item.maHangPhong === maHangPhong);
-    
-    return priceItem?.donGia || fallbackPrice?.donGia || null;
+  // Get room price directly from room
+  const getRoomPrice = (room: ApiRoom) => {
+    return room.donGiaQuaDem || room.donGia4h || null;
   };
+  
+  // Get unique room types from rooms
+  const uniqueRoomTypes = React.useMemo(() => {
+    const types = new Set((rooms || []).map(r => r.tenPhong).filter(Boolean));
+    return Array.from(types).sort();
+  }, [rooms]);
 
 
   // Loading and error states
@@ -345,9 +326,9 @@ const RoomsManagementPage = () => {
                 className={`${Style.selectTrigger} ${Style.selectTriggerSmall}`}
               >
                 <option value="all">Tất cả</option>
-                {(roomTypes || []).map((type) => (
-                  <option key={type.maHangPhong} value={type.tenHangPhong}>
-                    {type.tenHangPhong}
+                {uniqueRoomTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
                   </option>
                 ))}
               </select>
@@ -372,10 +353,10 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(rooms || []).filter(r => r.hangPhong?.tenHangPhong).length}
+              {(rooms || []).filter(r => r.tenPhong).length}
             </div>
             <div className={Style.statLabel}>
-              Có hạng phòng
+              Có tên phòng
             </div>
           </div>
         </div>
@@ -480,12 +461,12 @@ const RoomsManagementPage = () => {
                       <div className={Style.priceInfo}>
                         <div className={Style.currentPrice}>
                           {(() => {
-                            const price = getRoomPrice(room.hangPhong?.maHangPhong);
-                            return price ? formatPrice(price) + '/ngày' : 'Chưa có giá';
+                            const price = getRoomPrice(room);
+                            return price ? formatPrice(price) + '/đêm' : 'Chưa có giá';
                           })()}
                         </div>
                         <span className={Style.roomType}>
-                          {room.hangPhong?.tenHangPhong || 'Chưa phân loại'}
+                          {room.tenPhong || 'Chưa có tên'}
                         </span>
                       </div>
                     </td>
@@ -493,7 +474,7 @@ const RoomsManagementPage = () => {
                       <div className={Style.roomDetails}>
                         <div className={Style.detailItem}>
                           <Users className={Style.detailIcon} />
-                          <span>{room.hangPhong?.sucChua || 0} khách</span>
+                          <span>{room.sucChua || 0} khách</span>
                         </div>
                         <div className={Style.detailItem}>
                           <Bed className={Style.detailIcon} />
@@ -550,9 +531,9 @@ const RoomsManagementPage = () => {
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.statusInfo}>
-                        <span className={Style.statusLabel}>Hạng:</span>
+                        <span className={Style.statusLabel}>Tên phòng:</span>
                         <span className={Style.statusValue}>
-                          {room.hangPhong?.tenHangPhong || 'N/A'}
+                          {room.tenPhong || 'N/A'}
                         </span>
                       </div>
                     </td>
@@ -641,7 +622,6 @@ const RoomsManagementPage = () => {
       {showRoomForm && (
         <RoomForm
           room={editingRoom}
-          roomTypes={roomTypes || []}
           coSoList={coSoList || []}
           onClose={() => {
             setShowRoomForm(false);

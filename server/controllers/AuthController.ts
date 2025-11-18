@@ -98,12 +98,14 @@ export class AuthController {
         });
       }
 
-      // Find user by username or email
+      // Find user by username, email, or maNhanVien
       const user = await userRepository.findOne({
         where: [
           { taiKhoan },
-          { gmail: taiKhoan }
-        ]
+          { gmail: taiKhoan },
+          { maNhanVien: taiKhoan }
+        ],
+        relations: ['chucVu']
       });
 
       if (!user) {
@@ -120,8 +122,8 @@ export class AuthController {
         });
       }
 
-      // Check if email is verified
-      if (!user.isEmailVerified) {
+      // Check if email is verified (bỏ qua cho nhân viên)
+      if (!user.isEmailVerified && !user.maNhanVien) {
         return res.status(403).json({ 
           message: 'Vui lòng xác thực email trước khi đăng nhập',
           requiresVerification: true,
@@ -134,14 +136,16 @@ export class AuthController {
         { 
           id: user.id, 
           taiKhoan: user.taiKhoan,
-          vaiTro: user.vaiTro 
+          vaiTro: user.vaiTro,
+          maNhanVien: user.maNhanVien,
+          chucVu: user.chucVu?.maChucVu
         },
         JWT_SECRET,
         { expiresIn: '7d' }
       );
 
       // Return user without sensitive data
-      const { matKhau: _, verificationCode, ...userWithoutPassword } = user;
+      const { matKhau: _, verificationCode, resetPasswordToken, resetPasswordExpiry, ...userWithoutPassword } = user;
 
       res.json({
         success: true,
@@ -382,13 +386,16 @@ export class AuthController {
       }
 
       const decoded: any = jwt.verify(token, JWT_SECRET);
-      const user = await userRepository.findOne({ where: { id: decoded.id } });
+      const user = await userRepository.findOne({ 
+        where: { id: decoded.id },
+        relations: ['chucVu']
+      });
 
       if (!user) {
         return res.status(404).json({ message: 'Không tìm thấy user' });
       }
 
-      const { matKhau: _, verificationCode, resetPasswordToken, ...userWithoutPassword } = user;
+      const { matKhau: _, verificationCode, resetPasswordToken, resetPasswordExpiry, ...userWithoutPassword } = user;
 
       res.json({
         success: true,

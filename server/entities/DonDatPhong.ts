@@ -1,6 +1,6 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, OneToMany, JoinColumn } from "typeorm";
 import { CoSo } from "./CoSo";
-import { NhanVien } from "./NhanVien";
+import { User } from "./User";
 import { KhachHang } from "./KhachHang";
 import { ChiTietDonDatPhong } from "./ChiTietDonDatPhong";
 
@@ -13,9 +13,9 @@ export class DonDatPhong {
   @JoinColumn({ name: 'coSoMaCoSo' })
   coSo!: CoSo;
 
-  @ManyToOne(() => NhanVien)
-  @JoinColumn({ name: 'nhanVienMaNhanVien' })
-  nhanVien!: NhanVien;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  nhanVien!: User;
 
   @ManyToOne(() => KhachHang)
   @JoinColumn({ name: 'khachHangMaKhachHang' })
@@ -85,6 +85,32 @@ export class DonDatPhong {
 
   @Column({ type: "boolean", default: false })
   isVerified?: boolean;
+
+  // Booking hold/lock fields (theo flowchart)
+  @Column({ type: "timestamp", nullable: true })
+  expiresAt?: Date; // Timeout 15 phút cho PENDING bookings
+
+  @Column({ type: "int", default: 0 })
+  version!: number; // Optimistic locking
+
+  // Price breakdown fields (theo flowchart)
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true })
+  basePrice?: number; // Giá base theo loại phòng
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true, default: 0 })
+  seasonalSurcharge?: number; // Giá theo mùa và sự kiện
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true, default: 0 })
+  guestSurcharge?: number; // Phụ phí người thêm
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true, default: 0 })
+  vatAmount?: number; // Thuế VAT
+
+  @Column({ type: "decimal", precision: 10, scale: 2, nullable: true, default: 0 })
+  discount?: number; // Giảm giá khuyến mãi
+
+  @Column({ type: "varchar", length: 100, nullable: true })
+  promotionCode?: string; // Mã khuyến mãi
 
   @OneToMany(() => ChiTietDonDatPhong, (ct) => ct.donDatPhong)
   chiTiet!: ChiTietDonDatPhong[];

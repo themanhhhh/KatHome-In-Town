@@ -161,27 +161,6 @@ export const cosoApi = {
   },
 };
 
-// Hạng phòng
-export const hangPhongApi = {
-  getAll: () => api.get('hangphong'),
-  getById: (id: string) => api.get(`hangphong/${id}`),
-  create: (data: unknown) => api.post('hangphong', data),
-  update: (id: string, data: unknown) => api.put(`hangphong/${id}`, data),
-  delete: (id: string) => api.delete(`hangphong/${id}`),
-  uploadImage: async (id: string, file: File) => {
-    const imageUrl = await uploadFileToPinata(file);
-    return api.put(`hangphong/${id}/image`, { imageUrl });
-  },
-  createWithImage: async (data: unknown, imageFile?: File) => {
-    if (imageFile) {
-      const imageUrl = await uploadFileToPinata(imageFile);
-      return api.post('hangphong', { ...(data as Record<string, unknown>), hinhAnh: imageUrl });
-    } else {
-      return api.post('hangphong', data);
-    }
-  },
-};
-
 // Phòng
 export const phongApi = {
   getAll: () => api.get('phong'),
@@ -206,16 +185,12 @@ export const phongApi = {
 // Availability
 export interface AvailabilityRoom {
   maPhong: string;
+  tenPhong: string;
   moTa: string;
+  sucChua: number;
+  donGia4h: number;
+  donGiaQuaDem: number;
   hinhAnh?: string;
-  hangPhong?: {
-    maHangPhong: string;
-    tenHangPhong: string;
-    sucChua: number;
-    moTa?: string;
-    hinhAnh?: string;
-    donGia?: DonGia[];
-  };
   coSo?: {
     maCoSo: string;
     tenCoSo: string;
@@ -223,12 +198,6 @@ export interface AvailabilityRoom {
     sdt: string;
     hinhAnh?: string;
   };
-}
-
-export interface DonGia {
-  maHangPhong: string;
-  donViTinh: string;
-  donGia: number;
 }
 
 export const availabilityApi = {
@@ -339,14 +308,6 @@ export const donDatPhongApi = {
     api.post(`bookings/${bookingId}/check-out`, {}),
   cancel: (bookingId: string) => 
     api.post(`bookings/${bookingId}/cancel`, {}),
-};
-
-// Đơn giá
-export const donGiaApi = {
-  getAll: () => api.get<DonGia[]>('dongia'),
-  getById: (maHangPhong: string, donViTinh: string) =>
-    api.get<DonGia>(`dongia/${maHangPhong}/${donViTinh}`),
-  create: (data: unknown) => api.post('dongia', data),
 };
 
 // Ca làm

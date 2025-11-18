@@ -9,6 +9,8 @@ export { ChucVu } from "./ChucVu";
 export { TheoDoiCaLam } from "./TheoDoiCaLam";
 export { KhachHang } from "./KhachHang";
 export { KhieuNai } from "./KhieuNai";
+export { DanhGia } from "./DanhGia";
+export { ThongBao } from "./ThongBao";
 export { Revenue } from "./Revenue";
 export { Report } from "./Report";
 export { HoaDon } from "./HoaDon";

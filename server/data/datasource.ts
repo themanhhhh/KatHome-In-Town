@@ -14,7 +14,7 @@ export const AppDataSource = new DataSource({
     entities: [
       entities.User, entities.CoSo, entities.Phong, entities.DonDatPhong, entities.ChiTietDonDatPhong,
       entities.DichVu, entities.DonDatDichVu, entities.ChucVu,
-      entities.TheoDoiCaLam, entities.KhachHang, entities.KhieuNai, entities.Revenue, entities.Report,
+      entities.TheoDoiCaLam, entities.KhachHang, entities.KhieuNai, entities.DanhGia, entities.ThongBao, entities.Revenue, entities.Report,
       entities.HoaDon
     ],
   migrations: ["src/migrations/*.ts"], // Đường dẫn đến migrations

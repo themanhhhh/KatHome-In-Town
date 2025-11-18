@@ -1,21 +1,21 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from "typeorm";
-import { KhachHang } from "./KhachHang";
 import { DonDatPhong } from "./DonDatPhong";
+import { Phong } from "./Phong";
 
-@Entity({ name: 'khieu_nai' })
-export class KhieuNai {
+@Entity({ name: 'danh_gia' })
+export class DanhGia {
   @PrimaryGeneratedColumn('uuid')
-  maKhieuNai!: string;
+  maDanhGia!: string;
 
-  // Optional relation to customer (if logged in)
-  @ManyToOne(() => KhachHang, { nullable: true })
-  @JoinColumn({ name: 'khachHangMaKhachHang' })
-  khachHang?: KhachHang;
-
-  // Optional relation to booking
+  // Optional relation to booking (if user booked)
   @ManyToOne(() => DonDatPhong, { nullable: true })
   @JoinColumn({ name: 'donDatPhongMaDatPhong' })
   donDatPhong?: DonDatPhong;
+
+  // Optional relation to room (can review specific room)
+  @ManyToOne(() => Phong, { nullable: true })
+  @JoinColumn({ name: 'phongMaPhong' })
+  phong?: Phong;
 
   // Guest information (for non-logged-in users)
   @Column({ nullable: true })
@@ -27,23 +27,20 @@ export class KhieuNai {
   @Column({ nullable: true })
   soDienThoai?: string;
 
-  // Complaint type: service, room, staff, other
-  @Column({ default: 'other' })
-  loaiKhieuNai!: string;
+  // Rating (1-5 stars)
+  @Column({ type: "int" })
+  diemDanhGia!: number;
 
-  // Title/subject
-  @Column()
-  tieuDe!: string;
-
-  @CreateDateColumn()
-  ngayKhieuNai!: Date;
-
+  // Review content
   @Column("text")
-  dienGiai!: string;
+  noiDung!: string;
 
-  // Status: pending, processing, resolved, rejected
+  // Status: pending, approved, rejected
   @Column({ default: 'pending' })
   trangThai!: string;
+
+  @CreateDateColumn()
+  ngayDanhGia!: Date;
 
   // Admin response
   @Column({ type: "text", nullable: true })
@@ -52,3 +49,4 @@ export class KhieuNai {
   @Column({ type: "timestamp", nullable: true })
   ngayPhanHoi?: Date;
 }
+

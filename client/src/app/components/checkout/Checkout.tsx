@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Separator } from "../separator/separator";
 import { Badge } from "../badge/badge";
 import { donDatPhongApi } from "@/lib/api";
+import Img from "next/image";
 import { 
   ArrowLeft,
   CreditCard,
@@ -535,13 +536,33 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
                   {formData.paymentMethod === "bank-transfer" && (
                     <div className="p-4 rounded-lg bg-white/50">
-                      <div className="space-y-2">
+                      <div className="space-y-4">
                         <h4 className="font-heading" style={{ color: '#3D0301' }}>Thông tin chuyển khoản:</h4>
-                        <div className="text-sm space-y-1" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
-                          <p><strong>Ngân hàng:</strong> Vietcombank</p>
-                          <p><strong>Số tài khoản:</strong> 0123456789</p>
-                          <p><strong>Tên tài khoản:</strong> KatHome In Town </p>
-                          <p><strong>Nội dung:</strong> {formData.firstName} {formData.lastName} - Dat phong</p>
+                        <div className="flex flex-col md:flex-row gap-6">
+                          {/* Bank Info */}
+                          <div className="flex-1 text-sm space-y-1" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
+                            <p><strong>Ngân hàng:</strong> Vietcombank</p>
+                            <p><strong>Số tài khoản:</strong> 0123456789</p>
+                            <p><strong>Tên tài khoản:</strong> KatHome In Town</p>
+                            <p><strong>Nội dung:</strong> {formData.firstName} {formData.lastName} - Dat phong</p>
+                          </div>
+                          {/* QR Code */}
+                          <div className="flex-shrink-0 flex flex-col items-center justify-center">
+                            <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
+                              <Img
+                                src="/img/qr-payment.png" 
+                                alt="QR Code chuyển khoản" 
+                                className="w-40 h-40 object-contain"
+                                onError={(e) => {
+                                  // Fallback nếu không có ảnh
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs mt-2 text-center opacity-70" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
+                              Quét mã QR để chuyển khoản
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>

@@ -194,19 +194,19 @@ export function RoomDetail({
   const tax = subtotal > 0 ? Math.round(subtotal * 0.1) : 0;
   const total = subtotal + serviceFee + tax;
 
-  const locationName = room?.coSo?.tenCoSo ?? "Chua co thong tin co so";
-  const locationAddress = room?.coSo?.diaChi ?? "Chua cap nhat dia chi";
-  const contactPhone = room?.coSo?.sdt ?? "Chua cap nhat";
-  const contactEmail = "Chua cap nhat";
+  const locationName = room?.coSo?.tenCoSo ?? "Chưa co thông tin cơ sở";
+  const locationAddress = room?.coSo?.diaChi ?? "Chưa cập nhật địa chỉ";
+  const contactPhone = room?.coSo?.sdt ?? "Chưa cập nhật số điện thoại";
+  const contactEmail = "Chưa cập nhật email";
   const locationDisplay =
     room?.coSo
       ? [room.coSo.tenCoSo, room.coSo.diaChi]
           .filter((value): value is string => Boolean(value && value.trim()))
-          .join(" - ") || "Chua co thong tin co so"
-      : "Chua co thong tin co so";
+          .join(" - ") || "Chưa co thông tin cơ sở"
+      : "Chưa co thông tin cơ sở";
 
   const description =
-    room?.moTa || "Thong tin ve phong se duoc cap nhat som.";
+    room?.moTa || "Thông tin về phòng sẽ được cập nhật sớm.";
 
 const amenitiesToShow = useMemo(() => {
   const list = (room as unknown as { tienNghi?: string[] } | null)?.tienNghi;
@@ -242,7 +242,7 @@ const amenitiesToShow = useMemo(() => {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3" style={{ color: "#3D0301" }}>
             <div className="w-12 h-12 mx-auto border-4 border-t-transparent rounded-full animate-spin" />
-            <p>Dang tai thong tin phong...</p>
+            <p>Đang tải thông tin phòng...</p>
           </div>
         </div>
       </div>
@@ -255,22 +255,22 @@ const amenitiesToShow = useMemo(() => {
         <div className="flex-1 flex items-center justify-center">
           <Card className="max-w-md shadow-lg border-0" style={{ backgroundColor: "#FAD0C4" }}>
             <CardContent className="space-y-4 p-6 text-center" style={{ color: "#3D0301" }}>
-              <h2 className="text-xl font-semibold">Khong the tai phong</h2>
-              <p>{error || "Phong khong ton tai hoac da duoc cap nhat."}</p>
+              <h2 className="text-xl font-semibold">Không thể tải phòng</h2>
+              <p>{error || "Phòng không tồn tại hoặc đã được cập nhật."}</p>
               <div className="flex justify-center gap-3">
                 <Button
                   variant="outline"
                   style={{ borderColor: "#3D0301", color: "#3D0301" }}
                   onClick={onBackToSearch}
                 >
-                  Quay lai tim kiem
+                  Quay lại tìm kiếm
                 </Button>
                 <Button
                   className="text-white"
                   style={{ backgroundColor: "#3D0301" }}
                   onClick={onBackToHome}
                 >
-                  Ve trang chu
+                  Về trang chủ
                 </Button>
               </div>
             </CardContent>
@@ -296,7 +296,7 @@ const amenitiesToShow = useMemo(() => {
               style={{ color: "#3D0301" }}
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Quay lai ket qua</span>
+              <span>Quay lại kết quả</span>
             </Button>
             <Button
               variant="ghost"
@@ -305,7 +305,7 @@ const amenitiesToShow = useMemo(() => {
               style={{ color: "#3D0301" }}
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Ve trang chu</span>
+              <span>Về trang chủ</span>
             </Button>
           </div>
           <div className="flex gap-3">
@@ -318,14 +318,14 @@ const amenitiesToShow = useMemo(() => {
                 className="w-4 h-4"
                 fill={isFavorite ? "#3D0301" : "transparent"}
               />
-              <span>{isFavorite ? "Da luu" : "Luu phong"}</span>
+              <span>{isFavorite ? "Đã lưu" : "Lưu phòng"}</span>
             </Button>
             <Button
               variant="outline"
               style={{ borderColor: "#3D0301", color: "#3D0301" }}
             >
               <Share2 className="w-4 h-4" />
-              <span>Chia se</span>
+              <span>Chia sẻ</span>
             </Button>
           </div>
         </div>
@@ -373,7 +373,7 @@ const amenitiesToShow = useMemo(() => {
                       )}
                       <div className="absolute bottom-4 right-4 bg-black/60 text-white px-3 py-1 rounded-full text-xs">
                         <Maximize2 className="inline w-3 h-3 mr-1" />
-                        {imageSources.length} hinh
+                        {imageSources.length} hình
                       </div>
                     </div>
 
@@ -400,7 +400,7 @@ const amenitiesToShow = useMemo(() => {
                   </>
                 ) : (
                   <div className="w-full h-[420px] flex items-center justify-center text-sm" style={{ color: "#3D0301", backgroundColor: "rgba(255,255,255,0.5)" }}>
-                    Chua co hinh anh cho phong nay
+                    Chưa có hình ảnh cho phòng này
                   </div>
                 )}
               </CardContent>
@@ -441,7 +441,7 @@ const amenitiesToShow = useMemo(() => {
                       {formatCurrency(pricing.fourHour)}
                     </div>
                     <div className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
-                      Gia qua dem: {formatCurrency(pricing.overnight)}
+                      Gia qua đêm: {formatCurrency(pricing.overnight)}
                     </div>
                   </div>
                 </div>
@@ -449,21 +449,21 @@ const amenitiesToShow = useMemo(() => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="flex items-center gap-2 text-sm" style={{ color: "#3D0301" }}>
                     <Users className="w-4 h-4" />
-                    <span>Toi da {capacity} khach</span>
+                    <span>Tối đa {capacity} khách</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm" style={{ color: "#3D0301" }}>
                     <Bed className="w-4 h-4" />
-                    <span>{beds} giuong</span>
+                    <span>{beds} giường</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm" style={{ color: "#3D0301" }}>
                     <Bath className="w-4 h-4" />
-                    <span>1 phong tam</span>
+                    <span>1 phòng tắm</span>
                   </div>
                 </div>
 
                 <div>
                   <h2 className="text-lg font-semibold mb-3" style={{ color: "#3D0301" }}>
-                    Tien nghi noi bat
+                    Tiện nghi nổi bật
                   </h2>
                   <div className="flex flex-wrap gap-2">
                     {amenitiesToShow.length > 0 ? (
@@ -479,7 +479,7 @@ const amenitiesToShow = useMemo(() => {
                       ))
                     ) : (
                       <span className="text-sm opacity-70" style={{ color: "rgba(61,3,1,0.7)" }}>
-                        Chua co thong tin tien nghi
+                        Chưa có thông tin tiện nghi
                       </span>
                     )}
                   </div>
@@ -487,9 +487,9 @@ const amenitiesToShow = useMemo(() => {
 
                 <Tabs defaultValue="overview" className="w-full">
                   <TabsList className="grid grid-cols-3 bg-white/60" style={{ color: "#3D0301" }}>
-                    <TabsTrigger value="overview">Tong quan</TabsTrigger>
-                    <TabsTrigger value="policy">Chinh sach</TabsTrigger>
-                    <TabsTrigger value="area">Khu vuc</TabsTrigger>
+                    <TabsTrigger value="overview">Tổng quan</TabsTrigger>
+                    <TabsTrigger value="policy">Chính sách</TabsTrigger>
+                    <TabsTrigger value="area">Khu vực</TabsTrigger>
                   </TabsList>
                   <TabsContent
                     value="overview"
@@ -514,7 +514,7 @@ const amenitiesToShow = useMemo(() => {
                         </div>
                       ))
                     ) : (
-                      <span>Chua co chinh sach duoc cung cap.</span>
+                      <span>Chưa có chính sách được cung cấp.</span>
                     )}
                   </TabsContent>
                   <TabsContent
@@ -522,8 +522,8 @@ const amenitiesToShow = useMemo(() => {
                     className="mt-4 text-sm space-y-2"
                     style={{ color: "rgba(61,3,1,0.7)" }}
                   >
-                    <p>Co so: {locationName}</p>
-                    <p>Dia chi: {locationAddress}</p>
+                    <p>Cơ sở: {locationName}</p>
+                    <p>Địa chỉ: {locationAddress}</p>
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4" />
                       <span>{contactPhone}</span>
@@ -543,16 +543,16 @@ const amenitiesToShow = useMemo(() => {
               <CardContent className="space-y-6 p-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-1" style={{ color: "#3D0301" }}>
-                    Dat phong
+                    Đặt phòng
                   </h3>
                   <p className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
-                    Gia da bao gom phi dich vu va thue.
+                    Gia da bao gom phí dịch vụ và thuế.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label style={{ color: "#3D0301" }}>Nhan phong</Label>
+                    <Label style={{ color: "#3D0301" }}>Nhận phòng</Label>
                     <Input
                       type="date"
                       value={checkIn}
@@ -560,7 +560,7 @@ const amenitiesToShow = useMemo(() => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label style={{ color: "#3D0301" }}>Tra phong</Label>
+                    <Label style={{ color: "#3D0301" }}>Trả phòng</Label>
                     <Input
                       type="date"
                       value={checkOut}
@@ -570,7 +570,7 @@ const amenitiesToShow = useMemo(() => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label style={{ color: "#3D0301" }}>So khach</Label>
+                  <Label style={{ color: "#3D0301" }}>Số khách</Label>
                   <Input
                     type="number"
                     min={1}
@@ -585,20 +585,20 @@ const amenitiesToShow = useMemo(() => {
                 <div className="p-4 rounded-lg bg-white/60 space-y-3" style={{ color: "#3D0301" }}>
                   <div className="flex justify-between text-sm">
                     <span>
-                      {formatCurrency(pricePerNight)} x {nights} dem
+                      {formatCurrency(pricePerNight)} x {nights} đêm
                     </span>
                     <span>{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Phi dich vu (5%)</span>
+                    <span>Phí dịch vụ (5%)</span>
                     <span>{formatCurrency(serviceFee)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>Thue (10%)</span>
+                    <span>Thuế (10%)</span>
                     <span>{formatCurrency(tax)}</span>
                   </div>
                   <div className="border-t pt-3 flex justify-between font-semibold text-lg">
-                    <span>Tong cong</span>
+                    <span>Tổng cộng</span>
                     <span>{formatCurrency(total)}</span>
                   </div>
                 </div>
@@ -608,17 +608,17 @@ const amenitiesToShow = useMemo(() => {
                   style={{ backgroundColor: "#3D0301" }}
                   onClick={handleCheckout}
                 >
-                  Dat phong ngay
+                  Đặt phòng ngay
                 </Button>
 
                 <div className="space-y-3 text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
                   <div className="flex items-start gap-2">
                     <Clock className="w-4 h-4 mt-1" style={{ color: "#3D0301" }} />
-                    <span>Huy mien phi truoc 24 gio. Sau do se tinh phi 50% tong gia tri.</span>
+                    <span>Hủy miễn phí trước 24 giờ. Sau đó sẽ tính phí 50% tổng giá trị.</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <Shield className="w-4 h-4 mt-1" style={{ color: "#3D0301" }} />
-                    <span>Thanh toan an toan voi giao thuc ma hoa SSL.</span>
+                    <span>Thanh toán an toàn với giao thức mã hóa SSL.</span>
                   </div>
                 </div>
 

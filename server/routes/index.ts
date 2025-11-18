@@ -11,6 +11,8 @@ import { ChiTietDonDatPhongController } from '../controllers/ChiTietDonDatPhongC
 import { DonDatDichVuController } from '../controllers/DonDatDichVuController';
 import { TheoDoiCaLamController } from '../controllers/TheoDoiCaLamController';
 import { KhieuNaiController } from '../controllers/KhieuNaiController';
+import { DanhGiaController } from '../controllers/DanhGiaController';
+import { ThongBaoController } from '../controllers/ThongBaoController';
 import { RevenueController } from '../controllers/RevenueController';
 import { ReportController } from '../controllers/ReportController';
 import { authenticate, requireStaff, optionalAuth } from '../middleware/auth';
@@ -125,12 +127,33 @@ router.post('/theodoicalam', TheoDoiCaLamController.create);
 router.put('/theodoicalam/:id', TheoDoiCaLamController.update);
 router.delete('/theodoicalam/:id', TheoDoiCaLamController.delete);
 
-// KhieuNai routes
-router.get('/khieunai', KhieuNaiController.getAll);
+// KhieuNai routes (Complaints)
+router.get('/khieunai', KhieuNaiController.getAll); // Admin only
 router.get('/khieunai/:id', KhieuNaiController.getById);
-router.post('/khieunai', KhieuNaiController.create);
-router.put('/khieunai/:id', KhieuNaiController.update);
-router.delete('/khieunai/:id', KhieuNaiController.delete);
+router.post('/khieunai', KhieuNaiController.create); // Public - no auth required
+router.put('/khieunai/:id/status', KhieuNaiController.updateStatus); // Admin only
+router.put('/khieunai/:id', KhieuNaiController.update); // Admin only
+router.delete('/khieunai/:id', KhieuNaiController.delete); // Admin only
+
+// DanhGia routes (Reviews)
+router.get('/danhgia', DanhGiaController.getAll); // Public - approved reviews
+router.get('/danhgia/stats', DanhGiaController.getStats); // Public - review statistics
+router.get('/danhgia/:id', DanhGiaController.getById);
+router.post('/danhgia', DanhGiaController.create); // Public - no auth required
+router.put('/danhgia/:id/status', DanhGiaController.updateStatus); // Admin only
+router.delete('/danhgia/:id', DanhGiaController.delete); // Admin only
+
+// ThongBao routes (Notifications)
+router.get('/thongbao', authenticate, requireStaff, ThongBaoController.getAll); // Admin only - all notifications
+router.get('/thongbao/:id', authenticate, ThongBaoController.getById); // Get by ID
+router.get('/thongbao/khachhang/:maKhachHang', authenticate, ThongBaoController.getByCustomer); // Get by customer
+router.get('/thongbao/khachhang/:maKhachHang/unread-count', authenticate, ThongBaoController.getUnreadCount); // Unread count
+router.post('/thongbao', authenticate, requireStaff, ThongBaoController.create); // Admin only - create notification
+router.post('/thongbao/multiple', authenticate, requireStaff, ThongBaoController.createMultiple); // Admin only - send to multiple customers
+router.put('/thongbao/:id', authenticate, requireStaff, ThongBaoController.update); // Admin only - update
+router.put('/thongbao/:id/read', authenticate, ThongBaoController.markAsRead); // Mark as read
+router.put('/thongbao/mark-read', authenticate, ThongBaoController.markMultipleAsRead); // Mark multiple as read
+router.delete('/thongbao/:id', authenticate, requireStaff, ThongBaoController.delete); // Admin only - delete
 
 // Revenue routes
 router.get('/revenue', RevenueController.getAll);

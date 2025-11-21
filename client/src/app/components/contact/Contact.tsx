@@ -65,8 +65,8 @@ export function Contact() {
                     <div>
                        <h4 className="mb-1" style={{ color: '#3D0301' }}>Điện thoại</h4>
                        <p className="text-sm opacity-80" style={{ color: '#3D0301' }}>
-                         Hotline: 098 894 65 68<br />
-                         Zalo: 098 894 65 68
+                         Hotline: 0375 914 908<br />
+                         Zalo: 0375 914 908
                        </p>
                     </div>
                   </CardContent>
@@ -206,7 +206,7 @@ export function Contact() {
                       color: '#3D0301'
                     }}
                   >
-                     Gọi ngay: 098 894 65 68
+                     Gọi ngay: 0375 914 908
                   </Button>
                 </div>
               </form>

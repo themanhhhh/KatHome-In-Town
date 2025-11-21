@@ -12,7 +12,7 @@ export function Footer() {
   return (
     <footer className="py-16" style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', borderTop: '1px solid #F8E8EC' }}>
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <h3 className="text-xl font-heading" style={{ color: '#3D0301' }}>KatHome In Town </h3>
@@ -24,24 +24,24 @@ export function Footer() {
               <div 
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer" 
                 style={{ backgroundColor: 'rgba(61, 3, 1, 0.1)' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(61, 3, 1, 0.2)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(61, 3, 1, 0.1)'}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(61, 3, 1, 0.2)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(61, 3, 1, 0.1)')}
               >
                 <Facebook className="w-4 h-4" style={{ color: '#3D0301' }} />
               </div>
               <div 
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer" 
                 style={{ backgroundColor: 'rgba(61, 3, 1, 0.1)' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(61, 3, 1, 0.2)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(61, 3, 1, 0.1)'}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(61, 3, 1, 0.2)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(61, 3, 1, 0.1)')}
               >
                 <Instagram className="w-4 h-4" style={{ color: '#3D0301' }} />
               </div>
               <div 
                 className="w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer" 
                 style={{ backgroundColor: 'rgba(61, 3, 1, 0.1)' }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(61, 3, 1, 0.2)'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(61, 3, 1, 0.1)'}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(61, 3, 1, 0.2)')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(61, 3, 1, 0.1)')}
               >
                 <MessageCircle className="w-4 h-4" style={{ color: '#3D0301' }} />
               </div>
@@ -53,42 +53,30 @@ export function Footer() {
             <h4 style={{ color: '#3D0301' }}>Liên kết nhanh</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#home" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => e.target.style.color = '#3D0301'} onMouseLeave={(e) => e.target.style.color = 'rgba(61, 3, 1, 0.7)'}>
+                <a href="#home" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#3D0301')} onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(61, 3, 1, 0.7)')}>
                   Trang chủ
                 </a>
               </li>
               <li>
-                <a href="#about" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => e.target.style.color = '#3D0301'} onMouseLeave={(e) => e.target.style.color = 'rgba(61, 3, 1, 0.7)'}>
+                <a href="#about" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#3D0301')} onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(61, 3, 1, 0.7)')}>
                   Giới thiệu
                 </a>
               </li>
               <li>
-                <a href="#amenities" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => e.target.style.color = '#3D0301'} onMouseLeave={(e) => e.target.style.color = 'rgba(61, 3, 1, 0.7)'}>
+                <a href="#amenities" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#3D0301')} onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(61, 3, 1, 0.7)')}>
                   Tiện nghi
                 </a>
               </li>
               <li>
-                <a href="#gallery" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => e.target.style.color = '#3D0301'} onMouseLeave={(e) => e.target.style.color = 'rgba(61, 3, 1, 0.7)'}>
+                <a href="#gallery" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#3D0301')} onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(61, 3, 1, 0.7)')}>
                   Hình ảnh
                 </a>
               </li>
               <li>
-                <a href="#contact" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => e.target.style.color = '#3D0301'} onMouseLeave={(e) => e.target.style.color = 'rgba(61, 3, 1, 0.7)'}>
+                <a href="#contact" className="transition-colors" style={{ color: 'rgba(61, 3, 1, 0.7)' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#3D0301')} onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(61, 3, 1, 0.7)')}>
                   Liên hệ
                 </a>
               </li>
-            </ul>
-          </div>
-
-          {/* Services */}
-          <div className="space-y-4">
-            <h4 style={{ color: '#3D0301' }}>Dịch vụ</h4>
-            <ul className="space-y-2 text-sm">
-               <li style={{ color: 'rgba(61, 3, 1, 0.7)' }}>Đặt phòng trực tuyến</li>
-               <li style={{ color: 'rgba(61, 3, 1, 0.7)' }}>Tư vấn tour Hà Nội</li>
-               <li style={{ color: 'rgba(61, 3, 1, 0.7)' }}>Thuê xe di chuyển</li>
-               <li style={{ color: 'rgba(61, 3, 1, 0.7)' }}>Đón tiễn sân bay Nội Bài</li>
-               <li style={{ color: 'rgba(61, 3, 1, 0.7)' }}>Hỗ trợ 24/7</li>
             </ul>
           </div>
 
@@ -105,7 +93,7 @@ export function Footer() {
               </div>
               <div className="flex items-center space-x-3">
                  <Phone className="w-4 h-4 flex-shrink-0" style={{ color: 'rgba(61, 3, 1, 0.7)' }} />
-                 <span style={{ color: 'rgba(61, 3, 1, 0.7)' }}>098 894 65 68</span>
+                 <span style={{ color: 'rgba(61, 3, 1, 0.7)' }}>0375 914 908</span>
               </div>
               <div className="flex items-center space-x-3">
                  <Mail className="w-4 h-4 flex-shrink-0" style={{ color: 'rgba(61, 3, 1, 0.7)' }} />

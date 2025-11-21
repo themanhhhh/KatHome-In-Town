@@ -26,6 +26,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { qrCode } from "@/app/img";
 
 interface BookingData {
   roomData: {
@@ -103,6 +104,9 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isProcessing, setIsProcessing] = useState(false);
+  const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
+  const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -164,6 +168,64 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
+    // Reset payment confirmation state when payment method changes
+    if (field === 'paymentMethod') {
+      setCreatedBookingId(null);
+      setPaymentConfirmed(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!createdBookingId) {
+      alert('Vui lòng hoàn tất đặt phòng trước.');
+      return;
+    }
+
+    setIsConfirmingPayment(true);
+    
+    try {
+      const response = await donDatPhongApi.confirmPayment(createdBookingId, 'Bank Transfer');
+      
+      if (response.success) {
+        setPaymentConfirmed(true);
+        
+        // Proceed to payment success after a short delay
+        setTimeout(() => {
+          const totalPrice = getTotalPrice();
+          const customerName = `${formData.firstName} ${formData.lastName}`;
+          
+          const bookingData: BookingData = {
+            roomData,
+            searchData,
+            guestInfo: {
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              email: formData.email,
+              phone: formData.phone,
+              address: formData.address,
+              city: formData.city,
+              zipCode: formData.zipCode,
+              specialRequests: formData.specialRequests
+            },
+            paymentInfo: {
+              method: 'bank-transfer',
+              total: totalPrice
+            },
+            bookingId: createdBookingId,
+            bookingDate: new Date().toISOString()
+          };
+          
+          onProceedToVerification(bookingData);
+        }, 1000);
+      } else {
+        throw new Error(response.message || 'Failed to confirm payment');
+      }
+    } catch (error) {
+      console.error('Error confirming payment:', error);
+      alert(error instanceof Error ? error.message : 'Có lỗi xảy ra khi xác nhận thanh toán. Vui lòng thử lại.');
+    } finally {
+      setIsConfirmingPayment(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -209,7 +271,19 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
       const booking = response.data;
       
-      // For cash payment, proceed to payment success with booking info
+      // For bank transfer, save booking ID and show QR code confirmation
+      if (formData.paymentMethod === "bank-transfer") {
+        setCreatedBookingId(booking.maDatPhong);
+        setIsProcessing(false);
+        // Scroll to payment section to show QR code
+        setTimeout(() => {
+          const paymentSection = document.querySelector('[data-payment-section]');
+          paymentSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+        return;
+      }
+      
+      // For other payment methods, proceed to payment success with booking info
       const bookingData: BookingData = {
         roomData,
         searchData,
@@ -424,7 +498,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               </Card>
 
               {/* Payment Information */}
-              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }}>
+              <Card className="border-0 shadow-lg" style={{ backgroundColor: '#FAD0C4' }} data-payment-section>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2" style={{ color: '#3D0301' }}>
                     <CreditCard className="w-5 h-5" />
@@ -544,19 +618,18 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                             <p><strong>Ngân hàng:</strong> Vietcombank</p>
                             <p><strong>Số tài khoản:</strong> 0123456789</p>
                             <p><strong>Tên tài khoản:</strong> KatHome In Town</p>
+                            <p><strong>Số tiền:</strong> {formatPrice(getTotalPrice())}</p>
                             <p><strong>Nội dung:</strong> {formData.firstName} {formData.lastName} - Dat phong</p>
                           </div>
                           {/* QR Code */}
                           <div className="flex-shrink-0 flex flex-col items-center justify-center">
                             <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
                               <Img
-                                src="/img/qr-payment.png" 
+                                src={qrCode}
                                 alt="QR Code chuyển khoản" 
                                 className="w-40 h-40 object-contain"
-                                onError={(e) => {
-                                  // Fallback nếu không có ảnh
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
+                                width={160}
+                                height={160}
                               />
                             </div>
                             <p className="text-xs mt-2 text-center opacity-70" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
@@ -564,6 +637,46 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                             </p>
                           </div>
                         </div>
+                        
+                        {/* Confirmation Button - Show after booking is created */}
+                        {createdBookingId && !paymentConfirmed && (
+                          <div className="pt-4 border-t border-gray-200">
+                            <p className="text-sm mb-3" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
+                              Sau khi đã chuyển khoản thành công, vui lòng bấm nút bên dưới để xác nhận:
+                            </p>
+                            <Button
+                              type="button"
+                              onClick={handleConfirmPayment}
+                              disabled={isConfirmingPayment}
+                              className="w-full text-white py-3"
+                              style={{ backgroundColor: '#3D0301' }}
+                            >
+                              {isConfirmingPayment ? (
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                  <span>Đang xác nhận...</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center space-x-2">
+                                  <Shield className="w-4 h-4" />
+                                  <span>Xác nhận đã chuyển khoản</span>
+                                </div>
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {/* Success Message */}
+                        {paymentConfirmed && (
+                          <div className="pt-4 border-t border-gray-200">
+                            <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                              <p className="text-sm text-green-700 flex items-center space-x-2">
+                                <Shield className="w-4 h-4" />
+                                <span>Đã xác nhận thanh toán thành công! Đang chuyển đến trang xác nhận...</span>
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -579,24 +692,32 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               </Card>
 
               {/* Submit Button */}
-              <Button 
-                type="submit"
-                disabled={isProcessing}
-                className="w-full text-white py-3"
-                style={{ backgroundColor: '#3D0301' }}
-              >
-                {isProcessing ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Đang xử lý...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Shield className="w-4 h-4" />
-                    <span>Xác nhận & Thanh toán</span>
-                  </div>
-                )}
-              </Button>
+              {formData.paymentMethod === "bank-transfer" && createdBookingId ? (
+                <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                  <p className="text-sm text-blue-700">
+                    Đơn đặt phòng đã được tạo. Vui lòng chuyển khoản và bấm nút xác nhận ở trên.
+                  </p>
+                </div>
+              ) : (
+                <Button 
+                  type="submit"
+                  disabled={isProcessing || (formData.paymentMethod === "bank-transfer" && createdBookingId)}
+                  className="w-full text-white py-3"
+                  style={{ backgroundColor: '#3D0301' }}
+                >
+                  {isProcessing ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Đang xử lý...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Shield className="w-4 h-4" />
+                      <span>Xác nhận & Thanh toán</span>
+                    </div>
+                  )}
+                </Button>
+              )}
             </form>
           </div>
 

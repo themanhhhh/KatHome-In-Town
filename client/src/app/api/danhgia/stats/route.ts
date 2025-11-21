@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { API_CONFIG } from '../../config';
+import { getApiUrl } from '../../config';
 
 // GET /api/danhgia/stats - Get review statistics
 export async function GET(request: NextRequest) {
   try {
-    const response = await fetch(`${API_CONFIG.BASE_URL}/danhgia/stats`, {
+    const response = await fetch(getApiUrl('danhgia/stats'), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
       cache: 'no-store',
     });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Non-JSON response:', text.substring(0, 200));
+      return NextResponse.json(
+        { error: 'Invalid response from server' },
+        { status: 500 }
+      );
+    }
 
     const data = await response.json();
 

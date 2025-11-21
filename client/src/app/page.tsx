@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Header } from "./components/header/header";
 import { Hero } from "./components/hero/Hero";
 import { About } from "./components/about/about";
-import { Services } from "./components/services/Services";
 import { ReviewsSection } from "./components/reviews/ReviewsSection";
 import { ComplaintsSection } from "./components/complaints/ComplaintsSection";
 import { Contact } from "./components/contact/Contact";
@@ -30,7 +29,6 @@ export default function HomePage() {
       <main>
         <Hero onSearch={handleSearch} />
         <About />
-        <Services />
         <ReviewsSection />
         <ComplaintsSection />
         <Contact />

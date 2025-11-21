@@ -117,9 +117,6 @@ export function Header() {
           <a href="#about" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#3D0301' }}>
             Giới thiệu
           </a>
-          <a href="#services" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#3D0301' }}>
-            Dịch vụ
-          </a>
           <a href="#contact" className="hover:opacity-75 transition-opacity font-medium" style={{ color: '#3D0301' }}>
             Liên hệ
           </a>
@@ -129,7 +126,7 @@ export function Header() {
           <div className="hidden lg:flex items-center space-x-4">
              <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: '#3D0301' }}>
                <Phone className="w-4 h-4" />
-               <span>098 894 65 68</span>
+               <span>0375 914 908</span>
              </div>
              <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: '#3D0301' }}>
                <Mail className="w-4 h-4" />

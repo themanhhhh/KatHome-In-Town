@@ -27,6 +27,13 @@ import {
 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { qrCode } from "@/app/img";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../dialog/dialog";
 
 interface BookingData {
   roomData: {
@@ -51,7 +58,6 @@ interface BookingData {
     phone: string;
     address: string;
     city: string;
-    zipCode: string;
     specialRequests: string;
   };
   paymentInfo: {
@@ -93,7 +99,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     phone: "",
     address: "",
     city: "",
-    zipCode: "",
     specialRequests: "",
     paymentMethod: "",
     cardNumber: "",
@@ -107,6 +112,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
   const [paymentConfirmed, setPaymentConfirmed] = useState(false);
+  const [showQRDialog, setShowQRDialog] = useState(false);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -184,7 +190,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     setIsConfirmingPayment(true);
     
     try {
-      const response = await donDatPhongApi.confirmPayment(createdBookingId, 'Bank Transfer');
+      const response = await donDatPhongApi.confirmPayment(createdBookingId, 'Bank Transfer') as { success: boolean; message?: string };
       
       if (response.success) {
         setPaymentConfirmed(true);
@@ -192,7 +198,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
         // Proceed to payment success after a short delay
         setTimeout(() => {
           const totalPrice = getTotalPrice();
-          const customerName = `${formData.firstName} ${formData.lastName}`;
           
           const bookingData: BookingData = {
             roomData,
@@ -204,7 +209,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               phone: formData.phone,
               address: formData.address,
               city: formData.city,
-              zipCode: formData.zipCode,
               specialRequests: formData.specialRequests
             },
             paymentInfo: {
@@ -271,15 +275,12 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
       const booking = response.data;
       
-      // For bank transfer, save booking ID and show QR code confirmation
+      // For bank transfer, save booking ID and show QR code dialog
       if (formData.paymentMethod === "bank-transfer") {
         setCreatedBookingId(booking.maDatPhong);
         setIsProcessing(false);
-        // Scroll to payment section to show QR code
-        setTimeout(() => {
-          const paymentSection = document.querySelector('[data-payment-section]');
-          paymentSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
+        // Show QR code dialog
+        setShowQRDialog(true);
         return;
       }
       
@@ -294,7 +295,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
           phone: formData.phone,
           address: formData.address,
           city: formData.city,
-          zipCode: formData.zipCode,
           specialRequests: formData.specialRequests
         },
         paymentInfo: {
@@ -473,15 +473,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                         </p>
                       )}
                     </div>
-                    <div className="space-y-2">
-                      <Label style={{ color: '#3D0301' }}>Mã bưu điện</Label>
-                      <Input
-                        value={formData.zipCode}
-                        onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                        placeholder="70000"
-                        style={{ color: '#3D0301' }}
-                      />
-                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -612,31 +603,32 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                     <div className="p-4 rounded-lg bg-white/50">
                       <div className="space-y-4">
                         <h4 className="font-heading" style={{ color: '#3D0301' }}>Thông tin chuyển khoản:</h4>
-                        <div className="flex flex-col md:flex-row gap-6">
-                          {/* Bank Info */}
-                          <div className="flex-1 text-sm space-y-1" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
-                            <p><strong>Ngân hàng:</strong> Vietcombank</p>
-                            <p><strong>Số tài khoản:</strong> 0123456789</p>
-                            <p><strong>Tên tài khoản:</strong> KatHome In Town</p>
-                            <p><strong>Số tiền:</strong> {formatPrice(getTotalPrice())}</p>
-                            <p><strong>Nội dung:</strong> {formData.firstName} {formData.lastName} - Dat phong</p>
-                          </div>
-                          {/* QR Code */}
-                          <div className="flex-shrink-0 flex flex-col items-center justify-center">
-                            <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
-                              <Img
-                                src={qrCode}
-                                alt="QR Code chuyển khoản" 
-                                className="w-40 h-40 object-contain"
-                                width={160}
-                                height={160}
-                              />
-                            </div>
-                            <p className="text-xs mt-2 text-center opacity-70" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
-                              Quét mã QR để chuyển khoản
-                            </p>
-                          </div>
+                        <div className="text-sm space-y-1" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
+                          <p><strong>Ngân hàng:</strong> Vietcombank</p>
+                          <p><strong>Số tài khoản:</strong> 0123456789</p>
+                          <p><strong>Tên tài khoản:</strong> KatHome In Town</p>
+                          <p><strong>Số tiền:</strong> {formatPrice(getTotalPrice())}</p>
+                          <p><strong>Nội dung:</strong> {formData.firstName} {formData.lastName} - Dat phong</p>
                         </div>
+                        
+                        {/* Button to show QR code */}
+                        {createdBookingId ? (
+                          <Button
+                            type="button"
+                            onClick={() => setShowQRDialog(true)}
+                            className="w-full text-white py-3"
+                            style={{ backgroundColor: '#3D0301' }}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <CreditCard className="w-4 h-4" />
+                              <span>Xem QR Code chuyển khoản</span>
+                            </div>
+                          </Button>
+                        ) : (
+                          <p className="text-sm text-center" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
+                            Vui lòng hoàn tất đặt phòng để xem QR Code
+                          </p>
+                        )}
                         
                         {/* Confirmation Button - Show after booking is created */}
                         {createdBookingId && !paymentConfirmed && (
@@ -701,7 +693,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               ) : (
                 <Button 
                   type="submit"
-                  disabled={isProcessing || (formData.paymentMethod === "bank-transfer" && createdBookingId)}
+                  disabled={isProcessing || !!(formData.paymentMethod === "bank-transfer" && createdBookingId)}
                   className="w-full text-white py-3"
                   style={{ backgroundColor: '#3D0301' }}
                 >
@@ -821,6 +813,94 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
           </div>
         </div>
       </div>
+
+      {/* QR Code Dialog */}
+      <Dialog open={showQRDialog} onOpenChange={setShowQRDialog}>
+        <DialogContent className="max-w-md" style={{ backgroundColor: '#FAD0C4' }}>
+          <DialogHeader>
+            <DialogTitle style={{ color: '#3D0301' }}>QR Code Chuyển Khoản</DialogTitle>
+            <DialogDescription style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
+              Quét mã QR để chuyển khoản nhanh chóng
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* QR Code */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="bg-white p-4 rounded-lg shadow-lg border-2 border-gray-200">
+                <Img
+                  src={qrCode}
+                  alt="QR Code chuyển khoản" 
+                  className="w-64 h-64 object-contain"
+                  width={256}
+                  height={256}
+                />
+              </div>
+              <p className="text-sm mt-3 text-center font-medium" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
+                Quét mã QR bằng ứng dụng ngân hàng
+              </p>
+            </div>
+
+            {/* Bank Info */}
+            <div className="space-y-3 p-4 rounded-lg bg-white/50">
+              <h4 className="font-semibold text-sm" style={{ color: '#3D0301' }}>Thông tin chuyển khoản:</h4>
+              <div className="space-y-2 text-sm" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
+                <div className="flex justify-between">
+                  <span className="font-medium">Ngân hàng:</span>
+                  <span>Vietcombank</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Số tài khoản:</span>
+                  <span>0123456789</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Tên tài khoản:</span>
+                  <span>KatHome In Town</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Số tiền:</span>
+                  <span className="font-semibold" style={{ color: '#3D0301' }}>{formatPrice(getTotalPrice())}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Nội dung:</span>
+                  <span className="text-right">{formData.firstName} {formData.lastName} - Dat phong</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Confirmation Button - Show if booking is created */}
+            {createdBookingId && !paymentConfirmed && (
+              <div className="pt-4 border-t border-gray-200">
+                <p className="text-sm mb-3 text-center" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
+                  Sau khi đã chuyển khoản, vui lòng bấm xác nhận:
+                </p>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setShowQRDialog(false);
+                    handleConfirmPayment();
+                  }}
+                  disabled={isConfirmingPayment}
+                  className="w-full text-white py-3"
+                  style={{ backgroundColor: '#3D0301' }}
+                >
+                  {isConfirmingPayment ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Đang xác nhận...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center space-x-2">
+                      <Shield className="w-4 h-4" />
+                      <span>Xác nhận đã chuyển khoản</span>
+                    </div>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

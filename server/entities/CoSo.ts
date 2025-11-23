@@ -24,6 +24,14 @@ export class CoSo {
   @Column({ nullable: true })
   hinhAnh?: string;
 
+  @Column({ 
+    type: 'varchar', 
+    length: 20, 
+    default: 'active',
+    nullable: true 
+  })
+  trangThai?: string; // 'active', 'inactive', 'maintenance'
+
   @OneToMany(() => Phong, (phong) => phong.coSo)
   phong!: Phong[];
 }

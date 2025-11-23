@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from './button/button';
 import { Card } from './card/card';
 import { X, Save } from 'lucide-react';
-import { ApiBooking, ApiCustomer, ApiRoom, ApiCoSo, ApiNhanVien } from '../../types/api';  
-import { donDatPhongApi, khachHangApi, phongApi, cosoApi, nhanVienApi } from '../../lib/api';
+import { ApiBooking, ApiRoom, ApiCoSo, ApiNhanVien } from '../../types/api';  
+import { donDatPhongApi, phongApi, cosoApi, nhanVienApi } from '../../lib/api';
 import { toast } from 'sonner';
 
 interface BookingFormProps {
@@ -47,14 +47,12 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
     }],
     
     // Legacy fields for backward compatibility
-    maKhachHang: '',
     maPhong: '',
     soNguoiLon: 1,
     soTreEm: 0,
     totalAmount: 0
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [customers, setCustomers] = useState<ApiCustomer[]>([]);
   const [rooms, setRooms] = useState<ApiRoom[]>([]);
   const [cosos, setCosos] = useState<ApiCoSo[]>([]);
   const [nhanViens, setNhanViens] = useState<ApiNhanVien[]>([]);
@@ -63,20 +61,18 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
     // Load all required data
     const loadData = async () => {
       try {
-        const [customersData, roomsData, cososData, nhanViensData] = await Promise.all([
-          khachHangApi.getAll(),
+        const [roomsData, cososData, nhanViensData] = await Promise.all([
           phongApi.getAll(),
           cosoApi.getAll(),
           nhanVienApi.getAll()
         ]);
-        setCustomers(Array.isArray(customersData) ? customersData : []);
         setRooms(Array.isArray(roomsData) ? roomsData : []);
         setCosos(Array.isArray(cososData) ? cososData : []);
         setNhanViens(Array.isArray(nhanViensData) ? nhanViensData : []);
       } catch (err) {
         console.error('Error loading data:', err);
         toast.error('Lỗi khi tải dữ liệu', {
-          description: 'Không thể tải danh sách khách hàng, phòng, cơ sở hoặc nhân viên.'
+          description: 'Không thể tải danh sách phòng, cơ sở hoặc nhân viên.'
         });
       }
     };
@@ -84,26 +80,32 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
   }, []);
 
   useEffect(() => {
-    if (booking) {
+    if (booking && cosos.length > 0 && rooms.length > 0) {
       const firstRoom = booking.chiTiet?.[0];
       const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0), 0);
       const totalChildren = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soTreEm || 0), 0);
       
-      setFormData({
+      // Get coSoId from booking or find by matching coSo data
+      const coSoId = booking.coSo?.maCoSo || '';
+      
+      // Get roomId from first chiTiet
+      const maPhong = firstRoom?.phong?.maPhong || '';
+      
+      setFormData(prev => ({
         // Basic booking info
-        ngayDat: booking.ngayDat?.split('T')[0] || '',
-        checkinDuKien: booking.checkinDuKien?.split('T')[0] || '',
-        checkoutDuKien: booking.checkoutDuKien?.split('T')[0] || '',
-        trangThai: booking.trangThai || 'R',
-        phuongThucThanhToan: booking.phuongThucThanhToan || 'Cash',
-        notes: booking.notes || '',
+        ngayDat: booking.ngayDat?.split('T')[0] || prev.ngayDat,
+        checkinDuKien: booking.checkinDuKien?.split('T')[0] || prev.checkinDuKien,
+        checkoutDuKien: booking.checkoutDuKien?.split('T')[0] || prev.checkoutDuKien,
+        trangThai: booking.trangThai || prev.trangThai,
+        phuongThucThanhToan: booking.phuongThucThanhToan || prev.phuongThucThanhToan,
+        notes: booking.notes || prev.notes,
         
-        // Required fields for creation
-        coSoId: booking.coSo?.maCoSo || '',
-        nhanVienId: booking.nhanVien?.maNhanVien || '',
-        customerEmail: booking.customerEmail || '',
-        customerPhone: booking.customerPhone || '',
-        customerName: booking.customerName || '',
+        // Required fields for creation - preserve if already set
+        coSoId: coSoId || prev.coSoId,
+        nhanVienId: booking.nhanVien?.maNhanVien || prev.nhanVienId,
+        customerEmail: booking.customerEmail || booking.khachHang?.email || prev.customerEmail,
+        customerPhone: booking.customerPhone || booking.khachHang?.soDienThoai || prev.customerPhone,
+        customerName: booking.customerName || booking.khachHang?.tenKhachHang || prev.customerName,
         
         // Room details
         rooms: booking.chiTiet?.map(ct => ({
@@ -113,24 +115,16 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
           adults: ct.soNguoiLon || 1,
           children: ct.soTreEm || 0,
           price: ct.donGia || 0
-        })) || [{
-          roomId: '',
-          checkIn: '',
-          checkOut: '',
-          adults: 1,
-          children: 0,
-          price: 0
-        }],
+        })) || prev.rooms,
         
-        // Legacy fields for backward compatibility
-        maKhachHang: booking.khachHang?.maKhachHang || '',
-        maPhong: firstRoom?.phong?.maPhong || '',
-        soNguoiLon: totalGuests || 1,
-        soTreEm: totalChildren || 0,
-        totalAmount: booking.totalAmount || 0
-      });
+        // Legacy fields for backward compatibility - preserve room info
+        maPhong: maPhong || prev.maPhong,
+        soNguoiLon: totalGuests || prev.soNguoiLon,
+        soTreEm: totalChildren || prev.soTreEm,
+        totalAmount: booking.totalAmount || prev.totalAmount
+      }));
     }
-  }, [booking]);
+  }, [booking, cosos, rooms]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,7 +257,18 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Cơ sở <span className="text-red-500">*</span></label>
                 <select
                   value={formData.coSoId}
-                  onChange={(e) => setFormData({ ...formData, coSoId: e.target.value })}
+                  onChange={(e) => {
+                    const newCoSoId = e.target.value;
+                    // Reset phòng đã chọn nếu phòng đó không thuộc cơ sở mới
+                    const selectedRoom = rooms.find(r => r.maPhong === formData.maPhong);
+                    const shouldResetRoom = newCoSoId && selectedRoom && selectedRoom.coSo?.maCoSo !== newCoSoId;
+                    
+                    setFormData({ 
+                      ...formData, 
+                      coSoId: newCoSoId,
+                      maPhong: shouldResetRoom ? '' : formData.maPhong
+                    });
+                  }}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   required
                 >
@@ -426,35 +431,32 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Khách hàng (Legacy)</label>
-                <select
-                  value={formData.maKhachHang}
-                  onChange={(e) => setFormData({ ...formData, maKhachHang: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                >
-                  <option value="">Chọn khách hàng</option>
-                  {customers.map((customer) => (
-                    <option key={customer.maKhachHang} value={customer.maKhachHang}>
-                      {customer.tenKhachHang} - {customer.email}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Phòng (Legacy)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Phòng <span className="text-red-500">*</span></label>
                 <select
                   value={formData.maPhong}
                   onChange={(e) => setFormData({ ...formData, maPhong: e.target.value })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                  required
+                  disabled={!formData.coSoId}
                 >
-                  <option value="">Chọn phòng</option>
-                  {rooms.map((room) => (
-                    <option key={room.maPhong} value={room.maPhong}>
-                      {room.tenPhong || room.moTa} - {formatPrice(room.donGiaQuaDem || room.donGia4h || 0)}/đêm
-                    </option>
-                  ))}
+                  <option value="">
+                    {formData.coSoId ? 'Chọn phòng' : 'Vui lòng chọn cơ sở trước'}
+                  </option>
+                  {rooms
+                    .filter(room => {
+                      // Chỉ hiển thị phòng thuộc cơ sở đã chọn
+                      if (!formData.coSoId) return false;
+                      return room.coSo?.maCoSo === formData.coSoId;
+                    })
+                    .map((room) => (
+                      <option key={room.maPhong} value={room.maPhong}>
+                        {room.tenPhong || room.moTa} - {formatPrice(room.donGiaQuaDem || room.donGia4h || 0)}/đêm
+                      </option>
+                    ))}
                 </select>
+                {!formData.coSoId && (
+                  <p className="text-sm text-gray-500 mt-1">Vui lòng chọn cơ sở trước khi chọn phòng</p>
+                )}
               </div>
             </div>
 

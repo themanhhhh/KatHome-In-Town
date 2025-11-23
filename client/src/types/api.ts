@@ -7,6 +7,7 @@ export interface ApiRoom {
   donGia4h: number;
   donGiaQuaDem: number;
   hinhAnh?: string;
+  status?: string; // 'available', 'maintenance', 'blocked', 'booked'
   coSo?: {
     maCoSo: string;
     tenCoSo: string;
@@ -142,4 +143,5 @@ export interface ApiCoSo {
   email?: string;
   moTa?: string;
   hinhAnh?: string;
+  trangThai?: string; // 'active', 'inactive', 'maintenance'
 }

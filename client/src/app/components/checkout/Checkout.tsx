@@ -57,7 +57,6 @@ interface BookingData {
     email: string;
     phone: string;
     address: string;
-    city: string;
     specialRequests: string;
   };
   paymentInfo: {
@@ -98,7 +97,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     email: "",
     phone: "",
     address: "",
-    city: "",
     specialRequests: "",
     paymentMethod: "",
     cardNumber: "",
@@ -152,7 +150,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     if (!formData.phone.trim()) newErrors.phone = "Vui lòng nhập số điện thoại";
     else if (!/^\d{10,11}$/.test(formData.phone.replace(/\D/g, ''))) newErrors.phone = "Số điện thoại không hợp lệ";
     if (!formData.address.trim()) newErrors.address = "Vui lòng nhập địa chỉ";
-    if (!formData.city.trim()) newErrors.city = "Vui lòng chọn thành phố";
     if (!formData.paymentMethod) newErrors.paymentMethod = "Vui lòng chọn phương thức thanh toán";
     
     if (formData.paymentMethod === "card") {
@@ -208,7 +205,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               email: formData.email,
               phone: formData.phone,
               address: formData.address,
-              city: formData.city,
               specialRequests: formData.specialRequests
             },
             paymentInfo: {

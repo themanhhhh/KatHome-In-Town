@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import * as XLSX from 'xlsx';
 import { 
   Search,
   Filter,
@@ -25,6 +26,7 @@ import { donDatPhongApi } from "../../../lib/api";
 import { ApiBooking } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { BookingForm } from "../../components/booking-form";
+import { toast } from "sonner";
 
 // Using ApiBooking type from types/api.ts
 
@@ -42,7 +44,10 @@ const BookingsManagementPage = () => {
   );
 
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | undefined | null) => {
+    if (price === undefined || price === null || isNaN(price)) {
+      return '0đ';
+    }
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   };
 
@@ -153,6 +158,67 @@ const BookingsManagementPage = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    try {
+      const exportData = filteredBookings.map(booking => {
+        // Get room info from first chiTiet
+        const firstChiTiet = booking.chiTiet?.[0];
+        const roomName = firstChiTiet?.phong?.tenPhong || firstChiTiet?.phong?.moTa || 'N/A';
+        
+        // Get total guests
+        const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => 
+          sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0
+        );
+
+        // Get status label
+        const getStatusLabel = (status: string) => {
+          switch (status) {
+            case 'CF': return 'Đã xác nhận';
+            case 'R': return 'Chờ xác nhận';
+            case 'AB': return 'Đã hủy';
+            case 'CC': return 'Hoàn thành';
+            default: return status;
+          }
+        };
+
+        return {
+          'Mã booking': booking.maDatPhong,
+          'Khách hàng': booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
+          'Email': booking.khachHang?.email || booking.customerEmail || 'N/A',
+          'Số điện thoại': booking.khachHang?.soDienThoai || booking.customerPhone || 'N/A',
+          'Phòng': roomName,
+          'Cơ sở': booking.coSo?.tenCoSo || 'N/A',
+          'Ngày đặt': booking.ngayDat ? formatDate(booking.ngayDat) : 'N/A',
+          'Check-in': booking.checkinDuKien ? formatDate(booking.checkinDuKien) : 'N/A',
+          'Check-out': booking.checkoutDuKien ? formatDate(booking.checkoutDuKien) : 'N/A',
+          'Số khách': totalGuests,
+          'Tổng tiền': booking.totalAmount ? formatPrice(booking.totalAmount) : '0đ',
+          'Trạng thái': getStatusLabel(booking.trangThai || ''),
+          'Phương thức thanh toán': booking.phuongThucThanhToan || 'N/A',
+          'Ghi chú': booking.notes || ''
+        };
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Danh sách đặt phòng');
+
+      const filename = `DanhSachDatPhong_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, filename);
+
+      toast.success('Xuất Excel thành công!', {
+        description: `File ${filename} đã được tải xuống.`,
+        duration: 4000,
+      });
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      toast.error('Lỗi xuất Excel', {
+        description: error instanceof Error ? error.message : 'Có lỗi xảy ra',
+        duration: 5000,
+      });
+    }
+  };
+
   // Loading and error states
   if (bookingsLoading) {
     return <LoadingSpinner text="Đang tải..." />;
@@ -189,7 +255,7 @@ const BookingsManagementPage = () => {
           </div>
           
           <div className={Style.headerActions}>
-            <button className={Style.exportButton}>
+            <button className={Style.exportButton} onClick={handleExportExcel}>
               <Download className="w-4 h-4" />
               <span>Xuất Excel</span>
             </button>
@@ -274,7 +340,16 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {formatPrice((bookings || []).reduce((sum, b) => sum + (b.totalAmount || 0), 0))}
+              {(() => {
+                const totalRevenue = (bookings || []).reduce((sum, b) => {
+                  const amount = b.totalAmount;
+                  if (amount && !isNaN(amount) && amount > 0) {
+                    return sum + amount;
+                  }
+                  return sum;
+                }, 0);
+                return formatPrice(totalRevenue);
+              })()}
             </div>
             <div className={Style.statLabel}>
               Tổng doanh thu

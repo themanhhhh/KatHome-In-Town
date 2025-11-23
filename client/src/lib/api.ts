@@ -18,6 +18,18 @@ export class ApiError extends Error {
 }
 
 /**
+ * Get auth token from localStorage
+ */
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem('auth_token');
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Generic API request function
  */
 async function apiRequest<T>(
@@ -26,13 +38,22 @@ async function apiRequest<T>(
 ): Promise<T> {
   const url = API_BASE_URL ? `${API_BASE_URL}/api/${endpoint}` : `/api/${endpoint}`;
 
+  // Get auth token if available
+  const token = getAuthToken();
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options?.headers,
+  };
+
+  // Add authorization header if token exists
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   try {
     const response = await fetch(url, {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
+      headers,
     });
 
     const data = await response.json();

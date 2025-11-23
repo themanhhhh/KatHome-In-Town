@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import * as XLSX from 'xlsx';
 import { 
   Search,
   Filter,
@@ -21,10 +22,11 @@ import {
 
 import Style from "../../styles/usersmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
-import { usersApi, khachHangApi } from "../../../lib/api";
-import { ApiUser, ApiCustomer } from "../../../types/api";
+import { usersApi, khachHangApi, donDatPhongApi } from "../../../lib/api";
+import { ApiUser, ApiCustomer, ApiBooking } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { UserForm } from "../../components/user-form";
+import { toast } from "sonner";
 
 // Using ApiUser and ApiCustomer types from types/api.ts
 
@@ -49,63 +51,74 @@ const UsersManagementPage = () => {
     []
   );
 
+  // Fetch bookings to calculate real statistics
+  const { data: bookings = [] } = useApi<ApiBooking[]>(
+    () => donDatPhongApi.getAll(),
+    []
+  );
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
-  };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      active: { label: 'Hoạt động', className: Style.badgeActive },
-      inactive: { label: 'Không hoạt động', className: Style.badgeInactive },
-      banned: { label: 'Bị cấm', className: Style.badgeBanned }
-    };
+  // Calculate real statistics from bookings
+  const userStats = React.useMemo(() => {
+    const stats: Record<string, { bookings: number; spent: number }> = {};
     
-    const config = statusConfig[status as keyof typeof statusConfig] || { label: status, className: Style.badge };
+    (bookings || []).forEach(booking => {
+      const email = booking.customerEmail || booking.khachHang?.email;
+      if (email) {
+        if (!stats[email]) {
+          stats[email] = { bookings: 0, spent: 0 };
+        }
+        stats[email].bookings += 1;
+        stats[email].spent += booking.totalAmount || 0;
+      }
+    });
     
-    return (
-      <span className={`${Style.badge} ${config.className}`}>
-        {config.label}
-      </span>
-    );
-  };
+    return stats;
+  }, [bookings]);
 
   // Combine users and customers for unified display
   const allUsers = [
-    ...(users || []).map(user => ({
-      ...user,
-      id: user.id.toString(),
-      name: user.taiKhoan || 'N/A',
-      email: user.email || 'N/A',
-      phone: 'N/A', // ApiUser doesn't have phone
-      city: 'N/A', // ApiUser doesn't have city
-      registrationDate: user.ngayTao,
-      lastLogin: user.lanDangNhapCuoi || 'N/A',
-      status: user.trangThai,
-      type: 'user' as const,
-      totalBookings: 0, // Placeholder
-      totalSpent: 0, // Placeholder
-      averageRating: 0 // Placeholder
-    })),
-    ...(customers || []).map(customer => ({
-      ...customer,
-      id: customer.maKhachHang,
-      name: customer.tenKhachHang,
-      email: customer.email,
-      phone: customer.soDienThoai,
-      city: customer.diaChi || 'N/A',
-      registrationDate: customer.ngayTao || 'N/A',
-      lastLogin: 'N/A',
-      status: 'active' as const,
-      type: 'customer' as const,
-      totalBookings: 0, // Placeholder
-      totalSpent: 0, // Placeholder
-      averageRating: 0 // Placeholder
-    }))
+    ...(users || []).map(user => {
+      const email = user.gmail || '';
+      const stats = email ? userStats[email] : null;
+      return {
+        ...user,
+        id: user.id.toString(),
+        name: user.taiKhoan || 'N/A',
+        email: email || 'N/A',
+        phone: user.soDienThoai || 'N/A',
+        city: user.diaChi || 'N/A',
+        registrationDate: user.createdAt || 'N/A',
+        lastLogin: 'N/A',
+        status: 'active' as const,
+        type: 'user' as const,
+        totalBookings: stats?.bookings || 0,
+        totalSpent: stats?.spent || 0,
+        averageRating: 0 // Placeholder
+      };
+    }),
+    ...(customers || []).map(customer => {
+      const stats = customer.email ? userStats[customer.email] : null;
+      return {
+        ...customer,
+        id: customer.maKhachHang,
+        name: customer.tenKhachHang,
+        email: customer.email,
+        phone: customer.soDienThoai,
+        city: customer.diaChi || 'N/A',
+        registrationDate: customer.ngayTao || 'N/A',
+        lastLogin: 'N/A',
+        status: 'active' as const,
+        type: 'customer' as const,
+        totalBookings: stats?.bookings || 0,
+        totalSpent: stats?.spent || 0,
+        averageRating: 0 // Placeholder
+      };
+    })
   ];
 
   const filteredUsers = allUsers.filter(user => {
@@ -218,6 +231,39 @@ const UsersManagementPage = () => {
     }
   };
 
+  const handleExportExcel = () => {
+    try {
+      const exportData = filteredUsers.map(user => ({
+        'ID': user.id,
+        'Tên': user.name || 'N/A',
+        'Loại': user.type === 'user' ? 'Người dùng hệ thống' : 'Khách hàng',
+        'Email': user.email || 'N/A',
+        'Số điện thoại': user.phone || 'N/A',
+        'Địa chỉ': user.city || 'N/A',
+        'Tổng booking': user.totalBookings || 0,
+        'Tổng chi tiêu': user.totalSpent ? formatPrice(user.totalSpent) : '0đ'
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Danh sách người dùng');
+
+      const filename = `DanhSachNguoiDung_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, filename);
+
+      toast.success('Xuất Excel thành công!', {
+        description: `File ${filename} đã được tải xuống.`,
+        duration: 4000,
+      });
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      toast.error('Lỗi xuất Excel', {
+        description: error instanceof Error ? error.message : 'Có lỗi xảy ra',
+        duration: 5000,
+      });
+    }
+  };
+
   // Loading and error states
   const isLoading = usersLoading || customersLoading;
   const hasError = usersError || customersError;
@@ -253,7 +299,7 @@ const UsersManagementPage = () => {
           </div>
           
           <div className={Style.headerActions}>
-            <button className={Style.exportButton}>
+            <button className={Style.exportButton} onClick={handleExportExcel}>
               <Download className="w-4 h-4" />
               <span>Xuất Excel</span>
             </button>
@@ -399,9 +445,7 @@ const UsersManagementPage = () => {
                   <th className={Style.tableHeadCell}>Người dùng</th>
                   <th className={Style.tableHeadCell}>Liên hệ</th>
                   <th className={Style.tableHeadCell}>Địa điểm</th>
-                  <th className={Style.tableHeadCell}>Hoạt động</th>
                   <th className={Style.tableHeadCell}>Thống kê</th>
-                  <th className={Style.tableHeadCell}>Trạng thái</th>
                   <th className={Style.tableHeadCell}>Hành động</th>
                 </tr>
               </thead>
@@ -448,18 +492,6 @@ const UsersManagementPage = () => {
                       </div>
                     </td>
                     <td className={Style.tableCell}>
-                      <div className={Style.activityInfo}>
-                        <div>
-                          <span className={Style.activityLabel}>Đăng ký: </span>
-                          {formatDate(user.registrationDate)}
-                        </div>
-                        <div>
-                          <span className={Style.activityLabel}>Truy cập: </span>
-                          {user.lastLogin !== 'N/A' ? formatDate(user.lastLogin) : 'Chưa có'}
-                        </div>
-                      </div>
-                    </td>
-                    <td className={Style.tableCell}>
                       <div className={Style.statsInfo}>
                         <div className={Style.statItem}>
                           <Calendar className={Style.statIcon} />
@@ -482,9 +514,6 @@ const UsersManagementPage = () => {
                           </div>
                         )}
                       </div>
-                    </td>
-                    <td className={Style.tableCell}>
-                      {getStatusBadge(user.status)}
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.actions}>
@@ -572,6 +601,48 @@ const UsersManagementPage = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Additional Sections: Reviews, Complaints, Notifications */}
+      <div className={Style.additionalSections}>
+        {/* Reviews Section */}
+        <div className={Style.sectionCard}>
+          <div className={Style.sectionHeader}>
+            <Star className={Style.sectionIcon} />
+            <h3 className={Style.sectionTitle}>Đánh giá</h3>
+          </div>
+          <div className={Style.sectionContent}>
+            <p className={Style.sectionPlaceholder}>
+              Phần đánh giá sẽ được hiển thị tại đây
+            </p>
+          </div>
+        </div>
+
+        {/* Complaints Section */}
+        <div className={Style.sectionCard}>
+          <div className={Style.sectionHeader}>
+            <AlertCircle className={Style.sectionIcon} />
+            <h3 className={Style.sectionTitle}>Khiếu nại</h3>
+          </div>
+          <div className={Style.sectionContent}>
+            <p className={Style.sectionPlaceholder}>
+              Phần khiếu nại sẽ được hiển thị tại đây
+            </p>
+          </div>
+        </div>
+
+        {/* Notifications Section */}
+        <div className={Style.sectionCard}>
+          <div className={Style.sectionHeader}>
+            <Calendar className={Style.sectionIcon} />
+            <h3 className={Style.sectionTitle}>Thông báo</h3>
+          </div>
+          <div className={Style.sectionContent}>
+            <p className={Style.sectionPlaceholder}>
+              Phần thông báo sẽ được hiển thị tại đây
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* User Form Modal */}

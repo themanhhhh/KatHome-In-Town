@@ -654,3 +654,52 @@
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* Additional Sections */
+.additionalSections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.sectionCard {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sectionIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #3D0301;
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #3D0301;
+  margin: 0;
+}
+
+.sectionContent {
+  min-height: 100px;
+}
+
+.sectionPlaceholder {
+  color: #6b7280;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 2rem 0;
+}

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import * as XLSX from 'xlsx';
 import { 
   Search,
   Filter,
@@ -24,6 +25,7 @@ import { cosoApi } from "../../../lib/api";
 import { ApiCoSo } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { CoSoForm } from "../../components/coso-form";
+import { toast } from "sonner";
 
 const CoSoManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,8 +47,10 @@ const CoSoManagementPage = () => {
                          (coso.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (coso.soDienThoai || '').includes(searchTerm);
     
-    // For now, just return search matches since ApiCoSo doesn't have status field
-    return matchesSearch;
+    const matchesStatus = statusFilter === 'all' || 
+                         (coso.trangThai || 'active') === statusFilter;
+    
+    return matchesSearch && matchesStatus;
   });
 
   // Selection functions
@@ -113,6 +117,48 @@ const CoSoManagementPage = () => {
     return phone.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
   };
 
+  const handleExportExcel = () => {
+    try {
+      const getStatusLabel = (status: string) => {
+        switch (status) {
+          case 'active': return 'Hoạt động';
+          case 'inactive': return 'Tạm dừng';
+          case 'maintenance': return 'Bảo trì';
+          default: return status;
+        }
+      };
+
+      const exportData = filteredCoSos.map(coso => ({
+        'Mã cơ sở': coso.maCoSo,
+        'Tên cơ sở': coso.tenCoSo,
+        'Địa chỉ': coso.diaChi || 'N/A',
+        'Số điện thoại': coso.soDienThoai || 'N/A',
+        'Email': coso.email || 'N/A',
+        'Trạng thái': getStatusLabel(coso.trangThai || 'active'),
+        'Mô tả': coso.moTa || 'N/A',
+        'Hình ảnh': coso.hinhAnh || 'N/A'
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Danh sách cơ sở');
+
+      const filename = `DanhSachCoSo_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, filename);
+
+      toast.success('Xuất Excel thành công!', {
+        description: `File ${filename} đã được tải xuống.`,
+        duration: 4000,
+      });
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      toast.error('Lỗi xuất Excel', {
+        description: error instanceof Error ? error.message : 'Có lỗi xảy ra',
+        duration: 5000,
+      });
+    }
+  };
+
   // Loading and error states
   if (cososLoading) {
     return <LoadingSpinner text="Đang tải ..." />;
@@ -149,7 +195,7 @@ const CoSoManagementPage = () => {
           </div>
           
           <div className={Style.headerActions}>
-            <button className={Style.exportButton}>
+            <button className={Style.exportButton} onClick={handleExportExcel}>
               <Download className="w-4 h-4" />
               <span>Xuất Excel</span>
             </button>
@@ -288,6 +334,7 @@ const CoSoManagementPage = () => {
                   <th className={Style.tableHeadCell}>Cơ sở</th>
                   <th className={Style.tableHeadCell}>Địa chỉ</th>
                   <th className={Style.tableHeadCell}>Liên hệ</th>
+                  <th className={Style.tableHeadCell}>Trạng thái</th>
                   <th className={Style.tableHeadCell}>Mô tả</th>
                   <th className={Style.tableHeadCell}>Hành động</th>
                 </tr>
@@ -342,6 +389,30 @@ const CoSoManagementPage = () => {
                             <Mail className={Style.contactIcon} />
                             <span className={Style.contactText}>{coso.email}</span>
                           </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className={Style.tableCell}>
+                      <div className={Style.statusInfo}>
+                        {coso.trangThai === 'active' && (
+                          <span className={`${Style.statusBadge} ${Style.statusActive}`}>
+                            Hoạt động
+                          </span>
+                        )}
+                        {coso.trangThai === 'inactive' && (
+                          <span className={`${Style.statusBadge} ${Style.statusInactive}`}>
+                            Tạm dừng
+                          </span>
+                        )}
+                        {coso.trangThai === 'maintenance' && (
+                          <span className={`${Style.statusBadge} ${Style.statusMaintenance}`}>
+                            Bảo trì
+                          </span>
+                        )}
+                        {!coso.trangThai && (
+                          <span className={`${Style.statusBadge} ${Style.statusActive}`}>
+                            Hoạt động
+                          </span>
                         )}
                       </div>
                     </td>

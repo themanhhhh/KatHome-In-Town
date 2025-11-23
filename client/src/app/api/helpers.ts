@@ -23,12 +23,27 @@ export async function forwardToBackend(
       }
     }
 
+    // Forward authorization header if present
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Forward authorization header from client request
+    const authHeader = request.headers.get('authorization');
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+    
+    // Forward other headers (except host and connection which are server-specific)
+    request.headers.forEach((value, key) => {
+      if (key.toLowerCase() !== 'host' && key.toLowerCase() !== 'connection') {
+        headers[key] = value;
+      }
+    });
+
     const response = await fetch(url, {
       method: request.method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...Object.fromEntries(request.headers.entries()),
-      },
+      headers,
       body: body ? JSON.stringify(body) : undefined,
       ...options,
     });

@@ -22,7 +22,8 @@ export function CoSoForm({ coso, onClose, onSuccess }: CoSoFormProps) {
     diaChi: '',
     soDienThoai: '',
     email: '',
-    moTa: ''
+    moTa: '',
+    trangThai: 'active'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -35,7 +36,8 @@ export function CoSoForm({ coso, onClose, onSuccess }: CoSoFormProps) {
         diaChi: coso.diaChi || '',
         soDienThoai: coso.soDienThoai || '',
         email: coso.email || '',
-        moTa: coso.moTa || ''
+        moTa: coso.moTa || '',
+        trangThai: coso.trangThai || 'active'
       });
     }
   }, [coso]);
@@ -186,6 +188,20 @@ export function CoSoForm({ coso, onClose, onSuccess }: CoSoFormProps) {
                 rows={3}
                 placeholder="Mô tả về cơ sở, tiện nghi, đặc điểm nổi bật..."
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Trạng thái</label>
+              <select
+                value={formData.trangThai}
+                onChange={(e) => setFormData({ ...formData, trangThai: e.target.value })}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                required
+              >
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Tạm dừng</option>
+                <option value="maintenance">Bảo trì</option>
+              </select>
             </div>
 
             <div>

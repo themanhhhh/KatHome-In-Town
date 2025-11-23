@@ -434,6 +434,20 @@
   opacity: 0.6;
 }
 
+.descriptionInfo {
+  display: flex;
+  align-items: flex-start;
+}
+
+.descriptionText {
+  font-size: 0.875rem;
+  color: #3D0301;
+  line-height: 1.5;
+  max-width: 300px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 .ratingInfo {
   display: flex;
   flex-direction: column;
@@ -651,20 +665,37 @@
 
 .statusInfo {
   display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  align-items: center;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
   font-size: 0.875rem;
-}
-
-.statusLabel {
-  color: #3D0301;
-  opacity: 0.7;
-  font-size: 0.75rem;
-}
-
-.statusValue {
-  color: #3D0301;
   font-weight: 500;
+  white-space: nowrap;
+}
+
+.statusAvailable {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.statusMaintenance {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.statusBlocked {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.statusBooked {
+  background-color: #dbeafe;
+  color: #1e40af;
 }
 
 .bulkButtonDanger {

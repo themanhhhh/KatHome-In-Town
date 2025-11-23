@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
+import * as XLSX from 'xlsx';
 import { 
   Search,
   Filter,
@@ -17,9 +18,6 @@ import {
   Star,
   DollarSign,
   Calendar,
-  Wifi,
-  Wind,
-  Tv,
   Home,
   AlertCircle,
   RefreshCw
@@ -27,8 +25,8 @@ import {
 
 import Style from "../../styles/roomsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
-import { phongApi, coSoApi } from "../../../lib/api";
-import { ApiRoom } from "../../../types/api";
+import { phongApi, coSoApi, donDatPhongApi } from "../../../lib/api";
+import { ApiRoom, ApiBooking } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { RoomForm } from "../../components/room-form";
 import { toast } from "sonner";
@@ -59,6 +57,12 @@ const RoomsManagementPage = () => {
     hinhAnh?: string;
   }>>(
     () => coSoApi.getAll(),
+    []
+  );
+
+  // Fetch bookings to calculate revenue
+  const { data: bookings = [] } = useApi<ApiBooking[]>(
+    () => donDatPhongApi.getAll(),
     []
   );
 
@@ -232,6 +236,64 @@ const RoomsManagementPage = () => {
     return Array.from(types).sort();
   }, [rooms]);
 
+  // Calculate statistics from real data
+  const totalRooms = (rooms || []).length;
+  const roomsWithCoSo = (rooms || []).filter(r => r.coSo?.tenCoSo).length;
+  const uniqueRoomTypesCount = uniqueRoomTypes.length;
+  
+  // Calculate total revenue from bookings
+  const totalRevenue = React.useMemo(() => {
+    return (bookings || []).reduce((sum, booking) => {
+      return sum + (booking.totalAmount || 0);
+    }, 0);
+  }, [bookings]);
+
+  const handleExportExcel = () => {
+    try {
+      const exportData = filteredRooms.map(room => {
+        const getStatusLabel = (status: string | undefined) => {
+          switch (status) {
+            case 'available': return 'Có sẵn';
+            case 'maintenance': return 'Bảo trì';
+            case 'blocked': return 'Đã chặn';
+            case 'booked': return 'Đã đặt';
+            default: return 'Có sẵn';
+          }
+        };
+
+        return {
+          'Mã phòng': room.maPhong,
+          'Hạng phòng': room.tenPhong || 'N/A',
+          'Mô tả': room.moTa || 'Chưa có mô tả',
+          'Cơ sở': room.coSo?.tenCoSo || 'N/A',
+          'Sức chứa': room.sucChua || 0,
+          'Giá qua đêm': room.donGiaQuaDem ? formatPrice(room.donGiaQuaDem) : 'N/A',
+          'Giá 4 giờ': room.donGia4h ? formatPrice(room.donGia4h) : 'N/A',
+          'Trạng thái': getStatusLabel(room.status),
+          'Hình ảnh': room.hinhAnh || 'N/A'
+        };
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Danh sách phòng');
+
+      const filename = `DanhSachPhong_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, filename);
+
+      toast.success('Xuất Excel thành công!', {
+        description: `File ${filename} đã được tải xuống.`,
+        duration: 4000,
+      });
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+      toast.error('Lỗi xuất Excel', {
+        description: error instanceof Error ? error.message : 'Có lỗi xảy ra',
+        duration: 5000,
+      });
+    }
+  };
+
 
   // Loading and error states
   if (roomsLoading) {
@@ -254,18 +316,6 @@ const RoomsManagementPage = () => {
     );
   }
 
-  const getAmenityIcon = (amenity: string) => {
-    switch (amenity.toLowerCase()) {
-      case 'wifi':
-        return <Wifi className={Style.amenityIcon} />;
-      case 'điều hòa':
-        return <Wind className={Style.amenityIcon} />;
-      case 'tivi':
-        return <Tv className={Style.amenityIcon} />;
-      default:
-        return <Star className={Style.amenityIcon} />;
-    }
-  };
 
   return (
     <div className={Style.roomsManagement}>
@@ -277,7 +327,7 @@ const RoomsManagementPage = () => {
             <p>Quản lý thông tin và trạng thái các phòng tại KatHome In Town</p>
           </div>
           <div className={Style.headerActions}>
-            <button className={Style.exportButton}>
+            <button className={Style.exportButton} onClick={handleExportExcel}>
               <Download className="w-4 h-4" />
               <span>Xuất Excel</span>
             </button>
@@ -342,7 +392,7 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(rooms || []).length}
+              {totalRooms}
             </div>
             <div className={Style.statLabel}>
               Tổng phòng
@@ -353,10 +403,10 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(rooms || []).filter(r => r.tenPhong).length}
+              {uniqueRoomTypesCount}
             </div>
             <div className={Style.statLabel}>
-              Có tên phòng
+              Số loại phòng
             </div>
           </div>
         </div>
@@ -364,7 +414,7 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(rooms || []).filter(r => r.coSo?.tenCoSo).length}
+              {roomsWithCoSo}
             </div>
             <div className={Style.statLabel}>
               Có cơ sở
@@ -375,7 +425,7 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {formatPrice(0)}
+              {formatPrice(totalRevenue)}
             </div>
             <div className={Style.statLabel}>
               Tổng doanh thu
@@ -424,7 +474,7 @@ const RoomsManagementPage = () => {
                   <th className={Style.tableHeadCell}>Hình ảnh</th>
                   <th className={Style.tableHeadCell}>Giá & Loại</th>
                   <th className={Style.tableHeadCell}>Chi tiết</th>
-                  <th className={Style.tableHeadCell}>Tiện nghi</th>
+                  <th className={Style.tableHeadCell}>Mô tả</th>
                   <th className={Style.tableHeadCell}>Đánh giá</th>
                   <th className={Style.tableHeadCell}>Thống kê</th>
                   <th className={Style.tableHeadCell}>Trạng thái</th>
@@ -491,13 +541,10 @@ const RoomsManagementPage = () => {
                       </div>
                     </td>
                     <td className={Style.tableCell}>
-                      <div className={Style.amenitiesList}>
-                        {['Wifi', 'Điều hòa'].slice(0, 3).map((amenity, index) => (
-                          <div key={index} className={Style.amenityItem}>
-                            {getAmenityIcon(amenity)}
-                            <span>{amenity}</span>
-                          </div>
-                        ))}
+                      <div className={Style.descriptionInfo}>
+                        <span className={Style.descriptionText}>
+                          {room.moTa || 'Chưa có mô tả'}
+                        </span>
                       </div>
                     </td>
                     <td className={Style.tableCell}>
@@ -531,10 +578,31 @@ const RoomsManagementPage = () => {
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.statusInfo}>
-                        <span className={Style.statusLabel}>Tên phòng:</span>
-                        <span className={Style.statusValue}>
-                          {room.tenPhong || 'N/A'}
-                        </span>
+                        {room.status === 'available' && (
+                          <span className={`${Style.statusBadge} ${Style.statusAvailable}`}>
+                            Có sẵn
+                          </span>
+                        )}
+                        {room.status === 'maintenance' && (
+                          <span className={`${Style.statusBadge} ${Style.statusMaintenance}`}>
+                            Bảo trì
+                          </span>
+                        )}
+                        {room.status === 'blocked' && (
+                          <span className={`${Style.statusBadge} ${Style.statusBlocked}`}>
+                            Đã chặn
+                          </span>
+                        )}
+                        {room.status === 'booked' && (
+                          <span className={`${Style.statusBadge} ${Style.statusBooked}`}>
+                            Đã đặt
+                          </span>
+                        )}
+                        {!room.status && (
+                          <span className={`${Style.statusBadge} ${Style.statusAvailable}`}>
+                            Có sẵn
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className={Style.tableCell}>

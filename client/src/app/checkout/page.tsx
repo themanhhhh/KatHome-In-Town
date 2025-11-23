@@ -76,7 +76,6 @@ export default function CheckoutPage() {
       phone: string;
       address: string;
       city: string;
-      zipCode: string;
       specialRequests: string;
     };
     paymentInfo: {

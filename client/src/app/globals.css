@@ -395,4 +395,12 @@ html {
   .focus\:border-brand-primary:focus { border-color: var(--brand-primary); }
   .focus\:ring-brand-primary:focus { --tw-ring-color: var(--brand-primary); }
   .focus\:ring-brand-shadow:focus { --tw-ring-color: var(--brand-shadow); }
+  
+  /* Force white background for SelectContent */
+  [data-slot="select-content"] {
+    background-color: #ffffff !important;
+  }
+  [data-slot="select-content"] [data-radix-select-viewport] {
+    background-color: #ffffff !important;
+  }
 }

@@ -73,7 +73,7 @@ const NIGHT_IN_MS = 1000 * 60 * 60 * 24;
 
 const formatCurrency = (value: number) => {
   if (!value) {
-    return "Lien he";
+    return "Liên hệ";
   }
   return `${new Intl.NumberFormat("vi-VN").format(value)} VND`;
 };
@@ -147,7 +147,7 @@ export function RoomDetail({
         if (!active) {
           return;
         }
-        setError(err instanceof Error ? err.message : "Khong the tai du lieu phong");
+        setError(err instanceof Error ? err.message : "Không thể tải dữ liệu phòng");
       } finally {
         if (active) {
           setLoading(false);
@@ -194,7 +194,7 @@ export function RoomDetail({
   const tax = subtotal > 0 ? Math.round(subtotal * 0.1) : 0;
   const total = subtotal + serviceFee + tax;
 
-  const locationName = room?.coSo?.tenCoSo ?? "Chưa co thông tin cơ sở";
+  const locationName = room?.coSo?.tenCoSo ?? "Chưa có thông tin cơ sở";
   const locationAddress = room?.coSo?.diaChi ?? "Chưa cập nhật địa chỉ";
   const contactPhone = room?.coSo?.sdt ?? "Chưa cập nhật số điện thoại";
   const contactEmail = "Chưa cập nhật email";
@@ -202,8 +202,8 @@ export function RoomDetail({
     room?.coSo
       ? [room.coSo.tenCoSo, room.coSo.diaChi]
           .filter((value): value is string => Boolean(value && value.trim()))
-          .join(" - ") || "Chưa co thông tin cơ sở"
-      : "Chưa co thông tin cơ sở";
+          .join(" - ") || "Chưa có thông tin cơ sở"
+      : "Chưa có thông tin cơ sở";
 
   const description =
     room?.moTa || "Thông tin về phòng sẽ được cập nhật sớm.";
@@ -413,7 +413,7 @@ const amenitiesToShow = useMemo(() => {
                     <div className="flex items-center gap-2">
                       <Badge
                         variant="secondary"
-                        style={{ backgroundColor: "rgba(61,3,1,0.1)", color: "#3D0301" }}
+                        style={{ backgroundColor: "#ffffff", color: "#3D0301", borderColor: "#3D0301" }}
                       >
                         {displayType}
                       </Badge>
@@ -434,15 +434,11 @@ const amenitiesToShow = useMemo(() => {
                   </div>
 
                   <div className="text-right space-y-1">
-                    <div className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
-                      Gia theo 4 gio
-                    </div>
+                    
                     <div className="text-2xl font-semibold" style={{ color: "#3D0301" }}>
                       {formatCurrency(pricing.fourHour)}
                     </div>
-                    <div className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
-                      Gia qua đêm: {formatCurrency(pricing.overnight)}
-                    </div>
+                    
                   </div>
                 </div>
 
@@ -461,32 +457,10 @@ const amenitiesToShow = useMemo(() => {
                   </div>
                 </div>
 
-                <div>
-                  <h2 className="text-lg font-semibold mb-3" style={{ color: "#3D0301" }}>
-                    Tiện nghi nổi bật
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {amenitiesToShow.length > 0 ? (
-                      amenitiesToShow.map((amenity) => (
-                        <Badge
-                          key={amenity}
-                          variant="outline"
-                          className="text-xs"
-                          style={{ borderColor: "#3D0301", color: "#3D0301" }}
-                        >
-                          {amenity}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-sm opacity-70" style={{ color: "rgba(61,3,1,0.7)" }}>
-                        Chưa có thông tin tiện nghi
-                      </span>
-                    )}
-                  </div>
-                </div>
+                
 
                 <Tabs defaultValue="overview" className="w-full">
-                  <TabsList className="grid grid-cols-3 bg-white/60" style={{ color: "#3D0301" }}>
+                  <TabsList className="grid grid-cols-3 bg-white" style={{ color: "#3D0301" }}>
                     <TabsTrigger value="overview">Tổng quan</TabsTrigger>
                     <TabsTrigger value="policy">Chính sách</TabsTrigger>
                     <TabsTrigger value="area">Khu vực</TabsTrigger>
@@ -546,7 +520,7 @@ const amenitiesToShow = useMemo(() => {
                     Đặt phòng
                   </h3>
                   <p className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
-                    Gia da bao gom phí dịch vụ và thuế.
+                    Giá đã bao gồm phí dịch vụ và thuế.
                   </p>
                 </div>
 

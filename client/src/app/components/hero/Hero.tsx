@@ -115,7 +115,10 @@ export function Hero({ onSearch }: HeroProps) {
                          <Building2 className="w-4 h-4 mr-2" style={{ color: '#82213D' }} />
                          <SelectValue placeholder="Chọn cơ sở" />
                        </SelectTrigger>
-                       <SelectContent>
+                       <SelectContent 
+                         className="bg-white border shadow-lg"
+                         style={{ backgroundColor: '#ffffff' }}
+                       >
                          <SelectItem value="all">Tất cả cơ sở</SelectItem>
                          {coSoList.map((coSo) => (
                            <SelectItem key={coSo.maCoSo} value={coSo.maCoSo}>

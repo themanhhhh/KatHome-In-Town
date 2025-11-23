@@ -449,32 +449,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                     )}
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label style={{ color: '#3D0301' }}>Thành phố *</Label>
-                      <Select value={formData.city} onValueChange={(value: string) => handleInputChange('city', value)}>
-                        <SelectTrigger className={`${errors.city ? 'border-red-500' : ''} bg-white`} style={{ color: '#3D0301', backgroundColor: '#ffffff' }}>
-                          <SelectValue placeholder="Chọn thành phố" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white" style={{ backgroundColor: '#ffffff' }}>
-                          <SelectItem value="ho-chi-minh">TP. Hồ Chí Minh</SelectItem>
-                          <SelectItem value="ha-noi">Hà Nội</SelectItem>
-                          <SelectItem value="da-nang">Đà Nẵng</SelectItem>
-                          <SelectItem value="da-lat">Đà Lạt</SelectItem>
-                          <SelectItem value="nha-trang">Nha Trang</SelectItem>
-                          <SelectItem value="hoi-an">Hội An</SelectItem>
-                          <SelectItem value="phu-quoc">Phú Quốc</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {errors.city && (
-                        <p className="text-sm text-red-500 flex items-center space-x-1">
-                          <AlertCircle className="w-3 h-3" />
-                          <span>{errors.city}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
                   <div className="space-y-2">
                     <Label style={{ color: '#3D0301' }}>Yêu cầu đặc biệt</Label>
                     <Textarea

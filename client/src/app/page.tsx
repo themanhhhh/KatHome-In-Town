@@ -13,13 +13,16 @@ import { Footer } from "./components/footer/footer";
 export default function HomePage() {
   const router = useRouter();
 
-  const handleSearch = (data: { checkIn: string; checkOut: string; guests: number }) => {
+  const handleSearch = (data: { checkIn: string; checkOut: string; guests: number; coSoId?: string }) => {
     // Navigate to search page with query params
     const params = new URLSearchParams({
       checkIn: data.checkIn,
       checkOut: data.checkOut,
       guests: data.guests.toString(),
     });
+    if (data.coSoId) {
+      params.append('coSoId', data.coSoId);
+    }
     router.push(`/search?${params.toString()}`);
   };
 

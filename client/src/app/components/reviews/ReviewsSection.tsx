@@ -8,6 +8,7 @@ import { Input } from "../input/input";
 import { Label } from "../label/label";
 import { Textarea } from "../textarea/textarea";
 import { Star, MessageSquare, TrendingUp, Users } from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
 
 interface Review {
   maDanhGia: string;
@@ -31,6 +32,7 @@ interface Stats {
 }
 
 export const ReviewsSection: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -48,6 +50,18 @@ export const ReviewsSection: React.FC = () => {
     fetchReviews();
     fetchStats();
   }, []);
+
+  // Auto-fill form when user is logged in and form is shown
+  useEffect(() => {
+    if (showForm && isAuthenticated && user) {
+      setFormData(prev => ({
+        ...prev,
+        hoTen: prev.hoTen || user.taiKhoan || '',
+        email: prev.email || user.gmail || '',
+        soDienThoai: prev.soDienThoai || user.soDienThoai || ''
+      }));
+    }
+  }, [showForm, isAuthenticated, user]);
 
   const fetchReviews = async () => {
     try {

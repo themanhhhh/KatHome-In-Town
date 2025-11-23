@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent } from "../card/card";
 import { Button } from "../ui/button";
@@ -8,8 +8,10 @@ import { Input } from "../input/input";
 import { Label } from "../label/label";
 import { Textarea } from "../textarea/textarea";
 import { MessageSquare, AlertCircle } from "lucide-react";
+import { useAuth } from "../../../contexts/AuthContext";
 
 export const ComplaintsSection: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,6 +22,18 @@ export const ComplaintsSection: React.FC = () => {
     tieuDe: '',
     dienGiai: ''
   });
+
+  // Auto-fill form when user is logged in and form is shown
+  useEffect(() => {
+    if (showForm && isAuthenticated && user) {
+      setFormData(prev => ({
+        ...prev,
+        hoTen: prev.hoTen || user.taiKhoan || '',
+        email: prev.email || user.gmail || '',
+        soDienThoai: prev.soDienThoai || user.soDienThoai || ''
+      }));
+    }
+  }, [showForm, isAuthenticated, user]);
 
   const complaintTypes = [
     { value: 'service', label: 'Dịch vụ' },

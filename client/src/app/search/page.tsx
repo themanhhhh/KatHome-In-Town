@@ -13,11 +13,13 @@ export default function SearchPage() {
   const checkIn = searchParams.get('checkIn') || '';
   const checkOut = searchParams.get('checkOut') || '';
   const guests = parseInt(searchParams.get('guests') || '1');
+  const coSoId = searchParams.get('coSoId') || undefined;
 
   const searchData = {
     checkIn,
     checkOut,
     guests,
+    coSoId,
   };
 
   const handleBackToHome = () => {

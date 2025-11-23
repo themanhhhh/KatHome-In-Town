@@ -14,17 +14,26 @@ import {
   ChevronDown,
   Filter,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../dropdown-menu/dropdown-menu";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import {
   AvailabilityRoom,
   availabilityApi,
+  coSoApi,
 } from "@/lib/api";
+import { ApiCoSo } from "@/types/api";
 
 interface SearchResultsProps {
   searchData: {
     checkIn: string;
     checkOut: string;
     guests: number;
+    coSoId?: string;
   };
   onBackToHome: () => void;
   onViewRoomDetail: (roomId: string) => void;
@@ -56,21 +65,46 @@ export function SearchResults({
 }: SearchResultsProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [rooms, setRooms] = useState<UiRoom[]>([]);
+  const [sortedRooms, setSortedRooms] = useState<UiRoom[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCoSo, setSelectedCoSo] = useState<{ maCoSo: string; tenCoSo: string } | null>(null);
+  const [sortBy, setSortBy] = useState<'price-low' | 'price-high' | 'name-asc' | 'name-desc'>('price-low');
 
   useEffect(() => {
     let isMounted = true;
 
+    const fetchCoSoInfo = async () => {
+      if (searchData.coSoId && searchData.coSoId !== 'all') {
+        try {
+          const coSoData = await coSoApi.getById(searchData.coSoId) as ApiCoSo;
+          if (isMounted && coSoData) {
+            setSelectedCoSo({
+              maCoSo: coSoData.maCoSo,
+              tenCoSo: coSoData.tenCoSo,
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching co so info:', err);
+        }
+      } else {
+        setSelectedCoSo(null);
+      }
+    };
+
     const fetchAvailability = async () => {
       setLoading(true);
       setError(null);
+
+      // Fetch co so info if coSoId is provided
+      await fetchCoSoInfo();
 
       try {
         const data = await availabilityApi.search({
           checkIn: searchData.checkIn,
           checkOut: searchData.checkOut,
           guests: searchData.guests,
+          coSoId: searchData.coSoId && searchData.coSoId !== 'all' ? searchData.coSoId : undefined,
         });
 
         if (!isMounted) {
@@ -103,11 +137,13 @@ export function SearchResults({
         });
 
         setRooms(mapped);
+        setSortedRooms(mapped);
       } catch (e: unknown) {
         const message =
           e instanceof Error ? e.message : "Khong the tai danh sach phong";
         setError(message);
         setRooms([]);
+        setSortedRooms([]);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -122,7 +158,26 @@ export function SearchResults({
     return () => {
       isMounted = false;
     };
-  }, [searchData.checkIn, searchData.checkOut, searchData.guests]);
+  }, [searchData.checkIn, searchData.checkOut, searchData.guests, searchData.coSoId]);
+
+  // Sort rooms when sortBy or rooms change
+  useEffect(() => {
+    const sorted = [...rooms].sort((a, b) => {
+      switch (sortBy) {
+        case 'price-low':
+          return (a.price || 0) - (b.price || 0);
+        case 'price-high':
+          return (b.price || 0) - (a.price || 0);
+        case 'name-asc':
+          return a.name.localeCompare(b.name, 'vi');
+        case 'name-desc':
+          return b.name.localeCompare(a.name, 'vi');
+        default:
+          return 0;
+      }
+    });
+    setSortedRooms(sorted);
+  }, [rooms, sortBy]);
 
   const formatPrice = (price: number) => {
     if (!price) {
@@ -155,11 +210,11 @@ export function SearchResults({
               style={{ color: "#3D0301" }}
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Ve trang chu</span>
+              <span>Về trang chủ</span>
             </Button>
 
             <div className="text-sm" style={{ color: "#3D0301" }}>
-              {loading ? "Dang tai..." : `${rooms.length} phong con trong`}
+              {loading ? "Đang tải..." : `${sortedRooms.length} phòng còn trống`}
             </div>
           </div>
 
@@ -177,13 +232,13 @@ export function SearchResults({
             <div className="flex items-center space-x-2">
               <Users className="w-4 h-4" style={{ color: "#3D0301" }} />
               <span className="text-sm" style={{ color: "#3D0301" }}>
-                {searchData.guests} khach
+                {searchData.guests} khách
               </span>
             </div>
             <div className="flex items-center space-x-2">
               <MapPin className="w-4 h-4" style={{ color: "#3D0301" }} />
               <span className="text-sm" style={{ color: "#3D0301" }}>
-                Dia diem: Khong bo loc
+                Địa điểm: {selectedCoSo ? selectedCoSo.tenCoSo : 'Tất cả cơ sở'}
               </span>
             </div>
           </div>
@@ -194,15 +249,15 @@ export function SearchResults({
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-2xl mb-2 font-heading" style={{ color: "#3D0301" }}>
-              Phong con trong
+              Phòng còn trống
             </h1>
             <p
               className="opacity-80"
               style={{ color: "rgba(61, 3, 1, 0.7)" }}
             >
               {loading
-                ? "Dang tai ket qua..."
-                : `Tim thay ${rooms.length} phong phu hop voi yeu cau`}
+                ? "Đang tải kết quả..."
+                : `Tìm thấy ${sortedRooms.length} phòng phù hợp với yêu cầu`}
             </p>
           </div>
 
@@ -214,21 +269,56 @@ export function SearchResults({
               style={{ borderColor: "#3D0301", color: "#3D0301" }}
             >
               <Filter className="w-4 h-4" />
-              <span>Bo loc</span>
+              <span>Bỏ lọc</span>
             </Button>
 
             <div className="flex items-center space-x-2">
               <span className="text-sm" style={{ color: "#3D0301" }}>
-                Sap xep:
+                Sắp xếp:
               </span>
-              <Button
-                variant="outline"
-                className="flex items-center space-x-2"
-                style={{ borderColor: "#3D0301", color: "#3D0301" }}
-              >
-                <span>Gia thap nhat</span>
-                <ChevronDown className="w-4 h-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="flex items-center space-x-2"
+                    style={{ borderColor: "#3D0301", color: "#3D0301" }}
+                  >
+                    <span>
+                      {sortBy === 'price-low' && 'Giá thấp nhất'}
+                      {sortBy === 'price-high' && 'Giá cao nhất'}
+                      {sortBy === 'name-asc' && 'Tên A-Z'}
+                      {sortBy === 'name-desc' && 'Tên Z-A'}
+                    </span>
+                    <ChevronDown className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white border shadow-lg">
+                  <DropdownMenuItem 
+                    onClick={() => setSortBy('price-low')}
+                    className={sortBy === 'price-low' ? 'bg-gray-100' : ''}
+                  >
+                    Giá thấp nhất
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setSortBy('price-high')}
+                    className={sortBy === 'price-high' ? 'bg-gray-100' : ''}
+                  >
+                    Giá cao nhất
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setSortBy('name-asc')}
+                    className={sortBy === 'name-asc' ? 'bg-gray-100' : ''}
+                  >
+                    Tên A-Z
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => setSortBy('name-desc')}
+                    className={sortBy === 'name-desc' ? 'bg-gray-100' : ''}
+                  >
+                    Tên Z-A
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -240,7 +330,7 @@ export function SearchResults({
         )}
 
         <div className="space-y-6">
-          {rooms.map((room) => (
+          {sortedRooms.map((room) => (
             <Card
               key={room.id}
               className="overflow-hidden hover:shadow-lg transition-shadow border-0"
@@ -283,13 +373,13 @@ export function SearchResults({
                         </div>
                         <div className="flex items-center space-x-2 mb-2 text-sm" style={{ color: "#3D0301" }}>
                           <MapPin className="w-4 h-4" />
-                          <span>{room.location ?? "Chua co thong tin co so"}</span>
+                          <span>{room.location ?? "Chưa có thông tin cơ sở"}</span>
                         </div>
                         <p
                           className="text-sm opacity-80 mb-4"
                           style={{ color: "rgba(61, 3, 1, 0.7)" }}
                         >
-                          {room.description ?? "Chua co mo ta chi tiet cho phong nay."}
+                          {room.description ?? "Chưa có mô tả chi tiết cho phòng này."}
                         </p>
                       </div>
                     </div>
@@ -298,19 +388,19 @@ export function SearchResults({
                       <div className="flex items-center space-x-2">
                         <Users className="w-4 h-4" style={{ color: "#3D0301" }} />
                         <span className="text-sm" style={{ color: "#3D0301" }}>
-                          Toi da {room.maxGuests} khach
+                          Tối đa {room.maxGuests} khách
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Bed className="w-4 h-4" style={{ color: "#3D0301" }} />
                         <span className="text-sm" style={{ color: "#3D0301" }}>
-                          {room.beds} giuong
+                          {room.beds} giường
                         </span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Bath className="w-4 h-4" style={{ color: "#3D0301" }} />
                         <span className="text-sm" style={{ color: "#3D0301" }}>
-                          {room.bathrooms} phong tam
+                          {room.bathrooms} phòng tắm
                         </span>
                       </div>
                     </div>
@@ -333,14 +423,10 @@ export function SearchResults({
                             className="text-xs"
                             style={{ borderColor: "#3D0301", color: "#3D0301" }}
                           >
-                            +{room.amenities.length - 5} tien nghi
+                            +{room.amenities.length - 5} tiện nghi
                           </Badge>
                         )}
-                        {room.amenities.length === 0 && (
-                          <span className="text-sm opacity-70" style={{ color: "rgba(61, 3, 1, 0.7)" }}>
-                            Chua co danh sach tien nghi
-                          </span>
-                        )}
+
                       </div>
                     </div>
 
@@ -359,18 +445,13 @@ export function SearchResults({
                             </span>
                           )}
                         </div>
-                        <span
-                          className="text-sm opacity-80"
-                          style={{ color: "rgba(61, 3, 1, 0.7)" }}
-                        >
-                          /4h (da bao gom thue)
-                        </span>
+                        
                         {room.originalPrice > room.price && (
                           <div
                             className="text-xs mt-1"
                             style={{ color: "#3D0301" }}
                           >
-                            Tiet kiem {formatPrice(room.originalPrice - room.price)}
+                            Tiết kiệm {formatPrice(room.originalPrice - room.price)}
                           </div>
                         )}
                       </div>
@@ -381,14 +462,14 @@ export function SearchResults({
                           style={{ borderColor: "#3D0301", color: "#3D0301" }}
                           onClick={() => onViewRoomDetail(room.id)}
                         >
-                          Xem chi tiet
+                          Xem chi tiết
                         </Button>
                         <Button
                           className="text-white"
                           style={{ backgroundColor: "#3D0301" }}
                           onClick={() => onViewRoomDetail(room.id)}
                         >
-                          Dat phong ngay
+                          Đặt phòng ngay
                         </Button>
                       </div>
                     </div>
@@ -406,7 +487,7 @@ export function SearchResults({
               disabled
               style={{ borderColor: "#3D0301", color: "rgba(61, 3, 1, 0.5)" }}
             >
-              Truoc
+              Trước
             </Button>
             <Button
               className="text-white"

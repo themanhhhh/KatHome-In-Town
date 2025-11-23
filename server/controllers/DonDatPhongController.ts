@@ -593,5 +593,45 @@ export class DonDatPhongController {
       });
     }
   }
+
+  /**
+   * Get booking history by customer email
+   * GET /api/dondatphong/by-email/:email
+   */
+  static async getByEmail(req: Request, res: Response) {
+    try {
+      const { email } = req.params;
+      
+      if (!email) {
+        return res.status(400).json({ 
+          message: 'Email is required' 
+        });
+      }
+
+      // Decode email if it's URL encoded
+      const decodedEmail = decodeURIComponent(email);
+
+      // Query bookings by customerEmail or khachHang.email
+      const queryBuilder = donDatPhongRepository.createQueryBuilder('booking')
+        .leftJoinAndSelect('booking.coSo', 'coSo')
+        .leftJoinAndSelect('booking.nhanVien', 'nhanVien')
+        .leftJoinAndSelect('booking.khachHang', 'khachHang')
+        .leftJoinAndSelect('booking.chiTiet', 'chiTiet')
+        .leftJoinAndSelect('chiTiet.phong', 'phong')
+        .where('booking.customerEmail = :email', { email: decodedEmail })
+        .orWhere('khachHang.email = :email', { email: decodedEmail })
+        .orderBy('booking.ngayDat', 'DESC');
+
+      const bookings = await queryBuilder.getMany();
+
+      res.json(bookings);
+    } catch (error) {
+      console.error('Error fetching bookings by email:', error);
+      res.status(500).json({ 
+        message: 'Lỗi khi lấy lịch sử đặt phòng', 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
 }
 

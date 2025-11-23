@@ -149,7 +149,10 @@ export function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-white border shadow-lg">
-                  <DropdownMenuItem className="flex items-center space-x-2">
+                  <DropdownMenuItem 
+                    className="flex items-center space-x-2 cursor-pointer"
+                    onClick={() => router.push('/profile')}
+                  >
                     <UserIcon className="w-4 h-4" />
                     <span>Thông tin cá nhân</span>
                   </DropdownMenuItem>

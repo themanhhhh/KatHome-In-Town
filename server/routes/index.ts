@@ -87,6 +87,7 @@ router.put('/dichvu/:id/image', DichVuController.updateImage);
 
 // DonDatPhong routes
 router.get('/dondatphong', DonDatPhongController.getAll);
+router.get('/dondatphong/by-email/:email', DonDatPhongController.getByEmail);
 router.get('/dondatphong/:id', DonDatPhongController.getById);
 // THEO FLOWCHART: Kiểm tra authentication (optional - cho phép guest booking)
 router.post('/dondatphong', optionalAuth, DonDatPhongController.create);

@@ -1,21 +1,44 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent } from "../card/card";
 import { Input } from "../input/input";
 import { Label } from "../label/label";
-import { CalendarDays, Users, MapPin, Star } from "lucide-react";
+import { CalendarDays, Users, MapPin, Star, Building2 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
+import { coSoApi } from "../../../lib/api";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select/select";
 
 interface HeroProps {
-  onSearch?: (searchData: { checkIn: string; checkOut: string; guests: number }) => void;
+  onSearch?: (searchData: { checkIn: string; checkOut: string; guests: number; coSoId?: string }) => void;
+}
+
+interface CoSo {
+  maCoSo: string;
+  tenCoSo: string;
+  diaChi: string;
+  sdt: string;
 }
 
 export function Hero({ onSearch }: HeroProps) {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(2);
+  const [selectedCoSo, setSelectedCoSo] = useState<string>("all");
+  const [coSoList, setCoSoList] = useState<CoSo[]>([]);
+
+  useEffect(() => {
+    const fetchCoSo = async () => {
+      try {
+        const data = await coSoApi.getAll();
+        setCoSoList(data as CoSo[]);
+      } catch (error) {
+        console.error("Error fetching co so:", error);
+      }
+    };
+    fetchCoSo();
+  }, []);
 
   const handleSearch = () => {
     // Nếu không có ngày, tự động set ngày hiện tại và ngày mai
@@ -30,7 +53,8 @@ export function Hero({ onSearch }: HeroProps) {
       onSearch({ 
         checkIn: finalCheckIn, 
         checkOut: finalCheckOut, 
-        guests: guests || 2 
+        guests: guests || 2,
+        coSoId: selectedCoSo && selectedCoSo !== "all" ? selectedCoSo : undefined
       });
     }
   };
@@ -85,6 +109,24 @@ export function Hero({ onSearch }: HeroProps) {
                  <h3 className="mb-4 font-bold" style={{ color: '#82213D' }}>Đặt phòng nhanh</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
+                     <Label className="font-semibold" style={{ color: '#82213D' }}>Cơ sở</Label>
+                     <Select value={selectedCoSo} onValueChange={setSelectedCoSo}>
+                       <SelectTrigger className="w-full">
+                         <Building2 className="w-4 h-4 mr-2" style={{ color: '#82213D' }} />
+                         <SelectValue placeholder="Chọn cơ sở" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="all">Tất cả cơ sở</SelectItem>
+                         {coSoList.map((coSo) => (
+                           <SelectItem key={coSo.maCoSo} value={coSo.maCoSo}>
+                             {coSo.tenCoSo}
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
                      <Label className="font-semibold" style={{ color: '#82213D' }}>Ngày nhận phòng</Label>
                      <div className="relative">
                        <Input 
@@ -126,7 +168,7 @@ export function Hero({ onSearch }: HeroProps) {
                     </div>
                   </div>
                   
-                  <div className="flex items-end">
+                  <div className="md:col-span-2 flex items-end">
                      <Button 
                        className="w-full text-white hover:opacity-90 transition-opacity font-semibold"
                        style={{ backgroundColor: '#82213D' }}
@@ -148,23 +190,7 @@ export function Hero({ onSearch }: HeroProps) {
                 alt="KatHome In Town  bedroom"
                 className="w-full h-[600px] object-cover"
               />
-              {/* Overlay badge */}
-               <div 
-                 className="absolute top-6 left-6 px-4 py-2 rounded-full text-white text-sm font-semibold"
-                 style={{ backgroundColor: '#82213D' }}
-               >
-                 from 400k/4h
-               </div>
             </div>
-            
-            {/* Floating elements */}
-             <div 
-               className="absolute -bottom-6 -left-6 p-4 rounded-xl bg-white shadow-lg"
-               style={{ borderLeft: `4px solid #82213D` }}
-             >
-               <div className="text-sm font-semibold" style={{ color: '#82213D' }}>Đặc biệt</div>
-               <div className="text-xs" style={{ color: '#B8899A' }}>Giảm 20% cho khách mới</div>
-             </div>
           </div>
         </div>
       </div>

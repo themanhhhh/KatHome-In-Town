@@ -1,6 +1,7 @@
 'use client';
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "../card/card";
 import {
   MapPin,
@@ -32,6 +33,12 @@ interface BranchDetailProps {
 }
 
 export function BranchDetail({ coSo }: BranchDetailProps) {
+  const router = useRouter();
+
+  const handleRoomClick = (roomId: string) => {
+    router.push(`/rooms/${roomId}`);
+  };
+
   // Group rooms by room name (tenPhong)
   const roomsByType = coSo.phong?.reduce((acc, phong) => {
     const typeName = phong.tenPhong || 'Chưa có tên';
@@ -150,8 +157,17 @@ export function BranchDetail({ coSo }: BranchDetailProps) {
                        {rooms?.map((room) => (
                          <div
                            key={room.maPhong}
-                           className="p-3 rounded-lg text-center transition-all hover:shadow-md"
+                           onClick={() => handleRoomClick(room.maPhong)}
+                           className="p-3 rounded-lg text-center transition-all hover:shadow-md cursor-pointer hover:scale-105 active:scale-95"
                            style={{ backgroundColor: '#FAD0C4', color: '#3D0301' }}
+                           role="button"
+                           tabIndex={0}
+                           onKeyDown={(e) => {
+                             if (e.key === 'Enter' || e.key === ' ') {
+                               e.preventDefault();
+                               handleRoomClick(room.maPhong);
+                             }
+                           }}
                          >
                            <div className="flex items-center justify-center space-x-1 mb-1">
                              <Bed className="w-4 h-4" />

@@ -52,9 +52,15 @@ const AdminPage = () => {
     []
   );
 
+  // Ensure datasets are always arrays to prevent runtime errors
+  const bookingsList = Array.isArray(bookings) ? bookings : [];
+  const roomsList = Array.isArray(rooms) ? rooms : [];
+  const customersList = Array.isArray(customers) ? customers : [];
+  const usersList = Array.isArray(users) ? users : [];
+
   // Filter data based on date range
   const filteredBookings = useMemo(() => {
-    let filtered = [...bookings];
+    let filtered = [...bookingsList];
     
     if (dateFrom) {
       const fromDate = new Date(dateFrom);
@@ -77,10 +83,10 @@ const AdminPage = () => {
     }
     
     return filtered;
-  }, [bookings, dateFrom, dateTo]);
+  }, [bookingsList, dateFrom, dateTo]);
 
   const filteredRooms = useMemo(() => {
-    let filtered = [...rooms];
+    let filtered = [...roomsList];
     
     if (selectedFilter === 'rooms') {
       filtered = filtered.filter(room => room.tenPhong);
@@ -89,16 +95,16 @@ const AdminPage = () => {
     }
     
     return filtered;
-  }, [rooms, selectedFilter]);
+  }, [roomsList, selectedFilter]);
 
   // Calculate statistics from filtered data
   const totalRevenue = (filteredBookings || []).reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
   const totalBookings = (filteredBookings || []).length;
-  const totalUsers = (users || []).length;
-  const totalCustomers = (customers || []).length;
+  const totalUsers = usersList.length;
+  const totalCustomers = customersList.length;
   const roomsWithTenPhong = (filteredRooms || []).filter(room => room.tenPhong).length;
   const roomsWithCoSo = (filteredRooms || []).filter(room => room.coSo?.tenCoSo).length;
-  const occupancyRate = (rooms || []).length > 0 ? (roomsWithTenPhong / (rooms || []).length) * 100 : 0;
+  const occupancyRate = roomsList.length > 0 ? (roomsWithTenPhong / roomsList.length) * 100 : 0;
 
   const stats = {
     totalBookings,

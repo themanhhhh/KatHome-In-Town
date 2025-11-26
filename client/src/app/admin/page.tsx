@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { 
   Users,
   Calendar,
@@ -18,7 +18,7 @@ import {
 
 import Style from "../styles/adminpage.module.css";
 import { useApi } from "../../hooks/useApi";
-import { donDatPhongApi, phongApi, khachHangApi, usersApi } from "../../lib/api";
+import { donDatPhongApi, phongApi, khachHangApi, usersApi, danhGiaApi, ReviewStatsResponse } from "../../lib/api";
 import { ApiBooking, ApiRoom, ApiCustomer, ApiUser } from "../../types/api";
 import LoadingSpinner from "../components/loading-spinner";
 import { Input } from "../components/input/input";
@@ -30,6 +30,7 @@ const AdminPage = () => {
   const [selectedFilter, setSelectedFilter] = useState<FilterType>(null);
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
+  const [reviewStats, setReviewStats] = useState<ReviewStatsResponse | null>(null);
 
   // Fetch data from API
   const { data: bookings = [], loading: bookingsLoading, error: bookingsError } = useApi<ApiBooking[]>(
@@ -51,6 +52,20 @@ const AdminPage = () => {
     () => usersApi.getAll(),
     []
   );
+
+  // Fetch review statistics once for dashboard quick stats
+  useEffect(() => {
+    const fetchReviewStats = async () => {
+      try {
+        const stats = await danhGiaApi.getStats();
+        setReviewStats(stats);
+      } catch (error) {
+        console.error("Error fetching review stats for admin dashboard:", error);
+      }
+    };
+
+    fetchReviewStats();
+  }, []);
 
   // Ensure datasets are always arrays to prevent runtime errors
   const bookingsList = Array.isArray(bookings) ? bookings : [];
@@ -106,15 +121,39 @@ const AdminPage = () => {
   const roomsWithCoSo = (filteredRooms || []).filter(room => room.coSo?.tenCoSo).length;
   const occupancyRate = roomsList.length > 0 ? (roomsWithTenPhong / roomsList.length) * 100 : 0;
 
+  // Booking status-based metrics for confirmation / cancellation rates
+  const confirmedBookingsCount = bookingsList.filter(
+    (booking) => booking.trangThai === "CF"
+  ).length;
+  const cancelledBookingsCount = bookingsList.filter(
+    (booking) => booking.trangThai === "AB"
+  ).length;
+  const effectiveTotalBookingsForRate =
+    confirmedBookingsCount + cancelledBookingsCount;
+
+  const confirmationRate =
+    effectiveTotalBookingsForRate > 0
+      ? (confirmedBookingsCount / effectiveTotalBookingsForRate) * 100
+      : 0;
+
+  const cancellationRate =
+    effectiveTotalBookingsForRate > 0
+      ? (cancelledBookingsCount / effectiveTotalBookingsForRate) * 100
+      : 0;
+
   const stats = {
     totalBookings,
     totalRevenue,
     totalUsers: totalUsers + totalCustomers,
     occupancyRate: Math.round(occupancyRate),
     monthlyGrowth: 12.5,
-    averageRating: 4.8,
+    averageRating: reviewStats
+      ? typeof reviewStats.averageRating === "string"
+        ? parseFloat(reviewStats.averageRating as string) || 0
+        : (reviewStats.averageRating as number)
+      : 0,
     roomsWithTenPhong,
-    roomsWithCoSo
+    roomsWithCoSo,
   };
 
   // Get recent bookings - filtered by selected filter
@@ -137,48 +176,48 @@ const AdminPage = () => {
     }
     
     return bookingsToShow
-      .sort((a, b) => {
-        const dateA = new Date(a.ngayDat || 0).getTime();
-        const dateB = new Date(b.ngayDat || 0).getTime();
-        return dateB - dateA; // Descending order (newest first)
-      })
+    .sort((a, b) => {
+      const dateA = new Date(a.ngayDat || 0).getTime();
+      const dateB = new Date(b.ngayDat || 0).getTime();
+      return dateB - dateA; // Descending order (newest first)
+    })
       .slice(0, selectedFilter === 'bookings' ? 10 : 3) // Show more if "Tổng booking" is selected
-      .map(booking => {
-        const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0);
-        const firstRoom = booking.chiTiet?.[0];
-        
-        return {
-          id: booking.maDatPhong,
-          guestName: booking.khachHang?.ten || booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
-          room: firstRoom?.phong?.moTa || 'N/A',
-          checkIn: booking.checkinDuKien,
-          checkOut: booking.checkoutDuKien,
-          total: booking.totalAmount || 0,
-          status: booking.trangThai
-        };
-      });
+    .map(booking => {
+      const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0);
+      const firstRoom = booking.chiTiet?.[0];
+      
+      return {
+        id: booking.maDatPhong,
+        guestName: booking.khachHang?.ten || booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
+        room: firstRoom?.phong?.moTa || 'N/A',
+        checkIn: booking.checkinDuKien,
+        checkOut: booking.checkoutDuKien,
+        total: booking.totalAmount || 0,
+        status: booking.trangThai
+      };
+    });
   }, [filteredBookings, selectedFilter]);
 
   // Get upcoming check-ins (today's check-ins or filtered by date range)
   const upcomingCheckIns = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to start of today
-    
-    let checkInsToShow = (filteredBookings || [])
-      .filter(booking => {
-        // Only include confirmed or reserved bookings (not cancelled or completed)
-        if (!['CF', 'R'].includes(booking.trangThai)) {
-          return false;
-        }
-        
-        if (!booking.checkinDuKien) {
-          return false;
-        }
-        
-        // Parse the check-in date
-        const checkinDate = new Date(booking.checkinDuKien);
-        checkinDate.setHours(0, 0, 0, 0); // Normalize to start of day
-        
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set to start of today
+  
+    const checkInsToShow = (filteredBookings || [])
+    .filter(booking => {
+      // Only include confirmed or reserved bookings (not cancelled or completed)
+      if (!['CF', 'R'].includes(booking.trangThai)) {
+        return false;
+      }
+      
+      if (!booking.checkinDuKien) {
+        return false;
+      }
+      
+      // Parse the check-in date
+      const checkinDate = new Date(booking.checkinDuKien);
+      checkinDate.setHours(0, 0, 0, 0); // Normalize to start of day
+      
         // If "Check In hôm nay" filter is selected, only show today's check-ins
         if (selectedFilter === 'checkin') {
           return checkinDate.getTime() === today.getTime();
@@ -200,30 +239,30 @@ const AdminPage = () => {
         }
         
         // Otherwise, check if check-in is today
-        return checkinDate.getTime() === today.getTime();
+      return checkinDate.getTime() === today.getTime();
       });
     
     return checkInsToShow
-      .sort((a, b) => {
-        // Sort by check-in time if available
-        const dateA = new Date(a.checkinDuKien || 0).getTime();
-        const dateB = new Date(b.checkinDuKien || 0).getTime();
-        return dateA - dateB;
-      })
+    .sort((a, b) => {
+      // Sort by check-in time if available
+      const dateA = new Date(a.checkinDuKien || 0).getTime();
+      const dateB = new Date(b.checkinDuKien || 0).getTime();
+      return dateA - dateB;
+    })
       .slice(0, selectedFilter === 'checkin' ? 10 : 2) // Show more if "Check In hôm nay" is selected
-      .map(booking => {
-        const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0);
-        const firstRoom = booking.chiTiet?.[0];
-        
-        return {
-          id: booking.maDatPhong,
-          guestName: booking.khachHang?.ten || booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
-          room: firstRoom?.phong?.moTa || 'N/A',
-          checkIn: `${booking.checkinDuKien} 14:00`,
-          phone: booking.khachHang?.sdt || booking.khachHang?.soDienThoai || booking.customerPhone || 'N/A',
-          guests: totalGuests
-        };
-      });
+    .map(booking => {
+      const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0);
+      const firstRoom = booking.chiTiet?.[0];
+      
+      return {
+        id: booking.maDatPhong,
+        guestName: booking.khachHang?.ten || booking.khachHang?.tenKhachHang || booking.customerName || 'N/A',
+        room: firstRoom?.phong?.moTa || 'N/A',
+        checkIn: `${booking.checkinDuKien} 14:00`,
+        phone: booking.khachHang?.sdt || booking.khachHang?.soDienThoai || booking.customerPhone || 'N/A',
+        guests: totalGuests
+      };
+    });
   }, [filteredBookings, selectedFilter, dateFrom, dateTo]);
 
   // Loading and error states
@@ -523,7 +562,7 @@ const AdminPage = () => {
                 <CheckCircle className="w-6 h-6" />
               </div>
               <h3 className={Style.quickStatValue}>
-                98%
+                {Math.round(confirmationRate)}%
               </h3>
               <p className={Style.quickStatLabel}>
                 Tỷ lệ xác nhận
@@ -540,7 +579,7 @@ const AdminPage = () => {
                 <XCircle className="w-6 h-6" />
               </div>
               <h3 className={Style.quickStatValue}>
-                2%
+                {Math.round(cancellationRate)}%
               </h3>
               <p className={Style.quickStatLabel}>
                 Tỷ lệ hủy phòng

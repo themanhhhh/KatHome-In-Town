@@ -212,15 +212,30 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
 
   const calculateTotalPrice = useCallback(() => {
     const selectedRoom = rooms.find(room => room.maPhong === formData.maPhong);
-    if (selectedRoom && formData.checkinDuKien && formData.checkoutDuKien) {
-      const checkIn = new Date(formData.checkinDuKien);
-      const checkOut = new Date(formData.checkoutDuKien);
-      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-      // Since ApiRoom doesn't have giaPhong, use a default price
-      const defaultPrice = 500000; // 500k VND per night
-      const total = nights * defaultPrice;
-      setFormData(prev => ({ ...prev, totalAmount: total }));
+
+    // Chỉ tính khi đã chọn phòng và đủ ngày nhận/trả phòng
+    if (!selectedRoom || !formData.checkinDuKien || !formData.checkoutDuKien) {
+      return;
     }
+
+    const checkIn = new Date(formData.checkinDuKien);
+    const checkOut = new Date(formData.checkoutDuKien);
+    const diffTime = checkOut.getTime() - checkIn.getTime();
+
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime()) || diffTime <= 0) {
+      return;
+    }
+
+    const nights = Math.max(
+      1,
+      Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    );
+
+    // Lấy giá thực tế của phòng (ưu tiên đơn giá qua đêm)
+    const pricePerNight = selectedRoom.donGiaQuaDem || selectedRoom.donGia4h || 0;
+    const total = nights * pricePerNight;
+
+    setFormData(prev => ({ ...prev, totalAmount: total }));
   }, [rooms, formData.maPhong, formData.checkinDuKien, formData.checkoutDuKien]);
 
   useEffect(() => {
@@ -289,11 +304,20 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                 >
                   <option value="">Chọn nhân viên</option>
-                  {nhanViens.map((nv) => (
-                    <option key={nv.maNhanVien} value={nv.maNhanVien}>
-                      {nv.ten} - {nv.email}
-                    </option>
-                  ))}
+                  {nhanViens
+                    // Ẩn các bản ghi nhân viên không có tên và email
+                    .filter((nv) => (nv.ten && nv.ten.trim()) || (nv.email && nv.email.trim()))
+                    .map((nv) => {
+                      const hasEmail = nv.email && nv.email.trim().length > 0;
+                      const label = hasEmail
+                        ? `${nv.ten || nv.email} - ${nv.email}`
+                        : nv.ten || nv.maNhanVien;
+                      return (
+                        <option key={nv.maNhanVien} value={nv.maNhanVien}>
+                          {label}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
 
@@ -393,15 +417,18 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Tổng tiền (VNĐ)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Tổng tiền (VNĐ)
+                </label>
                 <input
-                  type="number"
-                  min="0"
-                  value={formData.totalAmount}
-                  onChange={(e) => setFormData({ ...formData, totalAmount: Number(e.target.value) })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  required
+                  type="text"
+                  value={formatPrice(formData.totalAmount)}
+                  readOnly
+                  className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-800 focus:outline-none cursor-not-allowed"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Tự động tính theo số đêm và giá phòng đã chọn
+                </p>
               </div>
 
               <div>
@@ -450,7 +477,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                     })
                     .map((room) => (
                       <option key={room.maPhong} value={room.maPhong}>
-                        {room.tenPhong || room.moTa} - {formatPrice(room.donGiaQuaDem || room.donGia4h || 0)}/đêm
+                        {formatPrice(room.donGiaQuaDem || room.donGia4h || 0)}/đêm
                       </option>
                     ))}
                 </select>

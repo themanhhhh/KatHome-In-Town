@@ -25,7 +25,7 @@ import {
 
 import Style from "../../styles/roomsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
-import { phongApi, coSoApi, donDatPhongApi } from "../../../lib/api";
+import { phongApi, coSoApi, donDatPhongApi, danhGiaApi, ReviewStatsResponse } from "../../../lib/api";
 import { ApiRoom, ApiBooking } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { RoomForm } from "../../components/room-form";
@@ -42,6 +42,7 @@ const RoomsManagementPage = () => {
   const [editingRoom, setEditingRoom] = useState<ApiRoom | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [roomReviewStats, setRoomReviewStats] = useState<Record<string, ReviewStatsResponse>>({});
 
   // Fetch data from API
   const { data: rooms = [], loading: roomsLoading, error: roomsError, refetch: refetchRooms } = useApi<ApiRoom[]>(
@@ -76,6 +77,41 @@ const RoomsManagementPage = () => {
     
     return matchesSearch && matchesType;
   });
+
+  // Load review stats for each room
+  React.useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const statsEntries = await Promise.all(
+          (rooms || []).map(async (room) => {
+            if (!room.maPhong) return null;
+            try {
+              const stats = await danhGiaApi.getStats(room.maPhong);
+              return [room.maPhong, stats] as [string, ReviewStatsResponse];
+            } catch (error) {
+              console.error("Error fetching review stats for room", room.maPhong, error);
+              return null;
+            }
+          })
+        );
+
+        const statsMap: Record<string, ReviewStatsResponse> = {};
+        for (const entry of statsEntries) {
+          if (entry) {
+            const [roomId, stats] = entry;
+            statsMap[roomId] = stats;
+          }
+        }
+        setRoomReviewStats(statsMap);
+      } catch (error) {
+        console.error("Error loading room review stats:", error);
+      }
+    };
+
+    if ((rooms || []).length > 0) {
+      loadStats();
+    }
+  }, [rooms]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
@@ -247,6 +283,21 @@ const RoomsManagementPage = () => {
       return sum + (booking.totalAmount || 0);
     }, 0);
   }, [bookings]);
+
+  // Get booking count & revenue per room from bookings data
+  const getRoomBookingStats = (roomId: string) => {
+    const relatedBookings = (bookings || []).filter((booking) =>
+      (booking.chiTiet || []).some((ct) => ct.phong?.maPhong === roomId)
+    );
+
+    const bookingCount = relatedBookings.length;
+    const revenue = relatedBookings.reduce(
+      (sum, booking) => sum + (booking.totalAmount || 0),
+      0
+    );
+
+    return { bookingCount, revenue };
+  };
 
   const handleExportExcel = () => {
     try {
@@ -472,8 +523,7 @@ const RoomsManagementPage = () => {
                   </th>
                   <th className={Style.tableHeadCell}>Phòng</th>
                   <th className={Style.tableHeadCell}>Hình ảnh</th>
-                  <th className={Style.tableHeadCell}>Giá & Loại</th>
-                  <th className={Style.tableHeadCell}>Chi tiết</th>
+                  <th className={Style.tableHeadCell}>Giá</th>
                   <th className={Style.tableHeadCell}>Mô tả</th>
                   <th className={Style.tableHeadCell}>Đánh giá</th>
                   <th className={Style.tableHeadCell}>Thống kê</th>
@@ -515,29 +565,6 @@ const RoomsManagementPage = () => {
                             return price ? formatPrice(price) + '/đêm' : 'Chưa có giá';
                           })()}
                         </div>
-                        <span className={Style.roomType}>
-                          {room.tenPhong || 'Chưa có tên'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className={Style.tableCell}>
-                      <div className={Style.roomDetails}>
-                        <div className={Style.detailItem}>
-                          <Users className={Style.detailIcon} />
-                          <span>{room.sucChua || 0} khách</span>
-                        </div>
-                        <div className={Style.detailItem}>
-                          <Bed className={Style.detailIcon} />
-                          <span>1 giường</span>
-                        </div>
-                        <div className={Style.detailItem}>
-                          <Bath className={Style.detailIcon} />
-                          <span>1 phòng tắm</span>
-                        </div>
-                        <div className={Style.detailItem}>
-                          <Maximize2 className={Style.detailIcon} />
-                          <span>25m²</span>
-                        </div>
                       </div>
                     </td>
                     <td className={Style.tableCell}>
@@ -549,31 +576,52 @@ const RoomsManagementPage = () => {
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.ratingInfo}>
-                        <div className={Style.ratingValue}>
-                          <Star className={Style.starIcon} />
-                          <span className={Style.ratingNumber}>
-                            4.5
-                          </span>
-                        </div>
-                        <div className={Style.reviewCount}>
-                          0 đánh giá
-                        </div>
+                        {(() => {
+                          const stats = roomReviewStats[room.maPhong];
+                          const average =
+                            stats && stats.totalReviews > 0
+                              ? Number(stats.averageRating)
+                              : null;
+                          const totalReviews = stats?.totalReviews ?? 0;
+                          return (
+                            <>
+                              <div className={Style.ratingValue}>
+                                <Star className={Style.starIcon} />
+                                <span className={Style.ratingNumber}>
+                                  {average !== null ? average.toFixed(1) : "--"}
+                                </span>
+                              </div>
+                              <div className={Style.reviewCount}>
+                                {totalReviews} đánh giá
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.statsInfo}>
-                        <div className={Style.statItem}>
-                          <Calendar className={Style.statIcon} />
-                          <span className={Style.statText}>
-                            0 booking
-                          </span>
-                        </div>
-                        <div className={Style.statItem}>
-                          <DollarSign className={Style.statIcon} />
-                          <span className={Style.statText}>
-                            {formatPrice(0)}
-                          </span>
-                        </div>
+                        {(() => {
+                          const { bookingCount, revenue } = getRoomBookingStats(
+                            room.maPhong
+                          );
+                          return (
+                            <>
+                              <div className={Style.statItem}>
+                                <Calendar className={Style.statIcon} />
+                                <span className={Style.statText}>
+                                  {bookingCount} booking
+                                </span>
+                              </div>
+                              <div className={Style.statItem}>
+                                <DollarSign className={Style.statIcon} />
+                                <span className={Style.statText}>
+                                  {formatPrice(revenue)}
+                                </span>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </td>
                     <td className={Style.tableCell}>

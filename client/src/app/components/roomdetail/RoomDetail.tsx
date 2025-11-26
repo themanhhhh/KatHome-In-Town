@@ -66,7 +66,11 @@ interface RoomDetailProps {
   };
   onBackToSearch: () => void;
   onBackToHome: () => void;
-  onProceedToCheckout: (roomData: RoomData) => void;
+  // Trả thêm thông tin ngày và số khách khi sang trang thanh toán
+  onProceedToCheckout: (
+    roomData: RoomData,
+    searchData: { checkIn: string; checkOut: string; guests: number }
+  ) => void;
 }
 
 const NIGHT_IN_MS = 1000 * 60 * 60 * 24;
@@ -134,11 +138,12 @@ export function RoomDetail({
 
         setRoom(data);
 
-        // Sử dụng đơn giá trực tiếp từ phong
-        if (data) {
+        // Sử dụng đơn giá trực tiếp từ phòng
+        if (data && active) {
           setPricing({
             fourHour: data.donGia4h ?? 0,
-            overnight: data.donGiaQuaDem ?? data.donGia4h ?? 0,
+            // Chỉ dùng giá qua đêm để hiển thị và tính toán
+            overnight: data.donGiaQuaDem ?? 0,
           });
         } else if (active) {
           setPricing({ fourHour: 0, overnight: 0 });
@@ -184,7 +189,8 @@ export function RoomDetail({
   const displayType = room?.tenPhong || "Phong";
   const capacity = room?.sucChua ?? Math.max(2, guests || 1);
   const beds = Math.max(1, Math.ceil(capacity / 2));
-  const pricePerNight = pricing.overnight || pricing.fourHour;
+  // Chỉ hiển thị giá qua đêm, không fallback sang giá 4 giờ
+  const pricePerNight = pricing.overnight || 0;
   const nights = useMemo(
     () => getNightCount(checkIn, checkOut),
     [checkIn, checkOut]
@@ -221,19 +227,33 @@ const amenitiesToShow = useMemo(() => {
     if (!room) {
       return;
     }
+
+    // Yêu cầu người dùng chọn ngày trước khi sang trang thanh toán
+    if (!checkIn || !checkOut) {
+      alert("Vui lòng chọn ngày nhận phòng và trả phòng trước khi thanh toán.");
+      return;
+    }
+
     const primaryImage = imageSources[0] ?? "";
-    onProceedToCheckout({
-      id: room.maPhong,
-      name: displayName,
-      type: displayType,
-      price: pricePerNight,
-      image: primaryImage,
-      maxGuests: capacity,
-      beds,
-      bathrooms: 1,
-      branchId: room.coSo?.maCoSo,
-      branchName: room.coSo?.tenCoSo,
-    });
+    onProceedToCheckout(
+      {
+        id: room.maPhong,
+        name: displayName,
+        type: displayType,
+        price: pricePerNight,
+        image: primaryImage,
+        maxGuests: capacity,
+        beds,
+        bathrooms: 1,
+        branchId: room.coSo?.maCoSo,
+        branchName: room.coSo?.tenCoSo,
+      },
+      {
+        checkIn,
+        checkOut,
+        guests,
+      }
+    );
   };
 
   if (loading) {
@@ -418,7 +438,7 @@ const amenitiesToShow = useMemo(() => {
                         {displayType}
                       </Badge>
                       <span className="text-sm" style={{ color: "rgba(61,3,1,0.7)" }}>
-                        Ma phong: {room.maPhong}
+                        Mã phòng: {room.maPhong}
                       </span>
                     </div>
                     <h1
@@ -436,7 +456,7 @@ const amenitiesToShow = useMemo(() => {
                   <div className="text-right space-y-1">
                     
                     <div className="text-2xl font-semibold" style={{ color: "#3D0301" }}>
-                      {formatCurrency(pricing.fourHour)}
+                      {formatCurrency(pricing.overnight)}
                     </div>
                     
                   </div>

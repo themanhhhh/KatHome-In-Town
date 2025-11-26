@@ -144,13 +144,21 @@ export class DanhGiaController {
   // Get review statistics
   static async getStats(req: Request, res: Response) {
     try {
-      const { phongMaPhong } = req.query;
+      const { phongMaPhong, trangThai } = req.query;
 
-      const queryBuilder = danhGiaRepository.createQueryBuilder('danhGia')
-        .where('danhGia.trangThai = :trangThai', { trangThai: 'approved' });
+      const queryBuilder = danhGiaRepository.createQueryBuilder('danhGia');
+
+      // Nếu truyền trạng thái thì lọc theo, còn không thì lấy tất cả để thống kê tổng
+      if (trangThai) {
+        queryBuilder.where('danhGia.trangThai = :trangThai', { trangThai });
+      }
 
       if (phongMaPhong) {
-        queryBuilder.andWhere('danhGia.phongMaPhong = :phongMaPhong', { phongMaPhong });
+        if (queryBuilder.expressionMap.wheres.length > 0) {
+          queryBuilder.andWhere('danhGia.phongMaPhong = :phongMaPhong', { phongMaPhong });
+        } else {
+          queryBuilder.where('danhGia.phongMaPhong = :phongMaPhong', { phongMaPhong });
+        }
       }
 
       const reviews = await queryBuilder.getMany();

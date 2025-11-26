@@ -38,21 +38,28 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     router.push('/');
   };
 
-  const handleProceedToCheckout = (roomData: {
-    id: string;
-    name: string;
-    type: string;
-    price: number;
-    image: string;
-    maxGuests: number;
-    beds: number;
-    bathrooms: number;
-    branchId?: string;
-    branchName?: string;
-  }) => {
-    // Save room data and search data to sessionStorage for checkout
+  const handleProceedToCheckout = (
+    roomData: {
+      id: string;
+      name: string;
+      type: string;
+      price: number;
+      image: string;
+      maxGuests: number;
+      beds: number;
+      bathrooms: number;
+      branchId?: string;
+      branchName?: string;
+    },
+    selectedSearchData: {
+      checkIn: string;
+      checkOut: string;
+      guests: number;
+    }
+  ) => {
+    // Lưu dữ liệu phòng và ngày đã chọn sang sessionStorage cho trang thanh toán
     sessionStorage.setItem('checkoutRoomData', JSON.stringify(roomData));
-    sessionStorage.setItem('checkoutSearchData', JSON.stringify(searchData));
+    sessionStorage.setItem('checkoutSearchData', JSON.stringify(selectedSearchData));
     router.push('/checkout');
   };
 

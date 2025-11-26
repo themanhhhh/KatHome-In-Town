@@ -42,12 +42,12 @@ async function apiRequest<T>(
   const token = getAuthToken();
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...options?.headers,
+    ...(options?.headers || {}),
   };
 
   // Add authorization header if token exists
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    (headers as Record<string, string>).Authorization = `Bearer ${token}`;
   }
 
   try {
@@ -329,6 +329,31 @@ export const donDatPhongApi = {
     api.post(`bookings/${bookingId}/check-out`, {}),
   cancel: (bookingId: string) => 
     api.post(`bookings/${bookingId}/cancel`, {}),
+};
+
+// Đánh giá
+export interface ReviewStatsResponse {
+  totalReviews: number;
+  averageRating: number | string;
+  ratingDistribution: {
+    5: number;
+    4: number;
+    3: number;
+    2: number;
+    1: number;
+  };
+}
+
+export const danhGiaApi = {
+  /**
+   * Lấy thống kê đánh giá.
+   * - Nếu truyền roomId => thống kê cho từng phòng (phongMaPhong).
+   * - Nếu không truyền => thống kê tổng.
+   */
+  getStats: (roomId?: string) => {
+    const query = roomId ? `?phongMaPhong=${encodeURIComponent(roomId)}` : "";
+    return api.get<ReviewStatsResponse>(`danhgia/stats${query}`);
+  },
 };
 
 // Ca làm

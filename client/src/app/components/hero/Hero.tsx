@@ -193,7 +193,7 @@ export function Hero({ onSearch }: HeroProps) {
                 alt="KatHome In Town  bedroom"
                 className="w-full h-[600px] object-cover"
               />
-            </div>
+             </div>
           </div>
         </div>
       </div>

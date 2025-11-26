@@ -112,15 +112,15 @@ export function SearchResults({
         }
 
         const mapped: UiRoom[] = (data || []).map((room: AvailabilityRoom) => {
-          const price4h = room.donGia4h ?? 0;
-          const priceOvernight = room.donGiaQuaDem ?? price4h;
+          const priceOvernight = room.donGiaQuaDem ?? 0;
           const capacity = room.sucChua ?? Math.max(2, searchData.guests || 1);
           
           return {
             id: room.maPhong,
             name: room.tenPhong || room.moTa || `Phong ${room.maPhong}`,
             type: room.tenPhong || "Phong",
-            price: price4h,
+            // Chỉ hiển thị giá qua đêm
+            price: priceOvernight,
             originalPrice: priceOvernight,
             image: room.hinhAnh,
             maxGuests: capacity,

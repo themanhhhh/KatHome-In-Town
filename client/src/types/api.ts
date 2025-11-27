@@ -121,9 +121,13 @@ export interface ApiNhanVien {
 
 export interface ApiCustomer {
   maKhachHang: string;
-  tenKhachHang: string;
+  // Tên và SĐT chuẩn theo entity KhachHang
+  ten: string;       // field chính từ backend
+  sdt: string;       // field chính từ backend
+  // Các tên cũ dùng cho tương thích ngược, nếu backend có map khác
+  tenKhachHang?: string;
+  soDienThoai?: string;
   email: string;
-  soDienThoai: string;
   diaChi?: string;
   ngayTao?: string;
 }

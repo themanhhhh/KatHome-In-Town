@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from './button/button';
 import { Card } from './card/card';
 import { X, Save } from 'lucide-react';
-import { ApiBooking, ApiRoom, ApiCoSo, ApiNhanVien } from '../../types/api';  
-import { donDatPhongApi, phongApi, cosoApi, nhanVienApi } from '../../lib/api';
+import { ApiBooking, ApiRoom, ApiCoSo, ApiNhanVien, ApiCustomer } from '../../types/api';  
+import { donDatPhongApi, phongApi, cosoApi, nhanVienApi, khachHangApi } from '../../lib/api';
 import { toast } from 'sonner';
 
 interface BookingFormProps {
@@ -32,6 +32,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
     // Required fields for creation
     coSoId: '',
     nhanVienId: '',
+    khachHangId: '',
     customerEmail: '',
     customerPhone: '',
     customerName: '',
@@ -56,19 +57,22 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
   const [rooms, setRooms] = useState<ApiRoom[]>([]);
   const [cosos, setCosos] = useState<ApiCoSo[]>([]);
   const [nhanViens, setNhanViens] = useState<ApiNhanVien[]>([]);
+  const [customers, setCustomers] = useState<ApiCustomer[]>([]);
 
   useEffect(() => {
     // Load all required data
     const loadData = async () => {
       try {
-        const [roomsData, cososData, nhanViensData] = await Promise.all([
+        const [roomsData, cososData, nhanViensData, customersData] = await Promise.all([
           phongApi.getAll(),
           cosoApi.getAll(),
-          nhanVienApi.getAll()
+          nhanVienApi.getAll(),
+          khachHangApi.getAll()
         ]);
         setRooms(Array.isArray(roomsData) ? roomsData : []);
         setCosos(Array.isArray(cososData) ? cososData : []);
         setNhanViens(Array.isArray(nhanViensData) ? nhanViensData : []);
+        setCustomers(Array.isArray(customersData) ? customersData as ApiCustomer[] : []);
       } catch (err) {
         console.error('Error loading data:', err);
         toast.error('Lỗi khi tải dữ liệu', {
@@ -106,6 +110,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
         customerEmail: booking.customerEmail || booking.khachHang?.email || prev.customerEmail,
         customerPhone: booking.customerPhone || booking.khachHang?.soDienThoai || prev.customerPhone,
         customerName: booking.customerName || booking.khachHang?.tenKhachHang || prev.customerName,
+        khachHangId: booking.khachHang?.maKhachHang || prev.khachHangId,
         
         // Room details
         rooms: booking.chiTiet?.map(ct => ({
@@ -141,6 +146,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
         // Create new booking with proper format
         const bookingData = {
           coSoId: formData.coSoId,
+          khachHangId: formData.khachHangId || undefined,
           nhanVienId: formData.nhanVienId,
           customerEmail: formData.customerEmail,
           customerPhone: formData.customerPhone,
@@ -157,9 +163,9 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
         };
 
         // Validate required fields
-        if (!bookingData.coSoId || !bookingData.customerEmail || !bookingData.customerPhone || !bookingData.customerName || bookingData.rooms.length === 0) {
+        if (!bookingData.coSoId || !bookingData.khachHangId || !bookingData.customerEmail || !bookingData.customerPhone || !bookingData.customerName || bookingData.rooms.length === 0) {
           toast.error('Thiếu thông tin bắt buộc', {
-            description: 'Vui lòng điền đầy đủ thông tin cơ sở, khách hàng và phòng.'
+            description: 'Vui lòng chọn khách hàng từ danh sách, điền đầy đủ thông tin cơ sở và phòng.'
           });
           setIsSubmitting(false);
           return;
@@ -321,12 +327,49 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                 </select>
               </div>
 
+              {/* Chọn khách hàng từ danh sách đã quản lý */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Khách hàng <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={formData.khachHangId}
+                  onChange={(e) => {
+                    const newId = e.target.value;
+                    const selected = customers.find((c) => c.maKhachHang === newId);
+                    setFormData((prev) => ({
+                      ...prev,
+                      khachHangId: newId,
+                      customerEmail: selected?.email || '',
+                      customerPhone: selected?.soDienThoai || selected?.sdt || '',
+                      customerName: selected?.tenKhachHang || selected?.ten || '',
+                    }));
+                  }}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                  required
+                >
+                  <option value="">Chọn khách hàng</option>
+                  {customers.map((kh) => {
+                    const name = kh.tenKhachHang || kh.ten;
+                    const phone = kh.soDienThoai || kh.sdt;
+                    return (
+                      <option key={kh.maKhachHang} value={kh.maKhachHang}>
+                        {name} - {phone}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Muốn thêm khách mới? Vào màn hình <strong>Quản lý khách hàng</strong> để tạo trước.
+                </p>
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Email khách hàng <span className="text-red-500">*</span></label>
                 <input
                   type="email"
                   value={formData.customerEmail}
-                  onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
+                  readOnly
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   placeholder="example@email.com"
                   required
@@ -338,7 +381,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                 <input
                   type="tel"
                   value={formData.customerPhone}
-                  onChange={(e) => setFormData({ ...formData, customerPhone: e.target.value })}
+                  readOnly
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   placeholder="0123456789"
                   required
@@ -350,7 +393,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                 <input
                   type="text"
                   value={formData.customerName}
-                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
+                  readOnly
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   placeholder="Họ và tên khách hàng"
                   required

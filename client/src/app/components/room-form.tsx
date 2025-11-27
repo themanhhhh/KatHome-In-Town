@@ -25,7 +25,6 @@ interface RoomFormProps {
 export function RoomForm({ room, coSoList, onClose, onSuccess }: RoomFormProps) {
   const [formData, setFormData] = useState({
     tenPhong: '',
-    hangPhong: '',
     moTa: '',
     sucChua: '2',
     donGiaQuaDem: '',
@@ -38,7 +37,6 @@ export function RoomForm({ room, coSoList, onClose, onSuccess }: RoomFormProps) 
     if (room) {
       setFormData({
         tenPhong: room.tenPhong || '',
-        hangPhong: room.tenPhong || '', // Sử dụng tenPhong làm hạng phòng
         moTa: room.moTa || '',
         sucChua: String(room.sucChua || 2),
         donGiaQuaDem: String(room.donGiaQuaDem || ''),
@@ -65,7 +63,7 @@ export function RoomForm({ room, coSoList, onClose, onSuccess }: RoomFormProps) 
       
       // Transform data
       const payload = {
-        tenPhong: formData.hangPhong, // Sử dụng hạng phòng làm tenPhong
+        tenPhong: formData.tenPhong,
         moTa: formData.moTa,
         sucChua: parseInt(formData.sucChua),
         donGiaQuaDem: parseFloat(formData.donGiaQuaDem),
@@ -152,22 +150,6 @@ export function RoomForm({ room, coSoList, onClose, onSuccess }: RoomFormProps) 
                   placeholder="VD: Phòng đôi tiêu chuẩn"
                   required
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Hạng phòng *</label>
-                <select
-                  value={formData.hangPhong}
-                  onChange={(e) => setFormData({ ...formData, hangPhong: e.target.value })}
-                  className="w-full p-2 border rounded-md"
-                  required
-                >
-                  <option value="">Chọn hạng phòng</option>
-                  <option value="Standard">Standard</option>
-                  <option value="VIP">VIP</option>
-                  <option value="Deluxe">Deluxe</option>
-                  <option value="Suite">Suite</option>
-                </select>
               </div>
 
               <div>

@@ -19,8 +19,8 @@ export class Phong {
   @Column({ type: 'int', default: 2 })
   sucChua!: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  donGia4h!: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  donGia4h?: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   donGiaQuaDem!: number;

@@ -37,9 +37,9 @@ export class PhongController {
       const { tenPhong, moTa, sucChua, donGia4h, donGiaQuaDem, hinhAnh, coSoMaCoSo } = req.body;
       
       // Validate required fields
-      if (!tenPhong || !moTa || !sucChua || !donGia4h || !donGiaQuaDem || !coSoMaCoSo) {
+      if (!tenPhong || !moTa || !sucChua || !donGiaQuaDem || !coSoMaCoSo) {
         return res.status(400).json({ 
-          message: 'Thiếu thông tin bắt buộc: tenPhong, moTa, sucChua, donGia4h, donGiaQuaDem, coSoMaCoSo' 
+          message: 'Thiếu thông tin bắt buộc: tenPhong, moTa, sucChua, donGiaQuaDem, coSoMaCoSo' 
         });
       }
       
@@ -52,7 +52,7 @@ export class PhongController {
         tenPhong,
         moTa,
         sucChua: parseInt(sucChua),
-        donGia4h: parseFloat(donGia4h),
+        donGia4h: donGia4h ? parseFloat(donGia4h) : undefined,
         donGiaQuaDem: parseFloat(donGiaQuaDem),
         hinhAnh
       });

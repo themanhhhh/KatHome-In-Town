@@ -224,8 +224,8 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
       return;
     }
 
-    const checkIn = new Date(formData.checkinDuKien);
-    const checkOut = new Date(formData.checkoutDuKien);
+      const checkIn = new Date(formData.checkinDuKien);
+      const checkOut = new Date(formData.checkoutDuKien);
     const diffTime = checkOut.getTime() - checkIn.getTime();
 
     if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime()) || diffTime <= 0) {
@@ -241,7 +241,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
     const pricePerNight = selectedRoom.donGiaQuaDem || selectedRoom.donGia4h || 0;
     const total = nights * pricePerNight;
 
-    setFormData(prev => ({ ...prev, totalAmount: total }));
+      setFormData(prev => ({ ...prev, totalAmount: total }));
   }, [rooms, formData.maPhong, formData.checkinDuKien, formData.checkoutDuKien]);
 
   useEffect(() => {
@@ -319,9 +319,9 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                         ? `${nv.ten || nv.email} - ${nv.email}`
                         : nv.ten || nv.maNhanVien;
                       return (
-                        <option key={nv.maNhanVien} value={nv.maNhanVien}>
+                    <option key={nv.maNhanVien} value={nv.maNhanVien}>
                           {label}
-                        </option>
+                    </option>
                       );
                     })}
                 </select>
@@ -519,10 +519,10 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                       return room.coSo?.maCoSo === formData.coSoId;
                     })
                     .map((room) => (
-                      <option key={room.maPhong} value={room.maPhong}>
+                    <option key={room.maPhong} value={room.maPhong}>
                         {formatPrice(room.donGiaQuaDem || room.donGia4h || 0)}/đêm
-                      </option>
-                    ))}
+                    </option>
+                  ))}
                 </select>
                 {!formData.coSoId && (
                   <p className="text-sm text-gray-500 mt-1">Vui lòng chọn cơ sở trước khi chọn phòng</p>

@@ -128,6 +128,10 @@ export interface ApiCustomer {
   tenKhachHang?: string;
   soDienThoai?: string;
   email: string;
+  ngaySinh?: string | Date;  // Ngày sinh
+  gioiTinh?: string;         // Giới tính: "Nam" | "Nữ"
+  quocTich?: string;         // Quốc tịch
+  cccd?: string;             // Số căn cước công dân
   diaChi?: string;
   ngayTao?: string;
 }

@@ -26,6 +26,17 @@ import { usersApi, khachHangApi, donDatPhongApi } from "../../../lib/api";
 import { ApiUser, ApiCustomer, ApiBooking } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { UserForm } from "../../components/user-form";
+import { CustomerForm } from "../../components/customer-form";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../components/alert-dialog/alert-dialog";
 import { toast } from "sonner";
 
 // Using ApiUser and ApiCustomer types from types/api.ts
@@ -36,9 +47,19 @@ const UsersManagementPage = () => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<ApiUser | null>(null);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<ApiCustomer | null>(null);
   const [activeTab, setActiveTab] = useState<'users' | 'customers'>('users');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  
+  // Delete confirmation dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{
+    type: 'user' | 'customer';
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Fetch data from API
   const { data: users = [], loading: usersLoading, error: usersError, refetch: refetchUsers } = useApi<ApiUser[]>(
@@ -57,7 +78,10 @@ const UsersManagementPage = () => {
     []
   );
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | undefined | null) => {
+    if (price === undefined || price === null || isNaN(price)) {
+      return '0đ';
+    }
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
   };
 
@@ -106,9 +130,9 @@ const UsersManagementPage = () => {
       return {
         ...customer,
         id: customer.maKhachHang,
-        name: customer.tenKhachHang,
-        email: customer.email,
-        phone: customer.soDienThoai,
+        name: customer.ten || customer.tenKhachHang || 'N/A',
+        email: customer.email || 'N/A',
+        phone: customer.sdt || customer.soDienThoai || 'N/A',
         city: customer.diaChi || 'N/A',
         registrationDate: customer.ngayTao || 'N/A',
         lastLogin: 'N/A',
@@ -191,16 +215,63 @@ const UsersManagementPage = () => {
     setShowUserForm(true);
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-      try {
-        await usersApi.delete(userId);
+  const handleDeleteUser = (userId: string, userName: string) => {
+    setItemToDelete({
+      type: 'user',
+      id: userId,
+      name: userName
+    });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteCustomer = (customerId: string, customerName: string) => {
+    setItemToDelete({
+      type: 'customer',
+      id: customerId,
+      name: customerName
+    });
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      if (itemToDelete.type === 'user') {
+        await usersApi.delete(itemToDelete.id);
         await refetchUsers();
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('Có lỗi xảy ra khi xóa người dùng');
+        toast.success('Xóa người dùng thành công!');
+      } else {
+        await khachHangApi.delete(itemToDelete.id);
+        await refetchCustomers();
+        toast.success('Xóa khách hàng thành công!');
       }
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    } catch (error) {
+      console.error(`Error deleting ${itemToDelete.type}:`, error);
+      const errorObj = error as { response?: { data?: { error?: string; message?: string } }; message?: string };
+      const errorMessage = errorObj?.response?.data?.error || 
+                         errorObj?.response?.data?.message || 
+                         errorObj?.message || 
+                         `Có lỗi xảy ra khi xóa ${itemToDelete.type === 'user' ? 'người dùng' : 'khách hàng'}`;
+      toast.error(`Lỗi khi xóa ${itemToDelete.type === 'user' ? 'người dùng' : 'khách hàng'}`, {
+        description: errorMessage,
+        duration: 5000
+      });
     }
+  };
+
+  const handleEditCustomer = (customer: ApiCustomer) => {
+    setEditingCustomer(customer);
+    setShowCustomerForm(true);
+  };
+
+
+  const handleCustomerFormSuccess = () => {
+    refetchCustomers();
+    setShowCustomerForm(false);
+    setEditingCustomer(null);
   };
 
   const handleBulkDelete = async () => {
@@ -299,6 +370,19 @@ const UsersManagementPage = () => {
           </div>
           
           <div className={Style.headerActions}>
+            {activeTab === 'customers' && (
+              <button 
+                className={Style.exportButton}
+                onClick={() => {
+                  setEditingCustomer(null);
+                  setShowCustomerForm(true);
+                }}
+                style={{ marginRight: '12px' }}
+              >
+                <Users className="w-4 h-4" />
+                <span>Thêm khách hàng</span>
+              </button>
+            )}
             <button className={Style.exportButton} onClick={handleExportExcel}>
               <Download className="w-4 h-4" />
               <span>Xuất Excel</span>
@@ -397,7 +481,10 @@ const UsersManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {formatPrice(allUsers.reduce((sum, u) => sum + u.totalSpent, 0))}
+              {formatPrice(allUsers.reduce((sum, u) => {
+                const spent = u.totalSpent || 0;
+                return sum + (isNaN(spent) ? 0 : spent);
+              }, 0))}
             </div>
             <div className={Style.statLabel}>
               Tổng chi tiêu
@@ -502,7 +589,7 @@ const UsersManagementPage = () => {
                         <div className={Style.statItem}>
                           <DollarSign className={Style.statIcon} />
                           <span className={Style.statText}>
-                            {formatPrice(user.totalSpent)}
+                            {formatPrice(user.totalSpent || 0)}
                           </span>
                         </div>
                         {user.averageRating > 0 && (
@@ -533,7 +620,30 @@ const UsersManagementPage = () => {
                             </button>
                             <button 
                               className={`${Style.actionButton} ${Style.actionButtonDanger}`}
-                              onClick={() => handleDeleteUser(user.id)}
+                              onClick={() => handleDeleteUser(user.id, user.name || 'người dùng này')}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                        {user.type === 'customer' && (
+                          <>
+                            <button 
+                              className={Style.actionButton}
+                              onClick={() => {
+                                const apiCustomer = (customers || []).find(c => c.maKhachHang === user.id);
+                                if (apiCustomer) handleEditCustomer(apiCustomer);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              className={`${Style.actionButton} ${Style.actionButtonDanger}`}
+                              onClick={() => {
+                                const apiCustomer = (customers || []).find(c => c.maKhachHang === user.id);
+                                const customerName = apiCustomer?.ten || apiCustomer?.tenKhachHang || user.name || 'khách hàng này';
+                                handleDeleteCustomer(user.id, customerName);
+                              }}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -656,6 +766,52 @@ const UsersManagementPage = () => {
           onSuccess={handleFormSuccess}
         />
       )}
+
+      {/* Customer Form Modal */}
+      {showCustomerForm && (
+        <CustomerForm
+          customer={editingCustomer}
+          onClose={() => {
+            setShowCustomerForm(false);
+            setEditingCustomer(null);
+          }}
+          onSuccess={handleCustomerFormSuccess}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="bg-white">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-gray-900">Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
+              Bạn có chắc chắn muốn xóa {itemToDelete?.type === 'user' ? 'người dùng' : 'khách hàng'} <strong className="text-gray-900">&quot;{itemToDelete?.name}&quot;</strong>?
+              {itemToDelete?.type === 'customer' && (
+                <span className="block mt-2 text-amber-600">
+                  ⚠️ Nếu khách hàng này có đơn đặt phòng, bạn sẽ không thể xóa.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                setDeleteDialogOpen(false);
+                setItemToDelete(null);
+              }}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300"
+            >
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

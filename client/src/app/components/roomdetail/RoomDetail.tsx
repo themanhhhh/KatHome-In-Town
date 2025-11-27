@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { phongApi } from "@/lib/api";
+import { toast } from "sonner";
 
 interface PhongDetail {
   maPhong: string;
@@ -152,7 +153,26 @@ export function RoomDetail({
         if (!active) {
           return;
         }
-        setError(err instanceof Error ? err.message : "Không thể tải dữ liệu phòng");
+        const errorMessage = err instanceof Error ? err.message : "Không thể tải dữ liệu phòng";
+        const errorDetails = err instanceof Error ? err.stack : String(err);
+        
+        setError(errorMessage);
+        
+        // Hiển thị toast với chi tiết lỗi
+        toast.error('Lỗi khi tải thông tin phòng', {
+          description: errorMessage,
+          duration: 5000,
+          action: {
+            label: 'Chi tiết',
+            onClick: () => {
+              console.error('Chi tiết lỗi:', errorDetails);
+              toast.error('Chi tiết lỗi', {
+                description: errorDetails,
+                duration: 10000,
+              });
+            }
+          }
+        });
       } finally {
         if (active) {
           setLoading(false);
@@ -230,7 +250,38 @@ const amenitiesToShow = useMemo(() => {
 
     // Yêu cầu người dùng chọn ngày trước khi sang trang thanh toán
     if (!checkIn || !checkOut) {
-      alert("Vui lòng chọn ngày nhận phòng và trả phòng trước khi thanh toán.");
+      toast.error('Thiếu thông tin đặt phòng', {
+        description: 'Vui lòng chọn ngày nhận phòng và trả phòng trước khi thanh toán.',
+        duration: 4000,
+      });
+      return;
+    }
+    
+    // Validate dates
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    
+    if (isNaN(checkInDate.getTime())) {
+      toast.error('Ngày nhận phòng không hợp lệ', {
+        description: `Ngày nhận phòng "${checkIn}" không đúng định dạng.`,
+        duration: 4000,
+      });
+      return;
+    }
+    
+    if (isNaN(checkOutDate.getTime())) {
+      toast.error('Ngày trả phòng không hợp lệ', {
+        description: `Ngày trả phòng "${checkOut}" không đúng định dạng.`,
+        duration: 4000,
+      });
+      return;
+    }
+    
+    if (checkOutDate <= checkInDate) {
+      toast.error('Ngày trả phòng không hợp lệ', {
+        description: 'Ngày trả phòng phải sau ngày nhận phòng.',
+        duration: 4000,
+      });
       return;
     }
 

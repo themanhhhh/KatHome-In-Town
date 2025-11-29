@@ -6,10 +6,6 @@ import * as XLSX from 'xlsx';
 import { 
   Search,
   Filter,
-  Bed,
-  Users,
-  Bath,
-  Maximize2,
   Eye,
   Edit,
   Trash2,
@@ -291,9 +287,16 @@ const RoomsManagementPage = () => {
   
   // Calculate total revenue from bookings
   const totalRevenue = React.useMemo(() => {
-    return (bookings || []).reduce((sum, booking) => {
-      return sum + (booking.totalAmount || 0);
+    const revenue = (bookings || []).reduce((sum, booking) => {
+      const amount = booking.totalAmount;
+      // Handle null, undefined, NaN, and ensure it's a valid number
+      if (amount == null || isNaN(Number(amount))) {
+        return sum;
+      }
+      return sum + Number(amount);
     }, 0);
+    // Ensure we return a valid number (not NaN)
+    return isNaN(revenue) ? 0 : revenue;
   }, [bookings]);
 
   // Get booking count & revenue per room from bookings data
@@ -303,12 +306,17 @@ const RoomsManagementPage = () => {
     );
 
     const bookingCount = relatedBookings.length;
-    const revenue = relatedBookings.reduce(
-      (sum, booking) => sum + (booking.totalAmount || 0),
-      0
-    );
+    const revenue = relatedBookings.reduce((sum, booking) => {
+      const amount = booking.totalAmount;
+      // Handle null, undefined, NaN, and ensure it's a valid number
+      if (amount == null || isNaN(Number(amount))) {
+        return sum;
+      }
+      return sum + Number(amount);
+    }, 0);
 
-    return { bookingCount, revenue };
+    // Ensure we return a valid number (not NaN)
+    return { bookingCount, revenue: isNaN(revenue) ? 0 : revenue };
   };
 
   const handleExportExcel = () => {
@@ -557,7 +565,7 @@ const RoomsManagementPage = () => {
                     <td className={Style.tableCell}>
                       <div>
                         <div className={Style.roomName}>
-                          {room.moTa}
+                          {room.tenPhong || room.moTa || 'Chưa có tên'}
                         </div>
                         <div className={Style.roomId}>
                           ID: {room.maPhong}

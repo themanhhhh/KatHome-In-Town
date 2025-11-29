@@ -59,6 +59,7 @@ export interface ApiBooking {
     maChiTiet: string;
     phong?: {
       maPhong: string;
+      tenPhong?: string;
       moTa: string;
       hinhAnh?: string;
     };

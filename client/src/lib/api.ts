@@ -314,6 +314,7 @@ export interface CreateBookingRequest {
 export const donDatPhongApi = {
   getAll: () => api.get('dondatphong'),
   getById: (id: string) => api.get(`dondatphong/${id}`),
+  getByEmail: (email: string) => api.get(`dondatphong/by-email/${encodeURIComponent(email)}`),
   create: (data: CreateBookingRequest) => api.post('dondatphong', data),
   update: (id: string, data: unknown) => api.put(`dondatphong/${id}`, data),
   delete: (id: string) => api.delete(`dondatphong/${id}`),

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '../components/header/header';
 import { Footer } from '../components/footer/footer';
@@ -9,14 +9,11 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/badge/badge';
 import { useAuth } from '../../contexts/AuthContext';
 import { ApiBooking } from '../../types/api';
+import { useApi } from '../../hooks/useApi';
+import { donDatPhongApi } from '../../lib/api';
 import { 
   Calendar, 
-  MapPin, 
   Users, 
-  CreditCard, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
   AlertCircle,
   ArrowLeft,
   Building2,
@@ -27,38 +24,26 @@ import Link from 'next/link';
 export default function ProfilePage() {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
-  const [bookings, setBookings] = useState<ApiBooking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  // Fetch bookings using useApi hook (consistent with admin pages)
+  const { data: bookingsData, loading, error } = useApi<ApiBooking[]>(
+    () => {
+      if (!user?.gmail) {
+        return Promise.resolve([]);
+      }
+      return donDatPhongApi.getByEmail(user.gmail);
+    },
+    [user?.gmail]
+  );
+
+  // Ensure bookings is always an array
+  const bookings = bookingsData || [];
 
   useEffect(() => {
     if (!isAuthenticated || !user) {
       router.push('/login');
-      return;
     }
-
-    const fetchBookings = async () => {
-      try {
-        setLoading(true);
-        const email = encodeURIComponent(user.gmail);
-        const response = await fetch(`/api/dondatphong/by-email/${email}`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch bookings');
-        }
-        
-        const data = await response.json();
-        setBookings(data);
-      } catch (err) {
-        console.error('Error fetching bookings:', err);
-        setError('Không thể tải lịch sử đặt phòng');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBookings();
-  }, [user, isAuthenticated, router]);
+  }, [isAuthenticated, user, router]);
 
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline'; color: string }> = {
@@ -92,9 +77,9 @@ export default function ProfilePage() {
     });
   };
 
-  const formatPrice = (price?: number) => {
-    if (!price) return 'N/A';
-    return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
+  const formatPrice = (price?: number | null) => {
+    if (price == null || isNaN(Number(price))) return 'N/A';
+    return new Intl.NumberFormat('vi-VN').format(Number(price)) + 'đ';
   };
 
   if (!isAuthenticated || !user) {
@@ -211,7 +196,7 @@ export default function ProfilePage() {
                                     <Bed className="w-4 h-4 mt-0.5" style={{ color: '#82213D' }} />
                                     <div>
                                       <p className="font-medium">
-                                        {chiTiet.phong?.moTa || 'Phòng không xác định'}
+                                        {chiTiet.phong?.tenPhong || chiTiet.phong?.moTa || 'Phòng không xác định'}
                                       </p>
                                       <p className="text-gray-600">
                                         {formatDate(chiTiet.checkInDate)} - {formatDate(chiTiet.checkOutDate)}

@@ -124,6 +124,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
               paymentRef: verifyJson.paymentRef || undefined,
               paidAt: new Date().toISOString(),
               sendEmail: false, // Email already sent in verify step
+              customerEmail: bookingData.guestInfo.email, // Gửi email để verify quyền
             }) as { success?: boolean; message?: string; data?: unknown };
 
             if (finalizeResponse?.success) {

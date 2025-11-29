@@ -29,6 +29,7 @@ import { phongApi, coSoApi, donDatPhongApi, danhGiaApi, ReviewStatsResponse } fr
 import { ApiRoom, ApiBooking } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { RoomForm } from "../../components/room-form";
+import { RoomDetail } from "../../components/room-detail";
 import { toast } from "sonner";
 
 // Using ApiRoom type from types/api.ts
@@ -40,6 +41,7 @@ const RoomsManagementPage = () => {
   const [selectedRooms, setSelectedRooms] = useState<string[]>([]);
   const [showRoomForm, setShowRoomForm] = useState(false);
   const [editingRoom, setEditingRoom] = useState<ApiRoom | null>(null);
+  const [viewingRoom, setViewingRoom] = useState<ApiRoom | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [roomReviewStats, setRoomReviewStats] = useState<Record<string, ReviewStatsResponse>>({});
@@ -187,6 +189,10 @@ const RoomsManagementPage = () => {
     setShowRoomForm(true);
   };
 
+  const handleViewRoom = (room: ApiRoom) => {
+    setViewingRoom(room);
+  };
+
   const handleEditRoom = (room: ApiRoom) => {
     setEditingRoom(room);
     setShowRoomForm(true);
@@ -194,16 +200,22 @@ const RoomsManagementPage = () => {
 
   const handleDeleteRoom = async (roomId: string) => {
     if (window.confirm('Bạn có chắc chắn muốn xóa phòng này?')) {
+      const deleteToast = toast.loading('Đang xóa phòng...', {
+        description: `Đang xóa phòng #${roomId}`,
+      });
+      
       try {
         await phongApi.delete(roomId);
         await refetchRooms();
         toast.success('Xóa phòng thành công!', {
+          id: deleteToast,
           description: `Phòng #${roomId} đã được xóa khỏi hệ thống.`,
           duration: 4000,
         });
       } catch (error) {
         console.error('Error deleting room:', error);
         toast.error('Lỗi xóa phòng', {
+          id: deleteToast,
           description: error instanceof Error ? error.message : 'Có lỗi xảy ra khi xóa phòng',
           duration: 5000,
         });
@@ -655,7 +667,10 @@ const RoomsManagementPage = () => {
                     </td>
                     <td className={Style.tableCell}>
                       <div className={Style.actions}>
-                        <button className={Style.actionButton}>
+                        <button 
+                          className={Style.actionButton}
+                          onClick={() => handleViewRoom(room)}
+                        >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button 
@@ -744,6 +759,14 @@ const RoomsManagementPage = () => {
             setEditingRoom(null);
           }}
           onSuccess={handleFormSuccess}
+        />
+      )}
+
+      {/* Room Detail Modal */}
+      {viewingRoom && (
+        <RoomDetail
+          room={viewingRoom}
+          onClose={() => setViewingRoom(null)}
         />
       )}
     </div>

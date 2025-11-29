@@ -3,6 +3,7 @@ import { AppDataSource } from '../data/datasource';
 import { DonDatPhong } from '../entities/DonDatPhong';
 import { Revenue } from '../entities/Revenue';
 import { BookingService } from '../services/BookingService';
+import type { HoaDon } from '../entities/HoaDon';
 
 const donDatPhongRepository = AppDataSource.getRepository(DonDatPhong);
 const revenueRepository = AppDataSource.getRepository(Revenue);
@@ -210,14 +211,47 @@ export class DonDatPhongController {
         });
       }
 
-      // Get staff user (nhan viên CSKH)
-      const nhanVien = req.user;
-      if (!nhanVien || !nhanVien.maNhanVien) {
-        await queryRunner.rollbackTransaction();
-        return res.status(403).json({
-          success: false,
-          message: 'Chỉ nhân viên CSKH mới có thể xác nhận thanh toán'
-        });
+      // Kiểm tra quyền: Nhân viên hoặc khách hàng finalize booking của chính họ
+      const user = req.user;
+      let nhanVien = null;
+      
+      if (user && user.maNhanVien) {
+        // Là nhân viên - cho phép finalize bất kỳ booking nào
+        nhanVien = user;
+      } else {
+        // Không phải nhân viên - kiểm tra booking thuộc về khách hàng này
+        // Kiểm tra qua email trong booking
+        const { customerEmail } = req.body;
+        if (!customerEmail) {
+          await queryRunner.rollbackTransaction();
+          return res.status(400).json({
+            success: false,
+            message: 'customerEmail is required for customer finalization'
+          });
+        }
+        
+        // Kiểm tra email khớp với booking
+        if (booking.customerEmail && booking.customerEmail.toLowerCase() !== customerEmail.toLowerCase()) {
+          await queryRunner.rollbackTransaction();
+          return res.status(403).json({
+            success: false,
+            message: 'Bạn chỉ có thể finalize booking của chính mình'
+          });
+        }
+        
+        // Nếu booking không có customerEmail, kiểm tra qua khachHang relation
+        if (!booking.customerEmail && booking.khachHang) {
+          if (booking.khachHang.email && booking.khachHang.email.toLowerCase() !== customerEmail.toLowerCase()) {
+            await queryRunner.rollbackTransaction();
+            return res.status(403).json({
+              success: false,
+              message: 'Bạn chỉ có thể finalize booking của chính mình'
+            });
+          }
+        }
+        
+        // Khách hàng finalize booking của chính họ - không cần nhanVien
+        console.log(`✅ Customer finalizing their own booking: ${bookingId} by ${customerEmail}`);
       }
 
       const paidDate = paidAt ? new Date(paidAt) : new Date();
@@ -230,7 +264,10 @@ export class DonDatPhongController {
       booking.totalPaid = totalAmount;
       booking.trangThai = 'CF'; // Confirmed
       booking.ngayXacNhan = paidDate;
-      booking.nhanVien = nhanVien; // Gán nhân viên đã xác nhận
+      // Chỉ gán nhanVien nếu có (nhân viên finalize)
+      if (nhanVien) {
+        booking.nhanVien = nhanVien;
+      }
 
       await queryRunner.manager.save(DonDatPhong, booking);
 
@@ -252,18 +289,27 @@ export class DonDatPhongController {
       const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
       const maHoaDon = `HD-${today}-${String(hoaDonCount + 1).padStart(4, '0')}`;
 
-      const hoaDon = hoaDonRepo.create({
+      // Tạo HoaDon object - chỉ gán nhanVien nếu có
+      const hoaDonData: any = {
         maHoaDon,
         donDatPhong: booking,
         tongTien: totalAmount,
         phuongThucThanhToan: paymentMethod,
-        paymentRef: paymentRef || null,
-        nhanVien: nhanVien,
+        paymentRef: paymentRef || undefined,
         ngayThanhToan: paidDate,
-        ghiChu: ghiChu || null
-      });
-
-      await queryRunner.manager.save(HoaDon, hoaDon);
+        ghiChu: ghiChu || undefined
+      };
+      
+      // Chỉ gán nhanVien nếu có (nhân viên finalize)
+      if (nhanVien) {
+        hoaDonData.nhanVien = nhanVien;
+      }
+      
+      const hoaDon = hoaDonRepo.create(hoaDonData);
+      const savedHoaDon = await queryRunner.manager.save(HoaDon, hoaDon);
+      
+      // Ensure we have a single entity (not array)
+      const hoaDonEntity = Array.isArray(savedHoaDon) ? savedHoaDon[0] : savedHoaDon;
 
       // Commit transaction
       await queryRunner.commitTransaction();
@@ -280,15 +326,15 @@ export class DonDatPhongController {
             paidAt: booking.paidAt
           },
           hoaDon: {
-            id: hoaDon.id,
-            maHoaDon: hoaDon.maHoaDon,
-            tongTien: hoaDon.tongTien,
-            phuongThucThanhToan: hoaDon.phuongThucThanhToan,
-            ngayThanhToan: hoaDon.ngayThanhToan,
-            nhanVien: {
+            id: hoaDonEntity.id,
+            maHoaDon: hoaDonEntity.maHoaDon,
+            tongTien: hoaDonEntity.tongTien,
+            phuongThucThanhToan: hoaDonEntity.phuongThucThanhToan,
+            ngayThanhToan: hoaDonEntity.ngayThanhToan,
+            nhanVien: nhanVien ? {
               maNhanVien: nhanVien.maNhanVien,
               ten: nhanVien.ten
-            }
+            } : null
           },
           revenue: {
             id: revenue.id,

@@ -421,12 +421,14 @@ export const paymentApi = {
     paymentRef?: string;
     paidAt?: string;
     sendEmail?: boolean;
+    customerEmail?: string; // Email của khách hàng để verify quyền
   }) => api.post(`bookings/${payload.bookingId}/finalize`, {
     totalAmount: payload.totalAmount,
     paymentMethod: payload.paymentMethod,
     paymentRef: payload.paymentRef,
     paidAt: payload.paidAt,
     sendEmail: payload.sendEmail,
+    customerEmail: payload.customerEmail,
   }),
 };
 

@@ -98,8 +98,8 @@ router.delete('/dondatphong/:id', authenticate, DonDatPhongController.delete);
 // Confirmation slip (không cần authentication - khách hàng có thể xem)
 router.get('/bookings/:bookingId/confirmation-slip', DonDatPhongController.getConfirmationSlip);
 
-// Payment finalization (yêu cầu nhân viên CSKH)
-router.post('/bookings/:bookingId/finalize', authenticate, requireStaff, DonDatPhongController.finalizePayment);
+// Payment finalization (cho phép nhân viên hoặc khách hàng finalize booking của chính họ)
+router.post('/bookings/:bookingId/finalize', optionalAuth, DonDatPhongController.finalizePayment);
 
 // Other booking management routes
 router.post('/bookings/:bookingId/confirm-payment', DonDatPhongController.confirmPayment);

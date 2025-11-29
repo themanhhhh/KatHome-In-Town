@@ -78,15 +78,55 @@ export class PhongController {
   }
   static async update(req: Request, res: Response) {
     try {
-      const phong = await phongRepository.findOneBy({ maPhong: req.params.id });
+      const { coSoMaCoSo, coSoId, ...otherFields } = req.body;
+      const phong = await phongRepository.findOne({
+        where: { maPhong: req.params.id },
+        relations: ['coSo']
+      });
+      
       if (!phong) {
         return res.status(404).json({ message: 'Không tìm thấy phòng' });
       }
-      phongRepository.merge(phong, req.body);
+
+      // Xử lý cập nhật cơ sở (coSo)
+      const coSoMaCoSoToUpdate = coSoMaCoSo || coSoId;
+      if (coSoMaCoSoToUpdate) {
+        // Kiểm tra cơ sở có tồn tại không
+        const { CoSo } = await import('../entities/CoSo');
+        const coSoRepository = AppDataSource.getRepository(CoSo);
+        const coSo = await coSoRepository.findOne({
+          where: { maCoSo: coSoMaCoSoToUpdate }
+        });
+        
+        if (!coSo) {
+          return res.status(400).json({ 
+            message: `Không tìm thấy cơ sở với mã: ${coSoMaCoSoToUpdate}` 
+          });
+        }
+        
+        // Cập nhật relation bằng cách gán entity
+        phong.coSo = coSo;
+      }
+
+      // Merge các field khác
+      phongRepository.merge(phong, otherFields);
+      
+      // Save phong (sẽ tự động cập nhật coSoMaCoSo foreign key)
       const result = await phongRepository.save(phong);
-      res.json(result);
+      
+      // Reload với relations để trả về đầy đủ thông tin
+      const updatedPhong = await phongRepository.findOne({
+        where: { maPhong: req.params.id },
+        relations: ['coSo']
+      });
+      
+      res.json(updatedPhong);
     } catch (error) {
-      res.status(500).json({ message: 'Lỗi khi cập nhật phòng', error });
+      console.error('Error updating room:', error);
+      res.status(500).json({ 
+        message: 'Lỗi khi cập nhật phòng', 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   }
   static async delete(req: Request, res: Response) {

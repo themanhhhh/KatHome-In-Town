@@ -135,9 +135,8 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
   const getTotalPrice = () => {
     const subtotal = roomData.price * calculateNights();
-    const serviceFee = subtotal * 0.05; // 5% service fee
-    const tax = subtotal * 0.1; // 10% tax
-    return subtotal + serviceFee + tax;
+    // Bỏ hoàn toàn phí dịch vụ/thuế: tổng chỉ là giá phòng * số đêm
+    return subtotal;
   };
 
   const validateForm = () => {
@@ -290,7 +289,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
           email: formData.email,
           phone: formData.phone,
           address: formData.address,
-          city: formData.city,
           specialRequests: formData.specialRequests
         },
         paymentInfo: {
@@ -742,14 +740,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                     <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
                       <span>{formatPrice(roomData.price)} x {calculateNights()} đêm</span>
                       <span>{formatPrice(roomData.price * calculateNights())}</span>
-                    </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
-                      <span>Phí dịch vụ (5%)</span>
-                      <span>{formatPrice(roomData.price * calculateNights() * 0.05)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
-                      <span>Thuế (10%)</span>
-                      <span>{formatPrice(roomData.price * calculateNights() * 0.1)}</span>
                     </div>
                     <Separator />
                     <div className="flex justify-between font-semibold text-lg" style={{ color: '#3D0301' }}>

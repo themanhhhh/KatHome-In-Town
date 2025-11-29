@@ -531,14 +531,6 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
                       <span>{formatPrice(bookingData.roomData.price)} x {calculateNights()} đêm</span>
                       <span>{formatPrice(bookingData.roomData.price * calculateNights())}</span>
                     </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
-                      <span>Phí dịch vụ (5%)</span>
-                      <span>{formatPrice(bookingData.roomData.price * calculateNights() * 0.05)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm" style={{ color: '#3D0301' }}>
-                      <span>Thuế (10%)</span>
-                      <span>{formatPrice(bookingData.roomData.price * calculateNights() * 0.1)}</span>
-                    </div>
                     <Separator />
                     <div className="flex justify-between font-semibold text-lg" style={{ color: '#3D0301' }}>
                       <span>Tổng cộng</span>

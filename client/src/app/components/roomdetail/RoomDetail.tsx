@@ -216,9 +216,8 @@ export function RoomDetail({
     [checkIn, checkOut]
   );
   const subtotal = pricePerNight * nights;
-  const serviceFee = subtotal > 0 ? Math.round(subtotal * 0.05) : 0;
-  const tax = subtotal > 0 ? Math.round(subtotal * 0.1) : 0;
-  const total = subtotal + serviceFee + tax;
+  // Bỏ hoàn toàn phí dịch vụ/thuế: tổng chỉ là giá phòng * số đêm
+  const total = subtotal;
 
   const locationName = room?.coSo?.tenCoSo ?? "Chưa có thông tin cơ sở";
   const locationAddress = room?.coSo?.diaChi ?? "Chưa cập nhật địa chỉ";
@@ -633,14 +632,6 @@ const amenitiesToShow = useMemo(() => {
                       {formatCurrency(pricePerNight)} x {nights} đêm
                     </span>
                     <span>{formatCurrency(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Phí dịch vụ (5%)</span>
-                    <span>{formatCurrency(serviceFee)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Thuế (10%)</span>
-                    <span>{formatCurrency(tax)}</span>
                   </div>
                   <div className="border-t pt-3 flex justify-between font-semibold text-lg">
                     <span>Tổng cộng</span>

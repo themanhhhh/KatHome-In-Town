@@ -83,53 +83,108 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
     loadData();
   }, []);
 
+  // Effect: Tự điền form khi có booking và các danh sách đã load
   useEffect(() => {
-    if (booking && cosos.length > 0 && rooms.length > 0) {
-      const firstRoom = booking.chiTiet?.[0];
-      const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0), 0);
-      const totalChildren = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soTreEm || 0), 0);
-      
-      // Get coSoId from booking or find by matching coSo data
-      const coSoId = booking.coSo?.maCoSo || '';
-      
-      // Get roomId from first chiTiet
-      const maPhong = firstRoom?.phong?.maPhong || '';
-      
-      setFormData(prev => ({
-        // Basic booking info
-        ngayDat: booking.ngayDat?.split('T')[0] || prev.ngayDat,
-        checkinDuKien: booking.checkinDuKien?.split('T')[0] || prev.checkinDuKien,
-        checkoutDuKien: booking.checkoutDuKien?.split('T')[0] || prev.checkoutDuKien,
-        trangThai: booking.trangThai || prev.trangThai,
-        phuongThucThanhToan: booking.phuongThucThanhToan || prev.phuongThucThanhToan,
-        notes: booking.notes || prev.notes,
-        
-        // Required fields for creation - preserve if already set
-        coSoId: coSoId || prev.coSoId,
-        nhanVienId: booking.nhanVien?.maNhanVien || prev.nhanVienId,
-        customerEmail: booking.customerEmail || booking.khachHang?.email || prev.customerEmail,
-        customerPhone: booking.customerPhone || booking.khachHang?.soDienThoai || prev.customerPhone,
-        customerName: booking.customerName || booking.khachHang?.tenKhachHang || prev.customerName,
-        khachHangId: booking.khachHang?.maKhachHang || prev.khachHangId,
-        
-        // Room details
-        rooms: booking.chiTiet?.map(ct => ({
-          roomId: ct.phong?.maPhong || '',
-          checkIn: ct.checkInDate?.split('T')[0] || '',
-          checkOut: ct.checkOutDate?.split('T')[0] || '',
-          adults: ct.soNguoiLon || 1,
-          children: ct.soTreEm || 0,
-          price: ct.donGia || 0
-        })) || prev.rooms,
-        
-        // Legacy fields for backward compatibility - preserve room info
-        maPhong: maPhong || prev.maPhong,
-        soNguoiLon: totalGuests || prev.soNguoiLon,
-        soTreEm: totalChildren || prev.soTreEm,
-        totalAmount: booking.totalAmount || prev.totalAmount
-      }));
+    if (!booking) {
+      // Reset form khi không có booking (tạo mới)
+      setFormData({
+        ngayDat: '',
+        checkinDuKien: '',
+        checkoutDuKien: '',
+        trangThai: 'R',
+        phuongThucThanhToan: 'Cash',
+        notes: '',
+        coSoId: '',
+        nhanVienId: '',
+        khachHangId: '',
+        customerEmail: '',
+        customerPhone: '',
+        customerName: '',
+        rooms: [{
+          roomId: '',
+          checkIn: '',
+          checkOut: '',
+          adults: 1,
+          children: 0,
+          price: 0
+        }],
+        maPhong: '',
+        soNguoiLon: 1,
+        soTreEm: 0,
+        totalAmount: 0
+      });
+      return;
     }
-  }, [booking, cosos, rooms]);
+    
+    // Chỉ set khi đã có booking
+    const firstRoom = booking.chiTiet?.[0];
+    const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0), 0);
+    const totalChildren = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soTreEm || 0), 0);
+    
+    // Get coSoId from booking - tự điền cơ sở
+    const coSoId = booking.coSo?.maCoSo || '';
+    
+    // Get roomId from first chiTiet - tự điền phòng
+    const maPhong = firstRoom?.phong?.maPhong || '';
+    
+    // Tự điền nhân viên từ booking
+    const nhanVienId = booking.nhanVien?.maNhanVien || '';
+    
+    // Tự điền khách hàng từ booking
+    const khachHangId = booking.khachHang?.maKhachHang || '';
+    
+    // Tìm khách hàng trong danh sách nếu đã load
+    const selectedCustomer = customers.length > 0 && khachHangId 
+      ? customers.find(c => c.maKhachHang === khachHangId)
+      : null;
+    
+    // Lấy thông tin khách hàng từ booking hoặc từ danh sách
+    const customerEmail = booking.customerEmail || booking.khachHang?.email || selectedCustomer?.email || '';
+    const customerPhone = booking.customerPhone || booking.khachHang?.soDienThoai || booking.khachHang?.sdt || selectedCustomer?.soDienThoai || selectedCustomer?.sdt || '';
+    const customerName = booking.customerName || booking.khachHang?.tenKhachHang || booking.khachHang?.ten || selectedCustomer?.tenKhachHang || selectedCustomer?.ten || '';
+    
+    // Set form data - ưu tiên giá trị từ booking, không fallback về prev nếu booking có giá trị
+    setFormData({
+      // Basic booking info
+      ngayDat: booking.ngayDat?.split('T')[0] || '',
+      checkinDuKien: booking.checkinDuKien?.split('T')[0] || '',
+      checkoutDuKien: booking.checkoutDuKien?.split('T')[0] || '',
+      trangThai: booking.trangThai || 'R',
+      phuongThucThanhToan: booking.phuongThucThanhToan || booking.paymentMethod || 'Cash',
+      notes: booking.notes || '',
+      
+      // Tự điền đầy đủ thông tin cơ sở, nhân viên, khách hàng - set trực tiếp từ booking
+      coSoId: coSoId,
+      nhanVienId: nhanVienId,
+      khachHangId: khachHangId,
+      customerEmail: customerEmail,
+      customerPhone: customerPhone,
+      customerName: customerName,
+      
+      // Room details
+      rooms: booking.chiTiet && booking.chiTiet.length > 0 ? booking.chiTiet.map(ct => ({
+        roomId: ct.phong?.maPhong || '',
+        checkIn: ct.checkInDate?.split('T')[0] || '',
+        checkOut: ct.checkOutDate?.split('T')[0] || '',
+        adults: ct.soNguoiLon || 1,
+        children: ct.soTreEm || 0,
+        price: ct.donGia || 0
+      })) : [{
+        roomId: '',
+        checkIn: '',
+        checkOut: '',
+        adults: 1,
+        children: 0,
+        price: 0
+      }],
+      
+      // Legacy fields for backward compatibility
+      maPhong: maPhong,
+      soNguoiLon: totalGuests > 0 ? totalGuests : 1,
+      soTreEm: totalChildren > 0 ? totalChildren : 0,
+      totalAmount: booking.totalAmount || 0
+    });
+  }, [booking, customers]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -26,6 +26,7 @@ import { donDatPhongApi } from "../../../lib/api";
 import { ApiBooking } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { BookingForm } from "../../components/booking-form";
+import { BookingDetail } from "../../components/booking-detail";
 import { toast } from "sonner";
 
 // Using ApiBooking type from types/api.ts
@@ -36,6 +37,7 @@ const BookingsManagementPage = () => {
   const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [editingBooking, setEditingBooking] = useState<ApiBooking | null>(null);
+  const [viewingBooking, setViewingBooking] = useState<ApiBooking | null>(null);
 
   // Fetch data from API
   const { data: bookings = [], loading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useApi<ApiBooking[]>(
@@ -76,6 +78,10 @@ const BookingsManagementPage = () => {
   const handleCreateBooking = () => {
     setEditingBooking(null);
     setShowBookingForm(true);
+  };
+
+  const handleViewBooking = (booking: ApiBooking) => {
+    setViewingBooking(booking);
   };
 
   const handleEditBooking = (booking: ApiBooking) => {
@@ -163,7 +169,9 @@ const BookingsManagementPage = () => {
       const exportData = filteredBookings.map(booking => {
         // Get room info from first chiTiet
         const firstChiTiet = booking.chiTiet?.[0];
-        const roomName = firstChiTiet?.phong?.tenPhong || firstChiTiet?.phong?.moTa || 'N/A';
+        const roomName = (firstChiTiet?.phong && 'tenPhong' in firstChiTiet.phong) 
+          ? (firstChiTiet.phong as { tenPhong: string }).tenPhong 
+          : (firstChiTiet?.phong?.moTa || 'N/A');
         
         // Get total guests
         const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => 
@@ -480,18 +488,24 @@ const BookingsManagementPage = () => {
                       </td>
                       <td className={Style.tableCell}>
                         <div className={Style.actions}>
-                          <button className={Style.actionButton}>
+                          <button 
+                            className={Style.actionButton}
+                            onClick={() => handleViewBooking(booking)}
+                            title="Xem chi tiết"
+                          >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button 
                             className={Style.actionButton}
                             onClick={() => handleEditBooking(booking)}
+                            title="Chỉnh sửa"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button 
                             className={`${Style.actionButton} ${Style.actionButtonDanger}`}
                             onClick={() => handleDeleteBooking(booking.maDatPhong)}
+                            title="Xóa"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -522,6 +536,14 @@ const BookingsManagementPage = () => {
             setEditingBooking(null);
           }}
           onSuccess={handleFormSuccess}
+        />
+      )}
+
+      {/* Booking Detail Modal */}
+      {viewingBooking && (
+        <BookingDetail
+          booking={viewingBooking}
+          onClose={() => setViewingBooking(null)}
         />
       )}
     </div>

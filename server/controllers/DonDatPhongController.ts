@@ -10,17 +10,27 @@ const revenueRepository = AppDataSource.getRepository(Revenue);
 export class DonDatPhongController {
   static async getAll(req: Request, res: Response) {
     try {
-      console.log('🔍 Fetching all bookings...');
+      console.log('🔍 Fetching all bookings with relations...');
       
-      // Try without relations first to see if that's the issue
+      // Load với tất cả relations cần thiết để hiển thị đầy đủ thông tin
       const donDatPhongs = await donDatPhongRepository.find({
+        relations: [
+          'coSo',           // Thông tin cơ sở
+          'nhanVien',      // Thông tin nhân viên
+          'khachHang',      // Thông tin khách hàng
+          'chiTiet',        // Chi tiết đặt phòng
+          'chiTiet.phong'   // Thông tin phòng trong chi tiết
+        ],
         order: {
           ngayDat: 'DESC' // Sắp xếp theo ngày đặt mới nhất
         }
       });
       
       console.log(`📊 Found ${donDatPhongs.length} bookings`);
-      console.log('📋 Sample booking:', donDatPhongs[0]?.maDatPhong);
+      if (donDatPhongs.length > 0) {
+        console.log('📋 Sample booking:', donDatPhongs[0]?.maDatPhong);
+        console.log('📋 Sample booking coSo:', donDatPhongs[0]?.coSo?.maCoSo || 'N/A');
+      }
       
       res.json(donDatPhongs);
     } catch (error) {

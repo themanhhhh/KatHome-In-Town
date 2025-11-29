@@ -186,7 +186,19 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     setIsConfirmingPayment(true);
     
     try {
-      const response = await donDatPhongApi.confirmPayment(createdBookingId, 'Bank Transfer') as { success: boolean; message?: string };
+      // Map payment method to backend enum (Card or Cash)
+      const mapPaymentMethod = (method: string): string => {
+        if (method === 'bank-transfer' || method === 'Bank Transfer') {
+          return 'Cash'; // Bank transfer is treated as Cash payment in backend
+        }
+        if (method === 'card') {
+          return 'Card';
+        }
+        return method; // Fallback to original value
+      };
+
+      const backendPaymentMethod = mapPaymentMethod(formData.paymentMethod);
+      const response = await donDatPhongApi.confirmPayment(createdBookingId, backendPaymentMethod) as { success: boolean; message?: string };
       
       if (response.success) {
         setPaymentConfirmed(true);

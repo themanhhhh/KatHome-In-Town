@@ -74,6 +74,18 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
   const [paymentFinalized, setPaymentFinalized] = useState(false);
   const [finalizeError, setFinalizeError] = useState<string | null>(null);
 
+  // Map frontend payment method to backend enum values (Card or Cash)
+  const mapPaymentMethod = (method: string): string => {
+    if (method === 'bank-transfer' || method === 'Bank Transfer') {
+      return 'Cash'; // Bank transfer is treated as Cash payment in backend
+    }
+    if (method === 'card') {
+      return 'Card';
+    }
+    // If already in correct format (Card, Cash), return as is
+    return method;
+  };
+
   // Send payment confirmation email on component mount
   useEffect(() => {
     const verifyAndSendPaymentEmail = async () => {
@@ -83,6 +95,9 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
       setEmailError(null);
 
       try {
+        // Map payment method to backend enum
+        const backendPaymentMethod = mapPaymentMethod(bookingData.paymentInfo.method);
+
         // Prefer calling backend verify endpoint which can also trigger email
         const verifyResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/payment/verify`,
@@ -92,7 +107,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
             body: JSON.stringify({
               bookingId: bookingData.bookingId,
               totalAmount: bookingData.paymentInfo.total,
-              paymentMethod: bookingData.paymentInfo.method,
+              paymentMethod: backendPaymentMethod,
               paymentRef: undefined,
               sendEmail: true,
               customerEmail: bookingData.guestInfo.email,
@@ -117,10 +132,13 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
           
           // ✅ After successful verification, finalize the booking
           try {
+            // Map payment method to backend enum
+            const backendPaymentMethod = mapPaymentMethod(bookingData.paymentInfo.method);
+
             const finalizeResponse = await paymentApi.finalizeBooking({
               bookingId: bookingData.bookingId,
               totalAmount: bookingData.paymentInfo.total,
-              paymentMethod: bookingData.paymentInfo.method,
+              paymentMethod: backendPaymentMethod,
               paymentRef: verifyJson.paymentRef || undefined,
               paidAt: new Date().toISOString(),
               sendEmail: false, // Email already sent in verify step

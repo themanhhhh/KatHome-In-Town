@@ -9,6 +9,7 @@ import { CalendarDays, Users, MapPin, Star, Building2 } from "lucide-react";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { coSoApi } from "../../../lib/api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select/select";
+import { toast } from "sonner";
 
 interface HeroProps {
   onSearch?: (searchData: { checkIn: string; checkOut: string; guests: number; coSoId?: string }) => void;
@@ -27,6 +28,7 @@ export function Hero({ onSearch }: HeroProps) {
   const [guests, setGuests] = useState(2);
   const [selectedCoSo, setSelectedCoSo] = useState<string>("all");
   const [coSoList, setCoSoList] = useState<CoSo[]>([]);
+  const [dateError, setDateError] = useState<string>("");
 
   useEffect(() => {
     const fetchCoSo = async () => {
@@ -40,7 +42,68 @@ export function Hero({ onSearch }: HeroProps) {
     fetchCoSo();
   }, []);
 
+  // Validate dates
+  const validateDates = (checkInDate: string, checkOutDate: string): string => {
+    if (!checkInDate && !checkOutDate) {
+      return ""; // No error if both empty (will use defaults)
+    }
+    
+    if (checkInDate && checkOutDate) {
+      const checkIn = new Date(checkInDate);
+      const checkOut = new Date(checkOutDate);
+      
+      if (checkIn >= checkOut) {
+        return "Ngày nhận phòng phải trước ngày trả phòng";
+      }
+    }
+    
+    return "";
+  };
+
+  // Handle check-in date change
+  const handleCheckInChange = (value: string) => {
+    setCheckIn(value);
+    if (value && checkOut) {
+      const error = validateDates(value, checkOut);
+      setDateError(error);
+      if (error) {
+        toast.error('Ngày không hợp lệ', {
+          description: error,
+          duration: 3000,
+        });
+      }
+    } else {
+      setDateError("");
+    }
+  };
+
+  // Handle check-out date change
+  const handleCheckOutChange = (value: string) => {
+    setCheckOut(value);
+    if (checkIn && value) {
+      const error = validateDates(checkIn, value);
+      setDateError(error);
+      if (error) {
+        toast.error('Ngày không hợp lệ', {
+          description: error,
+          duration: 3000,
+        });
+      }
+    } else {
+      setDateError("");
+    }
+  };
+
   const handleSearch = () => {
+    // Validate dates if both are provided
+    if (checkIn && checkOut) {
+      const error = validateDates(checkIn, checkOut);
+      if (error) {
+        setDateError(error);
+        return; // Don't proceed if validation fails
+      }
+    }
+
     // Nếu không có ngày, tự động set ngày hiện tại và ngày mai
     const today = new Date();
     const tomorrow = new Date(today);
@@ -48,6 +111,15 @@ export function Hero({ onSearch }: HeroProps) {
     
     const finalCheckIn = checkIn || today.toISOString().split('T')[0];
     const finalCheckOut = checkOut || tomorrow.toISOString().split('T')[0];
+    
+    // Final validation with default dates
+    const finalError = validateDates(finalCheckIn, finalCheckOut);
+    if (finalError) {
+      setDateError(finalError);
+      return;
+    }
+    
+    setDateError(""); // Clear error if validation passes
     
     if (onSearch) {
       onSearch({ 
@@ -57,6 +129,23 @@ export function Hero({ onSearch }: HeroProps) {
         coSoId: selectedCoSo && selectedCoSo !== "all" ? selectedCoSo : undefined
       });
     }
+  };
+
+  // Get minimum date for check-out (should be at least 1 day after check-in)
+  const getMinCheckOutDate = (): string => {
+    if (!checkIn) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toISOString().split('T')[0];
+    }
+    const minDate = new Date(checkIn);
+    minDate.setDate(minDate.getDate() + 1);
+    return minDate.toISOString().split('T')[0];
+  };
+
+  // Get minimum date for check-in (should be today or later)
+  const getMinCheckInDate = (): string => {
+    return new Date().toISOString().split('T')[0];
   };
   return (
     <section id="home" className="relative min-h-[90vh] flex items-center">
@@ -134,9 +223,10 @@ export function Hero({ onSearch }: HeroProps) {
                      <div className="relative">
                        <Input 
                          type="date" 
-                         className="pl-10"
+                         className={`pl-10 ${dateError ? 'border-red-500' : ''}`}
                          value={checkIn}
-                         onChange={(e) => setCheckIn(e.target.value)}
+                         min={getMinCheckInDate()}
+                         onChange={(e) => handleCheckInChange(e.target.value)}
                        />
                        <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#82213D' }} />
                     </div>
@@ -147,13 +237,15 @@ export function Hero({ onSearch }: HeroProps) {
                      <div className="relative">
                        <Input 
                          type="date" 
-                         className="pl-10"
+                         className={`pl-10 ${dateError ? 'border-red-500' : ''}`}
                          value={checkOut}
-                         onChange={(e) => setCheckOut(e.target.value)}
+                         min={getMinCheckOutDate()}
+                         onChange={(e) => handleCheckOutChange(e.target.value)}
                        />
                        <CalendarDays className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2" style={{ color: '#82213D' }} />
                     </div>
                   </div>
+                  
                   
                   <div className="space-y-2">
                      <Label className="font-semibold" style={{ color: '#82213D' }}>Số khách</Label>
@@ -173,9 +265,10 @@ export function Hero({ onSearch }: HeroProps) {
                   
                   <div className="md:col-span-2 flex items-end">
                      <Button 
-                       className="w-full text-white hover:opacity-90 transition-opacity font-semibold"
+                       className="w-full text-white hover:opacity-90 transition-opacity font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                        style={{ backgroundColor: '#82213D' }}
                        onClick={handleSearch}
+                       disabled={!!dateError}
                      >
                        Tìm phòng trống
                      </Button>

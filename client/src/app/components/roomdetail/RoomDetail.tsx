@@ -113,6 +113,7 @@ export function RoomDetail({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [checkIn, setCheckIn] = useState(searchData.checkIn);
   const [checkOut, setCheckOut] = useState(searchData.checkOut);
+  const [dateError, setDateError] = useState<string>("");
   const [guests, setGuests] = useState(searchData.guests);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -122,6 +123,8 @@ export function RoomDetail({
     setCheckIn(searchData.checkIn);
     setCheckOut(searchData.checkOut);
     setGuests(searchData.guests);
+    // Reset date error when search data changes
+    setDateError("");
   }, [searchData.checkIn, searchData.checkOut, searchData.guests]);
 
   useEffect(() => {
@@ -276,7 +279,17 @@ const amenitiesToShow = useMemo(() => {
       return;
     }
     
+    // Check if there's a date error from real-time validation
+    if (dateError) {
+      toast.error('Ngày không hợp lệ', {
+        description: dateError,
+        duration: 4000,
+      });
+      return;
+    }
+    
     if (checkOutDate <= checkInDate) {
+      setDateError("Ngày nhận phòng phải trước ngày trả phòng");
       toast.error('Ngày trả phòng không hợp lệ', {
         description: 'Ngày trả phòng phải sau ngày nhận phòng.',
         duration: 4000,
@@ -600,7 +613,28 @@ const amenitiesToShow = useMemo(() => {
                     <Input
                       type="date"
                       value={checkIn}
-                      onChange={(event) => setCheckIn(event.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className={dateError ? 'border-red-500' : ''}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setCheckIn(value);
+                        if (value && checkOut) {
+                          const checkInDate = new Date(value);
+                          const checkOutDate = new Date(checkOut);
+                          if (checkInDate >= checkOutDate) {
+                            const errorMsg = "Ngày nhận phòng phải trước ngày trả phòng";
+                            setDateError(errorMsg);
+                            toast.error('Ngày không hợp lệ', {
+                              description: errorMsg,
+                              duration: 3000,
+                            });
+                          } else {
+                            setDateError("");
+                          }
+                        } else {
+                          setDateError("");
+                        }
+                      }}
                     />
                   </div>
                   <div className="space-y-2">
@@ -608,7 +642,36 @@ const amenitiesToShow = useMemo(() => {
                     <Input
                       type="date"
                       value={checkOut}
-                      onChange={(event) => setCheckOut(event.target.value)}
+                      min={checkIn ? (() => {
+                        const minDate = new Date(checkIn);
+                        minDate.setDate(minDate.getDate() + 1);
+                        return minDate.toISOString().split('T')[0];
+                      })() : (() => {
+                        const tomorrow = new Date();
+                        tomorrow.setDate(tomorrow.getDate() + 1);
+                        return tomorrow.toISOString().split('T')[0];
+                      })()}
+                      className={dateError ? 'border-red-500' : ''}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setCheckOut(value);
+                        if (checkIn && value) {
+                          const checkInDate = new Date(checkIn);
+                          const checkOutDate = new Date(value);
+                          if (checkInDate >= checkOutDate) {
+                            const errorMsg = "Ngày nhận phòng phải trước ngày trả phòng";
+                            setDateError(errorMsg);
+                            toast.error('Ngày không hợp lệ', {
+                              description: errorMsg,
+                              duration: 3000,
+                            });
+                          } else {
+                            setDateError("");
+                          }
+                        } else {
+                          setDateError("");
+                        }
+                      }}
                     />
                   </div>
                 </div>

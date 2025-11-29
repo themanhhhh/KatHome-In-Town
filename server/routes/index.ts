@@ -107,6 +107,10 @@ router.post('/bookings/:bookingId/check-in', DonDatPhongController.checkIn);
 router.post('/bookings/:bookingId/check-out', DonDatPhongController.checkOut);
 router.post('/bookings/:bookingId/cancel', DonDatPhongController.cancelBooking);
 
+// OTP routes
+router.post('/bookings/:bookingId/send-otp', DonDatPhongController.sendOTP);
+router.post('/bookings/:bookingId/verify-otp', DonDatPhongController.verifyOTP);
+
 // ChiTietDonDatPhong routes
 router.get('/chitietdondatphong', ChiTietDonDatPhongController.getAll);
 router.get('/chitietdondatphong/:id', ChiTietDonDatPhongController.getById);

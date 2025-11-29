@@ -533,7 +533,80 @@ export class DonDatPhongController {
   }
 
   /**
-   * Verify OTP and confirm booking (DEPRECATED - Không còn sử dụng)
+   * Gửi mã OTP cho booking
+   */
+  static async sendOTP(req: Request, res: Response) {
+    try {
+      const { bookingId } = req.params;
+
+      // Get booking
+      const booking = await donDatPhongRepository.findOne({
+        where: { maDatPhong: bookingId },
+        relations: ['coSo', 'khachHang']
+      });
+
+      if (!booking) {
+        return res.status(404).json({
+          success: false,
+          message: 'Không tìm thấy đơn đặt phòng'
+        });
+      }
+
+      // Generate OTP code (6 digits)
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+      // Update booking with OTP
+      booking.otpCode = otpCode;
+      booking.otpExpiry = otpExpiry;
+      booking.isVerified = false; // Reset verification status
+      await donDatPhongRepository.save(booking);
+
+      // Send OTP email
+      const { EmailService } = await import('../services/EmailService');
+      const customerEmail = booking.customerEmail || booking.khachHang?.email;
+      const customerName = booking.customerName || booking.khachHang?.ten || 'Khách hàng';
+
+      if (!customerEmail) {
+        return res.status(400).json({
+          success: false,
+          message: 'Không tìm thấy email khách hàng'
+        });
+      }
+
+      try {
+        await EmailService.sendBookingOTP(
+          customerEmail,
+          otpCode,
+          customerName,
+          booking.maDatPhong
+        );
+      } catch (emailError) {
+        console.error('Error sending OTP email:', emailError);
+        // Don't fail the request if email fails, but log it
+      }
+
+      res.json({
+        success: true,
+        message: 'Mã OTP đã được gửi đến email của bạn',
+        data: {
+          bookingId: booking.maDatPhong,
+          email: customerEmail,
+          expiresAt: otpExpiry
+        }
+      });
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Lỗi khi gửi mã OTP',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  /**
+   * Verify OTP and confirm booking
    */
   static async verifyOTP(req: Request, res: Response) {
     try {
@@ -543,7 +616,7 @@ export class DonDatPhongController {
       if (!otpCode) {
         return res.status(400).json({
           success: false,
-          message: 'OTP code is required'
+          message: 'Mã OTP là bắt buộc'
         });
       }
 
@@ -555,7 +628,7 @@ export class DonDatPhongController {
       if (!booking) {
         return res.status(404).json({
           success: false,
-          message: 'Booking not found'
+          message: 'Không tìm thấy đơn đặt phòng'
         });
       }
 
@@ -563,7 +636,15 @@ export class DonDatPhongController {
       if (booking.isVerified) {
         return res.status(400).json({
           success: false,
-          message: 'Booking already verified'
+          message: 'Đơn đặt phòng đã được xác nhận'
+        });
+      }
+
+      // Check if OTP exists
+      if (!booking.otpCode) {
+        return res.status(400).json({
+          success: false,
+          message: 'Chưa có mã OTP. Vui lòng yêu cầu gửi mã OTP trước.'
         });
       }
 
@@ -571,7 +652,7 @@ export class DonDatPhongController {
       if (booking.otpExpiry && new Date() > new Date(booking.otpExpiry)) {
         return res.status(400).json({
           success: false,
-          message: 'OTP has expired. Please request a new one.'
+          message: 'Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.'
         });
       }
 
@@ -579,7 +660,7 @@ export class DonDatPhongController {
       if (booking.otpCode !== otpCode) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid OTP code'
+          message: 'Mã OTP không đúng. Vui lòng thử lại.'
         });
       }
 
@@ -587,11 +668,14 @@ export class DonDatPhongController {
       booking.isVerified = true;
       booking.trangThai = 'CF'; // Confirmed
       booking.ngayXacNhan = new Date();
+      // Clear OTP after successful verification
+      booking.otpCode = undefined;
+      booking.otpExpiry = undefined;
       await donDatPhongRepository.save(booking);
 
       res.json({
         success: true,
-        message: 'Booking verified successfully',
+        message: 'Xác nhận đặt phòng thành công!',
         data: booking
       });
     } catch (error) {

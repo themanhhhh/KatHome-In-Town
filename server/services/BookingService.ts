@@ -219,6 +219,10 @@ export class BookingService {
       // 7. Tạo booking HOLD với timeout 15 phút (theo flowchart)
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
+      // Generate OTP code (6 digits) for email verification
+      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      const otpExpiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
       const donDatPhong = bookingRepo.create({
         maDatPhong,
         coSo,
@@ -248,7 +252,9 @@ export class BookingService {
         version: 0,
         
         paymentStatus: 'pending',
-        isVerified: true,
+        isVerified: false, // Chưa verify OTP
+        otpCode, // OTP code để xác nhận
+        otpExpiry, // Thời gian hết hạn OTP
       });
 
       await queryRunner.manager.save(DonDatPhong, donDatPhong);
@@ -294,9 +300,29 @@ export class BookingService {
         relations: ['coSo', 'khachHang', 'chiTiet', 'chiTiet.phong'],
       });
 
-      // BỎ EMAIL - chỉ thông báo staff
+      // Gửi OTP email và thông báo staff
       if (result) {
         try {
+          // Gửi OTP email cho khách hàng
+          const customerEmail = result.customerEmail || result.khachHang?.email;
+          const customerName = result.customerName || result.khachHang?.ten || 'Khách hàng';
+          
+          if (customerEmail && result.otpCode) {
+            try {
+              await EmailService.sendBookingOTP(
+                customerEmail,
+                result.otpCode,
+                customerName,
+                result.maDatPhong
+              );
+              console.log(`✅ OTP sent to ${customerEmail} for booking ${result.maDatPhong}`);
+            } catch (emailError) {
+              console.error('Failed to send OTP email:', emailError);
+              // Don't throw - email failure shouldn't fail the booking
+            }
+          }
+
+          // Thông báo staff
           await NotificationService.notifyStaffNewBooking(result);
         } catch (notifError) {
           console.error('Failed to notify staff:', notifError);

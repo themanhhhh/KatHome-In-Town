@@ -504,6 +504,84 @@ export class EmailService {
   }
 
   /**
+   * Gửi mã OTP cho booking
+   */
+  static async sendBookingOTP(
+    email: string,
+    otpCode: string,
+    customerName: string,
+    bookingId: string
+  ): Promise<void> {
+    try {
+      const subject = `Mã OTP xác nhận đặt phòng #${bookingId}`;
+      
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background: #f9f9f9; }
+            .code-box { background: white; padding: 30px; margin: 20px 0; text-align: center; border-radius: 5px; border: 2px solid #4CAF50; }
+            .code { font-size: 36px; font-weight: bold; color: #4CAF50; letter-spacing: 8px; font-family: 'Courier New', monospace; }
+            .booking-info { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; }
+            .warning { background: #fff3cd; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #ffc107; }
+            .footer { text-align: center; padding: 20px; color: #666; font-size: 0.9em; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔐 Mã OTP xác nhận đặt phòng</h1>
+            </div>
+            <div class="content">
+              <h2>Xin chào ${customerName}!</h2>
+              <p>Cảm ơn bạn đã đặt phòng. Vui lòng sử dụng mã OTP bên dưới để xác nhận đặt phòng của bạn:</p>
+              
+              <div class="code-box">
+                <div class="code">${otpCode}</div>
+              </div>
+              
+              <div class="booking-info">
+                <p><strong>Mã đặt phòng:</strong> ${bookingId}</p>
+              </div>
+              
+              <div class="warning">
+                <p><strong>⚠️ Lưu ý:</strong></p>
+                <ul>
+                  <li>Mã OTP này có hiệu lực trong <strong>5 phút</strong></li>
+                  <li>Không chia sẻ mã OTP này với bất kỳ ai</li>
+                  <li>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email này</li>
+                </ul>
+              </div>
+              
+              <p>Nếu bạn gặp vấn đề, vui lòng liên hệ với chúng tôi qua email hoặc số điện thoại hỗ trợ.</p>
+            </div>
+            <div class="footer">
+              <p>Trân trọng,<br>Đội ngũ Hotel Booking</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `;
+
+      await this.transporter.sendMail({
+        from: `"Hotel Booking" <${process.env.EMAIL_USER || 'lunarofmoon@gmail.com'}>`,
+        to: email,
+        subject,
+        html,
+      });
+
+      console.log(`✅ Sent booking OTP to ${email} for booking ${bookingId}`);
+    } catch (error) {
+      console.error('❌ Error sending booking OTP:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Test email connection
    */
   static async testConnection(): Promise<boolean> {

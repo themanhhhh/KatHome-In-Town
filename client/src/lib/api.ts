@@ -319,6 +319,8 @@ export const donDatPhongApi = {
   delete: (id: string) => api.delete(`dondatphong/${id}`),
   
   // Booking management
+  sendOTP: (bookingId: string) => 
+    api.post(`bookings/${bookingId}/send-otp`, {}),
   verifyOTP: (bookingId: string, otpCode: string) => 
     api.post(`bookings/${bookingId}/verify-otp`, { otpCode }),
   confirmPayment: (bookingId: string, paymentMethod: string = 'Cash') => 

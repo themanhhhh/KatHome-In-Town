@@ -575,7 +575,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                     })
                     .map((room) => (
                     <option key={room.maPhong} value={room.maPhong}>
-                        {formatPrice(room.donGiaQuaDem || room.donGia4h || 0)}/đêm
+                        {room.tenPhong || room.moTa || 'N/A'}
                     </option>
                   ))}
                 </select>

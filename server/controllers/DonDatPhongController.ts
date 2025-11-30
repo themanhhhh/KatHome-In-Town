@@ -148,13 +148,32 @@ export class DonDatPhongController {
         where: { 
           maDatPhong: req.params.id,
           isDeleted: false
-        }
+        },
+        relations: ['coSo', 'khachHang', 'chiTiet', 'chiTiet.phong']
       });
       if (!donDatPhong) {
         return res.status(404).json({ message: 'Không tìm thấy đơn đặt phòng' });
       }
+      
+      // Lưu trạng thái cũ để kiểm tra xem có đổi thành "CC" (hoàn thành) không
+      const oldStatus = donDatPhong.trangThai;
+      const newStatus = req.body.trangThai;
+      
       donDatPhongRepository.merge(donDatPhong, req.body);
       const result = await donDatPhongRepository.save(donDatPhong);
+      
+      // ✅ Nếu status được đổi thành "CC" (hoàn thành), gửi email xác nhận
+      if (newStatus === 'CC' && oldStatus !== 'CC') {
+        try {
+          const { EmailService } = await import('../services/EmailService');
+          await EmailService.sendPaymentConfirmation(result);
+          console.log(`✅ Sent payment confirmation email to ${result.customerEmail} for completed booking ${result.maDatPhong}`);
+        } catch (emailError) {
+          console.error('❌ Failed to send payment confirmation email:', emailError);
+          // Không throw error - việc gửi email thất bại không nên làm fail update booking
+        }
+      }
+      
       res.json(result);
     } catch (error) {
       res.status(500).json({ message: 'Lỗi khi cập nhật đơn đặt phòng', error });

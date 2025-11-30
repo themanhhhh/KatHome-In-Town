@@ -190,13 +190,17 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
         
         console.log('🔍 Payment verify - payload:', payload);
 
-        // Prefer calling backend verify endpoint which can also trigger email
+        // ✅ Chỉ verify payment, KHÔNG gửi email ở đây
+        // Email sẽ được gửi sau khi nhân viên đổi status thành "CC" (hoàn thành)
         const verifyResponse = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/payment/verify`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({
+              ...payload,
+              sendEmail: false, // ❌ KHÔNG gửi email sau khi verify OTP
+            }),
           }
         );
 
@@ -209,7 +213,9 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
 
         const verifyJson = await verifyResponse.json();
         if (verifyJson.success) {
-          setEmailSent(!!verifyJson.emailSent || true);
+          // ✅ Không set emailSent = true vì chưa gửi email
+          // Email sẽ được gửi sau khi nhân viên đổi status thành "CC"
+          setEmailSent(false);
           
           // ✅ After successful verification, finalize the booking
           try {
@@ -309,34 +315,8 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
           return;
         }
 
-        // Fallback to Next.js route (frontend relay)
-        const fallback = await fetch('/api/payment-confirmation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: bookingData.guestInfo.email,
-            customerName: `${bookingData.guestInfo.firstName} ${bookingData.guestInfo.lastName}`,
-            bookingData: {
-              bookingId: bookingData.bookingId,
-              roomName: bookingData.roomData.name,
-              checkIn: bookingData.searchData.checkIn,
-              checkOut: bookingData.searchData.checkOut,
-              guests: bookingData.searchData.guests,
-              totalAmount: totalAmount,
-              paymentMethod: bookingData.paymentInfo.method,
-              bookingDate: bookingData.bookingDate,
-            },
-          }),
-        });
-        const fbJson = await fallback.json();
-        if (!fallback.ok || !fbJson.success) {
-          throw new Error(fbJson.message || 'Failed to send payment confirmation email');
-        }
-        setEmailSent(true);
-        toast.success('Email xác nhận đã được gửi!', {
-          description: `Vui lòng kiểm tra email tại ${bookingData.guestInfo.email}`,
-          duration: 5000,
-        });
+        // ❌ Không cần fallback gửi email nữa
+        // Email sẽ được gửi sau khi nhân viên đổi status thành "CC" (hoàn thành)
       } catch (error) {
         console.error('❌ Payment verification/email error:', error);
         const errorMsg = error instanceof Error ? error.message : 'Failed to verify/send email';
@@ -434,7 +414,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
           Đặt phòng thành công!
         </h1>
         <p className="text-lg opacity-80 max-w-2xl mx-auto px-4" style={{ color: 'rgba(61, 3, 1, 0.8)' }}>
-          Cảm ơn bạn đã chọn KatHome In Town . Chúng tôi đã gửi email xác nhận đến địa chỉ của bạn.
+          Cảm ơn bạn đã chọn KatHome In Town. Email xác nhận sẽ được gửi sau khi nhân viên hoàn tất xử lý đặt phòng.
         </p>
         <div className="mt-6">
           <Badge className="px-4 py-2 text-lg" style={{ backgroundColor: 'rgba(61, 3, 1, 0.1)', color: '#3D0301' }}>

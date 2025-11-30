@@ -232,22 +232,6 @@ export default function ProfilePage() {
                               </p>
                             </div>
 
-                            {booking.paymentStatus && (
-                              <div>
-                                <p className="text-sm text-gray-600 mb-1">Trạng thái thanh toán</p>
-                                <Badge 
-                                  variant={booking.paymentStatus === 'paid' ? 'default' : 'outline'}
-                                  style={{ 
-                                    backgroundColor: booking.paymentStatus === 'paid' ? '#10B981' : undefined 
-                                  }}
-                                >
-                                  {booking.paymentStatus === 'paid' ? 'Đã thanh toán' : 
-                                   booking.paymentStatus === 'waiting_confirmation' ? 'Chờ xác nhận' : 
-                                   'Chưa thanh toán'}
-                                </Badge>
-                              </div>
-                            )}
-
                             {booking.paymentMethod && (
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Phương thức</p>

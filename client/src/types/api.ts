@@ -154,3 +154,46 @@ export interface ApiCoSo {
   hinhAnh?: string;
   trangThai?: string; // 'active', 'inactive', 'maintenance'
 }
+
+export interface ApiDanhGia {
+  maDanhGia: string;
+  hoTen?: string;
+  email?: string;
+  soDienThoai?: string;
+  diemDanhGia: number;
+  noiDung: string;
+  trangThai: string; // 'pending', 'approved', 'rejected'
+  ngayDanhGia: string;
+  phanHoi?: string;
+  ngayPhanHoi?: string;
+  phong?: {
+    maPhong: string;
+    tenPhong?: string;
+  };
+  donDatPhong?: {
+    maDatPhong: string;
+  };
+}
+
+export interface ApiKhieuNai {
+  maKhieuNai: string;
+  hoTen?: string;
+  email?: string;
+  soDienThoai?: string;
+  loaiKhieuNai: string; // 'service', 'room', 'staff', 'other'
+  tieuDe: string;
+  ngayKhieuNai: string;
+  dienGiai: string;
+  trangThai: string; // 'pending', 'processing', 'resolved', 'rejected'
+  phanHoi?: string;
+  ngayPhanHoi?: string;
+  khachHang?: {
+    maKhachHang: string;
+    ten?: string;
+    tenKhachHang?: string;
+    email?: string;
+  };
+  donDatPhong?: {
+    maDatPhong: string;
+  };
+}

@@ -33,6 +33,8 @@ const CoSoManagementPage = () => {
   const [selectedCoSos, setSelectedCoSos] = useState<string[]>([]);
   const [showCoSoForm, setShowCoSoForm] = useState(false);
   const [editingCoSo, setEditingCoSo] = useState<ApiCoSo | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch data from API
   const { data: cosos = [], loading: cososLoading, error: cososError, refetch: refetchCoSos } = useApi<ApiCoSo[]>(
@@ -53,12 +55,59 @@ const CoSoManagementPage = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredCoSos.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedCoSos = filteredCoSos.slice(startIndex, endIndex);
+
+  // Generate page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow + 2) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      
+      if (currentPage <= 3) {
+        for (let i = 2; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   // Selection functions
   const handleSelectAll = () => {
-    if (selectedCoSos.length === filteredCoSos.length) {
-      setSelectedCoSos([]);
+    if (paginatedCoSos.length > 0 && paginatedCoSos.every(coso => selectedCoSos.includes(coso.maCoSo))) {
+      setSelectedCoSos(prev => prev.filter(id => !paginatedCoSos.map(c => c.maCoSo).includes(id)));
     } else {
-      setSelectedCoSos(filteredCoSos.map(coso => coso.maCoSo));
+      setSelectedCoSos(prev => [...new Set([...prev, ...paginatedCoSos.map(coso => coso.maCoSo)])]);
     }
   };
 
@@ -326,7 +375,7 @@ const CoSoManagementPage = () => {
                   <th className={Style.tableHeadCell}>
                     <input
                       type="checkbox"
-                      checked={selectedCoSos.length === filteredCoSos.length && filteredCoSos.length > 0}
+                      checked={paginatedCoSos.length > 0 && paginatedCoSos.every(coso => selectedCoSos.includes(coso.maCoSo))}
                       onChange={handleSelectAll}
                       className={Style.checkbox}
                     />
@@ -340,7 +389,7 @@ const CoSoManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredCoSos.map((coso, index) => (
+                {paginatedCoSos.map((coso, index) => (
                   <tr key={coso.maCoSo || `coso-${index}`} className={Style.tableRow}>
                     <td className={Style.tableCell}>
                       <input
@@ -455,6 +504,53 @@ const CoSoManagementPage = () => {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {filteredCoSos.length > 0 && (
+          <div className={Style.pagination}>
+            <div className={Style.paginationInfo}>
+              Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredCoSos.length)} trong tổng số {filteredCoSos.length} cơ sở
+            </div>
+            <div className={Style.paginationControls}>
+              <button
+                className={Style.paginationButton}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Trước
+              </button>
+              
+              <div className={Style.paginationNumbers}>
+                {getPageNumbers().map((page, index) => {
+                  if (page === '...') {
+                    return (
+                      <span key={`ellipsis-${index}`} className={Style.paginationEllipsis}>
+                        ...
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      key={page}
+                      className={`${Style.paginationNumber} ${currentPage === page ? Style.paginationNumberActive : ''}`}
+                      onClick={() => setCurrentPage(page as number)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                className={Style.paginationButton}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Tiếp
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* CoSo Form Modal */}

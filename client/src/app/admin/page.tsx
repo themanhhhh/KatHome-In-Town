@@ -113,7 +113,13 @@ const AdminPage = () => {
   }, [roomsList, selectedFilter]);
 
   // Calculate statistics from filtered data
-  const totalRevenue = (filteredBookings || []).reduce((sum, booking) => sum + (booking.totalAmount || 0), 0);
+  // Chỉ tính doanh thu từ các booking đã hoàn thành (CC - Checked-out/Completed)
+  const totalRevenue = (filteredBookings || []).reduce((sum, booking) => {
+    if (booking.trangThai === 'CC') {
+      return sum + (booking.totalAmount || 0);
+    }
+    return sum;
+  }, 0);
   const totalBookings = (filteredBookings || []).length;
   const totalUsers = usersList.length;
   const totalCustomers = customersList.length;

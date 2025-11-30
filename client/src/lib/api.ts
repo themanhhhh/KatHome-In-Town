@@ -349,6 +349,18 @@ export interface ReviewStatsResponse {
 
 export const danhGiaApi = {
   /**
+   * Lấy tất cả đánh giá.
+   * - Có thể filter theo trangThai, phongMaPhong, limit
+   */
+  getAll: (params?: { trangThai?: string; phongMaPhong?: string; limit?: number }) => {
+    const queryParams = new URLSearchParams();
+    if (params?.trangThai) queryParams.append('trangThai', params.trangThai);
+    if (params?.phongMaPhong) queryParams.append('phongMaPhong', params.phongMaPhong);
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+    const query = queryParams.toString();
+    return api.get(`danhgia${query ? `?${query}` : ''}`);
+  },
+  /**
    * Lấy thống kê đánh giá.
    * - Nếu truyền roomId => thống kê cho từng phòng (phongMaPhong).
    * - Nếu không truyền => thống kê tổng.

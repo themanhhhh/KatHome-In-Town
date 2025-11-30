@@ -14,7 +14,11 @@ export class DonDatPhongController {
       console.log('🔍 Fetching all bookings with relations...');
       
       // Load với tất cả relations cần thiết để hiển thị đầy đủ thông tin
+      // Filter out soft-deleted records
       const donDatPhongs = await donDatPhongRepository.find({
+        where: {
+          isDeleted: false
+        },
         relations: [
           'coSo',           // Thông tin cơ sở
           'nhanVien',      // Thông tin nhân viên
@@ -43,7 +47,10 @@ export class DonDatPhongController {
   static async getById(req: Request, res: Response) {
     try {
       const donDatPhong = await donDatPhongRepository.findOne({
-        where: { maDatPhong: req.params.id },
+        where: { 
+          maDatPhong: req.params.id,
+          isDeleted: false
+        },
         relations: ['coSo', 'nhanVien', 'khachHang', 'chiTiet', 'chiTiet.phong']
       });
       if (!donDatPhong) {
@@ -137,7 +144,12 @@ export class DonDatPhongController {
 
   static async update(req: Request, res: Response) {
     try {
-      const donDatPhong = await donDatPhongRepository.findOneBy({ maDatPhong: req.params.id });
+      const donDatPhong = await donDatPhongRepository.findOne({
+        where: { 
+          maDatPhong: req.params.id,
+          isDeleted: false
+        }
+      });
       if (!donDatPhong) {
         return res.status(404).json({ message: 'Không tìm thấy đơn đặt phòng' });
       }
@@ -151,12 +163,32 @@ export class DonDatPhongController {
 
   static async delete(req: Request, res: Response) {
     try {
-      const result = await donDatPhongRepository.delete(req.params.id);
-      if (result.affected === 0) {
+      // Soft delete: chỉ đánh dấu isDeleted = true thay vì xóa thật
+      const donDatPhong = await donDatPhongRepository.findOne({
+        where: { 
+          maDatPhong: req.params.id,
+          isDeleted: false
+        }
+      });
+
+      if (!donDatPhong) {
         return res.status(404).json({ message: 'Không tìm thấy đơn đặt phòng' });
       }
-      res.json({ message: 'Xóa đơn đặt phòng thành công' });
+
+      // Soft delete: đánh dấu đã xóa
+      donDatPhong.isDeleted = true;
+      donDatPhong.deletedAt = new Date();
+      await donDatPhongRepository.save(donDatPhong);
+
+      res.json({ 
+        message: 'Xóa đơn đặt phòng thành công (soft delete)',
+        data: {
+          maDatPhong: donDatPhong.maDatPhong,
+          deletedAt: donDatPhong.deletedAt
+        }
+      });
     } catch (error) {
+      console.error('Error soft deleting booking:', error);
       res.status(500).json({ message: 'Lỗi khi xóa đơn đặt phòng', error });
     }
   }
@@ -188,9 +220,12 @@ export class DonDatPhongController {
         });
       }
 
-      // Get booking with all relations
+      // Get booking with all relations (exclude soft-deleted)
       const booking = await queryRunner.manager.findOne(DonDatPhong, {
-        where: { maDatPhong: bookingId },
+        where: { 
+          maDatPhong: bookingId,
+          isDeleted: false
+        },
         relations: ['coSo', 'khachHang', 'chiTiet', 'chiTiet.phong']
       });
 
@@ -262,8 +297,11 @@ export class DonDatPhongController {
       booking.paymentRef = paymentRef || null;
       booking.paidAt = paidDate;
       booking.totalPaid = totalAmount;
-      booking.trangThai = 'CF'; // Confirmed
+      // Use 'CF' (Confirmed) instead of 'PA' to avoid enum error
+      // 'PA' may not exist in database enum yet
+      booking.trangThai = 'CF'; // Confirmed (Đã xác nhận và thanh toán)
       booking.ngayXacNhan = paidDate;
+      booking.paymentTimeoutAt = undefined; // Clear payment timeout vì đã thanh toán
       // Chỉ gán nhanVien nếu có (nhân viên finalize)
       if (nhanVien) {
         booking.nhanVien = nhanVien;
@@ -282,41 +320,65 @@ export class DonDatPhongController {
 
       await queryRunner.manager.save(Revenue, revenue);
 
-      // Create HoaDon (Invoice)
-      const { HoaDon } = await import('../entities/HoaDon');
-      const hoaDonRepo = queryRunner.manager.getRepository(HoaDon);
-      const hoaDonCount = await hoaDonRepo.count();
-      const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
-      const maHoaDon = `HD-${today}-${String(hoaDonCount + 1).padStart(4, '0')}`;
+      // Create HoaDon (Invoice) - với error handling nếu bảng chưa tồn tại
+      let hoaDonEntity: any = null;
+      try {
+        const { HoaDon } = await import('../entities/HoaDon');
+        const hoaDonRepo = queryRunner.manager.getRepository(HoaDon);
+        
+        // Kiểm tra xem bảng có tồn tại không bằng cách thử count
+        try {
+          const hoaDonCount = await hoaDonRepo.count();
+          const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+          const maHoaDon = `HD-${today}-${String(hoaDonCount + 1).padStart(4, '0')}`;
 
-      // Tạo HoaDon object - chỉ gán nhanVien nếu có
-      const hoaDonData: any = {
-        maHoaDon,
-        donDatPhong: booking,
-        tongTien: totalAmount,
-        phuongThucThanhToan: paymentMethod,
-        paymentRef: paymentRef || undefined,
-        ngayThanhToan: paidDate,
-        ghiChu: ghiChu || undefined
-      };
-      
-      // Chỉ gán nhanVien nếu có (nhân viên finalize)
-      if (nhanVien) {
-        hoaDonData.nhanVien = nhanVien;
+          // Tạo HoaDon object - chỉ gán nhanVien nếu có
+          const hoaDonData: any = {
+            maHoaDon,
+            donDatPhong: booking,
+            tongTien: totalAmount,
+            phuongThucThanhToan: paymentMethod,
+            paymentRef: paymentRef || undefined,
+            ngayThanhToan: paidDate,
+            ghiChu: ghiChu || undefined
+          };
+          
+          // Chỉ gán nhanVien nếu có (nhân viên finalize)
+          if (nhanVien) {
+            hoaDonData.nhanVien = nhanVien;
+          }
+          
+          const hoaDon = hoaDonRepo.create(hoaDonData);
+          const savedHoaDon = await queryRunner.manager.save(HoaDon, hoaDon);
+          
+          // Ensure we have a single entity (not array)
+          hoaDonEntity = Array.isArray(savedHoaDon) ? savedHoaDon[0] : savedHoaDon;
+          console.log('✅ HoaDon created successfully:', hoaDonEntity.maHoaDon);
+        } catch (tableError: any) {
+          // Nếu bảng chưa tồn tại, bỏ qua việc tạo HoaDon
+          if (tableError?.message?.includes('does not exist') || 
+              tableError?.message?.includes('relation') ||
+              tableError?.code === '42P01') {
+            console.warn('⚠️ HoaDon table does not exist yet. Skipping invoice creation.');
+            console.warn('💡 Please run migration: 1771300000000-CreateHoaDonTable');
+          } else {
+            // Nếu là lỗi khác, throw lại
+            throw tableError;
+          }
+        }
+      } catch (hoaDonError) {
+        console.warn('⚠️ Error creating HoaDon:', hoaDonError);
+        // Không throw error, chỉ log warning - booking vẫn được finalize thành công
       }
-      
-      const hoaDon = hoaDonRepo.create(hoaDonData);
-      const savedHoaDon = await queryRunner.manager.save(HoaDon, hoaDon);
-      
-      // Ensure we have a single entity (not array)
-      const hoaDonEntity = Array.isArray(savedHoaDon) ? savedHoaDon[0] : savedHoaDon;
 
       // Commit transaction
       await queryRunner.commitTransaction();
 
       return res.json({
         success: true,
-        message: 'Thanh toán đã được xác nhận và hóa đơn đã được tạo',
+        message: hoaDonEntity 
+          ? 'Thanh toán đã được xác nhận và hóa đơn đã được tạo'
+          : 'Thanh toán đã được xác nhận',
         data: {
           booking: {
             maDatPhong: booking.maDatPhong,
@@ -325,7 +387,7 @@ export class DonDatPhongController {
             totalPaid: booking.totalPaid,
             paidAt: booking.paidAt
           },
-          hoaDon: {
+          hoaDon: hoaDonEntity ? {
             id: hoaDonEntity.id,
             maHoaDon: hoaDonEntity.maHoaDon,
             tongTien: hoaDonEntity.tongTien,
@@ -335,7 +397,7 @@ export class DonDatPhongController {
               maNhanVien: nhanVien.maNhanVien,
               ten: nhanVien.ten
             } : null
-          },
+          } : null,
           revenue: {
             id: revenue.id,
             amount: revenue.amount,
@@ -490,7 +552,10 @@ export class DonDatPhongController {
       const { bookingId } = req.params;
 
       const booking = await donDatPhongRepository.findOne({
-        where: { maDatPhong: bookingId },
+        where: { 
+          maDatPhong: bookingId,
+          isDeleted: false
+        },
         relations: ['coSo', 'khachHang', 'chiTiet', 'chiTiet.phong']
       });
 
@@ -587,7 +652,10 @@ export class DonDatPhongController {
 
       // Get booking
       const booking = await donDatPhongRepository.findOne({
-        where: { maDatPhong: bookingId },
+        where: { 
+          maDatPhong: bookingId,
+          isDeleted: false
+        },
         relations: ['coSo', 'khachHang']
       });
 
@@ -668,7 +736,10 @@ export class DonDatPhongController {
 
       // Get booking
       const booking = await donDatPhongRepository.findOne({
-        where: { maDatPhong: bookingId }
+        where: { 
+          maDatPhong: bookingId,
+          isDeleted: false
+        }
       });
 
       if (!booking) {
@@ -714,6 +785,8 @@ export class DonDatPhongController {
       booking.isVerified = true;
       booking.trangThai = 'CF'; // Confirmed
       booking.ngayXacNhan = new Date();
+      // Set payment timeout: 10 phút để thanh toán
+      booking.paymentTimeoutAt = new Date(Date.now() + 10 * 60 * 1000);
       // Clear OTP after successful verification
       booking.otpCode = undefined;
       booking.otpExpiry = undefined;
@@ -751,15 +824,15 @@ export class DonDatPhongController {
       // Decode email if it's URL encoded
       const decodedEmail = decodeURIComponent(email);
 
-      // Query bookings by customerEmail or khachHang.email
+      // Query bookings by customerEmail or khachHang.email (exclude soft-deleted)
       const queryBuilder = donDatPhongRepository.createQueryBuilder('booking')
         .leftJoinAndSelect('booking.coSo', 'coSo')
         .leftJoinAndSelect('booking.nhanVien', 'nhanVien')
         .leftJoinAndSelect('booking.khachHang', 'khachHang')
         .leftJoinAndSelect('booking.chiTiet', 'chiTiet')
         .leftJoinAndSelect('chiTiet.phong', 'phong')
-        .where('booking.customerEmail = :email', { email: decodedEmail })
-        .orWhere('khachHang.email = :email', { email: decodedEmail })
+        .where('booking.isDeleted = :isDeleted', { isDeleted: false })
+        .andWhere('(booking.customerEmail = :email OR khachHang.email = :email)', { email: decodedEmail })
         .orderBy('booking.ngayDat', 'DESC');
 
       const bookings = await queryBuilder.getMany();

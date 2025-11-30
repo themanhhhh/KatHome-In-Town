@@ -21,7 +21,7 @@ export class DonDatPhong {
   @JoinColumn({ name: 'khachHangMaKhachHang' })
   khachHang!: KhachHang;
 
-  @Column({ type: "enum", enum: ["R", "CF", "CC", "AB"] })
+  @Column({ type: "enum", enum: ["R", "CF", "PA", "CC", "AB"] })
   trangThai!: string;
 
   @Column({ type: "enum", enum: ["Card", "Cash"] })
@@ -90,6 +90,9 @@ export class DonDatPhong {
   @Column({ type: "timestamp", nullable: true })
   expiresAt?: Date; // Timeout 15 phút cho PENDING bookings
 
+  @Column({ type: "timestamp", nullable: true })
+  paymentTimeoutAt?: Date; // Timeout 10 phút để thanh toán sau khi xác nhận OTP
+
   @Column({ type: "int", default: 0 })
   version!: number; // Optimistic locking
 
@@ -114,4 +117,11 @@ export class DonDatPhong {
 
   @OneToMany(() => ChiTietDonDatPhong, (ct) => ct.donDatPhong)
   chiTiet!: ChiTietDonDatPhong[];
+
+  // Soft delete field
+  @Column({ type: "boolean", default: false })
+  isDeleted!: boolean;
+
+  @Column({ type: "timestamp", nullable: true })
+  deletedAt?: Date;
 }

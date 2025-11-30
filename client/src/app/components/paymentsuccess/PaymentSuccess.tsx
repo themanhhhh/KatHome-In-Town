@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../card/card";
 import { Badge } from "../badge/badge";
@@ -73,30 +73,122 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
   const [emailError, setEmailError] = useState<string | null>(null);
   const [paymentFinalized, setPaymentFinalized] = useState(false);
   const [finalizeError, setFinalizeError] = useState<string | null>(null);
+  const hasProcessedRef = useRef(false); // Track if payment verification has been processed
 
   // Map frontend payment method to backend enum values (Card or Cash)
   const mapPaymentMethod = (method: string): string => {
-    if (method === 'bank-transfer' || method === 'Bank Transfer') {
+    // Normalize to lowercase for comparison
+    const normalizedMethod = method?.toLowerCase().trim();
+    
+    if (normalizedMethod === 'bank-transfer' || normalizedMethod === 'bank transfer') {
       return 'Cash'; // Bank transfer is treated as Cash payment in backend
     }
-    if (method === 'card') {
+    if (normalizedMethod === 'card' || normalizedMethod === 'credit-card' || normalizedMethod === 'debit-card') {
       return 'Card';
     }
+    if (normalizedMethod === 'cash' || normalizedMethod === 'cash on delivery' || normalizedMethod === 'thanh toán tại chỗ') {
+      return 'Cash';
+    }
     // If already in correct format (Card, Cash), return as is
-    return method;
+    if (method === 'Card' || method === 'Cash') {
+      return method;
+    }
+    // Fallback: default to Cash for unknown methods
+    console.warn(`⚠️ Unknown payment method "${method}", defaulting to Cash`);
+    return 'Cash';
   };
 
   // Send payment confirmation email on component mount
+  // Chỉ chạy một lần khi component mount với bookingData đã có sẵn
   useEffect(() => {
+    // Prevent duplicate processing
+    if (hasProcessedRef.current) {
+      return;
+    }
+
+    // Đảm bảo bookingData đã có giá trị
+    if (!bookingData || !bookingData.bookingId) {
+      console.log('⏭️ Skipping payment verification - bookingData not ready');
+      return;
+    }
+
     const verifyAndSendPaymentEmail = async () => {
-      if (emailSent) return; // Prevent duplicate sends
+      // Mark as processed to prevent duplicate calls
+      hasProcessedRef.current = true;
 
       setIsSendingEmail(true);
       setEmailError(null);
 
       try {
+        // Log booking data for debugging
+        console.log('🔍 Payment verify - bookingData:', bookingData);
+        
+        // Validate required fields
+        if (!bookingData.bookingId) {
+          console.error('❌ Validation failed: Booking ID is missing');
+          throw new Error('Booking ID is missing');
+        }
+        
+        // Calculate total if missing or invalid
+        let totalAmount = bookingData.paymentInfo?.total;
+        if (!totalAmount || totalAmount <= 0 || isNaN(totalAmount)) {
+          console.warn('⚠️ Total amount is missing or invalid, calculating from room price...');
+          // Calculate total from room price and nights
+          const checkInDate = new Date(bookingData.searchData?.checkIn);
+          const checkOutDate = new Date(bookingData.searchData?.checkOut);
+          const nights = Math.ceil(Math.abs(checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+          const roomPrice = bookingData.roomData?.price || 0;
+          totalAmount = roomPrice * nights;
+          
+          if (totalAmount <= 0) {
+            console.error('❌ Validation failed: Cannot calculate total amount', {
+              roomPrice,
+              nights,
+              checkIn: bookingData.searchData?.checkIn,
+              checkOut: bookingData.searchData?.checkOut,
+            });
+            throw new Error('Total amount is missing or invalid');
+          }
+          
+          // Update bookingData with calculated total
+          bookingData.paymentInfo = {
+            ...bookingData.paymentInfo,
+            total: totalAmount,
+          };
+          console.log('✅ Calculated total amount:', totalAmount);
+        }
+        if (!bookingData.paymentInfo?.method) {
+          console.error('❌ Validation failed: Payment method is missing');
+          throw new Error('Payment method is missing');
+        }
+
         // Map payment method to backend enum
         const backendPaymentMethod = mapPaymentMethod(bookingData.paymentInfo.method);
+        console.log('🔍 Payment method mapping:', bookingData.paymentInfo.method, '->', backendPaymentMethod);
+        
+        // Validate mapped payment method
+        if (!backendPaymentMethod || (backendPaymentMethod !== 'Card' && backendPaymentMethod !== 'Cash')) {
+          console.error('❌ Validation failed: Invalid payment method', backendPaymentMethod);
+          throw new Error('Invalid payment method');
+        }
+
+        // Prepare request payload
+        const payload = {
+          bookingId: bookingData.bookingId,
+          totalAmount: totalAmount,
+          paymentMethod: backendPaymentMethod,
+          paymentRef: undefined,
+          sendEmail: true,
+          customerEmail: bookingData.guestInfo?.email,
+          customerName: bookingData.guestInfo ? `${bookingData.guestInfo.firstName || ''} ${bookingData.guestInfo.lastName || ''}`.trim() : undefined,
+          roomName: bookingData.roomData?.name,
+          checkIn: bookingData.searchData?.checkIn,
+          checkOut: bookingData.searchData?.checkOut,
+          guests: bookingData.searchData?.guests,
+          bookingDate: bookingData.bookingDate,
+        };
+        
+        console.log('🔍 Payment verify - payload:', payload);
 
         // Prefer calling backend verify endpoint which can also trigger email
         const verifyResponse = await fetch(
@@ -104,26 +196,15 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              bookingId: bookingData.bookingId,
-              totalAmount: bookingData.paymentInfo.total,
-              paymentMethod: backendPaymentMethod,
-              paymentRef: undefined,
-              sendEmail: true,
-              customerEmail: bookingData.guestInfo.email,
-              customerName: `${bookingData.guestInfo.firstName} ${bookingData.guestInfo.lastName}`,
-              roomName: bookingData.roomData.name,
-              checkIn: bookingData.searchData.checkIn,
-              checkOut: bookingData.searchData.checkOut,
-              guests: bookingData.searchData.guests,
-              bookingDate: bookingData.bookingDate,
-            }),
+            body: JSON.stringify(payload),
           }
         );
 
         if (!verifyResponse.ok) {
           const err = await verifyResponse.json().catch(() => ({}));
-          throw new Error(err.message || 'Payment verify failed');
+          const errorMessage = err.error || err.message || `Payment verify failed (${verifyResponse.status})`;
+          console.error('Payment verify error:', err);
+          throw new Error(errorMessage);
         }
 
         const verifyJson = await verifyResponse.json();
@@ -135,15 +216,23 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
             // Map payment method to backend enum
             const backendPaymentMethod = mapPaymentMethod(bookingData.paymentInfo.method);
 
+            console.log('🔍 Finalizing booking with:', {
+              bookingId: bookingData.bookingId,
+              totalAmount,
+              paymentMethod: backendPaymentMethod,
+            });
+
             const finalizeResponse = await paymentApi.finalizeBooking({
               bookingId: bookingData.bookingId,
-              totalAmount: bookingData.paymentInfo.total,
+              totalAmount: totalAmount,
               paymentMethod: backendPaymentMethod,
               paymentRef: verifyJson.paymentRef || undefined,
               paidAt: new Date().toISOString(),
               sendEmail: false, // Email already sent in verify step
               customerEmail: bookingData.guestInfo.email, // Gửi email để verify quyền
-            }) as { success?: boolean; message?: string; data?: unknown };
+            }) as { success?: boolean; message?: string; data?: unknown; error?: string };
+
+            console.log('🔍 Finalize response:', finalizeResponse);
 
             if (finalizeResponse?.success) {
               setPaymentFinalized(true);
@@ -152,27 +241,67 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
                 description: `Booking #${bookingData.bookingId} đã được xác nhận và thanh toán.`,
                 duration: 5000,
               });
+              
+              // ✅ Xóa sessionStorage sau khi finalize thành công
+              // Đảm bảo data đã được xử lý xong trước khi xóa
+              try {
+                sessionStorage.removeItem('paymentSuccessData');
+                sessionStorage.removeItem('checkoutRoomData');
+                sessionStorage.removeItem('checkoutSearchData');
+                console.log('✅ Cleaned up sessionStorage after successful payment finalization');
+              } catch (storageError) {
+                console.warn('⚠️ Failed to clean sessionStorage:', storageError);
+              }
             } else {
-              throw new Error('Finalize booking failed');
+              // Check if response has error message
+              const errorMsg = finalizeResponse?.message || finalizeResponse?.error || 'Finalize booking failed';
+              throw new Error(errorMsg);
             }
-          } catch (finalizeErr) {
+          } catch (finalizeErr: unknown) {
             console.error('❌ Error finalizing booking:', finalizeErr);
             
+            // Extract error message
+            let errorMessage = 'Lỗi khi xác nhận thanh toán';
+            if (finalizeErr instanceof Error) {
+              errorMessage = finalizeErr.message;
+            } else if (typeof finalizeErr === 'string') {
+              errorMessage = finalizeErr;
+            } else if (finalizeErr && typeof finalizeErr === 'object' && 'message' in finalizeErr) {
+              errorMessage = String(finalizeErr.message);
+            }
+            
+            console.error('❌ Finalize error details:', {
+              error: finalizeErr,
+              errorMessage,
+              bookingId: bookingData.bookingId,
+            });
+            
             // ✅ Check if error is "already paid" - treat as success
-            const errorMessage = finalizeErr instanceof Error ? finalizeErr.message : String(finalizeErr);
-            if (errorMessage.toLowerCase().includes('already paid') || 
-                errorMessage.toLowerCase().includes('đã thanh toán')) {
+            const lowerErrorMessage = errorMessage.toLowerCase();
+            if (lowerErrorMessage.includes('already paid') || 
+                lowerErrorMessage.includes('đã thanh toán') ||
+                lowerErrorMessage.includes('booking is already paid')) {
               setPaymentFinalized(true);
               console.log('✅ Payment already finalized (already paid)');
               toast.info('Thanh toán đã được xác nhận', {
                 description: `Booking #${bookingData.bookingId} đã được thanh toán trước đó.`,
                 duration: 5000,
               });
+              
+              // ✅ Xóa sessionStorage khi booking đã được thanh toán trước đó
+              try {
+                sessionStorage.removeItem('paymentSuccessData');
+                sessionStorage.removeItem('checkoutRoomData');
+                sessionStorage.removeItem('checkoutSearchData');
+                console.log('✅ Cleaned up sessionStorage (already paid)');
+              } catch (storageError) {
+                console.warn('⚠️ Failed to clean sessionStorage:', storageError);
+              }
             } else {
               setFinalizeError(errorMessage);
-              toast.error('Lỗi xử lý thanh toán', {
-                description: errorMessage,
-                duration: 6000,
+              toast.warning('Lưu ý về thanh toán', {
+                description: `${errorMessage}. Booking của bạn đã được tạo nhưng có thể cần xác nhận thêm.`,
+                duration: 8000,
               });
             }
           }
@@ -193,7 +322,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
               checkIn: bookingData.searchData.checkIn,
               checkOut: bookingData.searchData.checkOut,
               guests: bookingData.searchData.guests,
-              totalAmount: bookingData.paymentInfo.total,
+              totalAmount: totalAmount,
               paymentMethod: bookingData.paymentInfo.method,
               bookingDate: bookingData.bookingDate,
             },
@@ -222,7 +351,9 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
     };
 
     verifyAndSendPaymentEmail();
-  }, [bookingData, emailSent]);
+    // Chỉ chạy khi bookingData thay đổi từ null/undefined sang có giá trị
+    // useRef đảm bảo chỉ gọi API một lần
+  }, [bookingData]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN').format(price) + 'đ';
@@ -263,18 +394,30 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
     setTimeout(() => {
       setIsDownloading(false);
       // In real app, would generate and download PDF
-      alert("Hóa đơn đã được tải xuống!");
+      toast.success('Hóa đơn đã được tải xuống!', {
+        description: 'File PDF đã được tải về máy của bạn.',
+        duration: 3000,
+      });
     }, 2000);
   };
 
   const handleShare = async () => {
     setIsSharing(true);
-    setTimeout(() => {
-      setIsSharing(false);
+    try {
       // In real app, would use Web Share API or copy to clipboard
-      navigator.clipboard.writeText(`Đặt phòng thành công tại KatHome In Town ! Mã đặt phòng: ${bookingData.bookingId}`);
-      alert("Đã sao chép thông tin đặt phòng!");
-    }, 1000);
+      await navigator.clipboard.writeText(`Đặt phòng thành công tại KatHome In Town ! Mã đặt phòng: ${bookingData.bookingId}`);
+      toast.success('Đã sao chép thông tin đặt phòng!', {
+        description: 'Thông tin đặt phòng đã được sao chép vào clipboard.',
+        duration: 3000,
+      });
+    } catch {
+      toast.error('Lỗi sao chép', {
+        description: 'Không thể sao chép thông tin. Vui lòng thử lại.',
+        duration: 3000,
+      });
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   return (
@@ -613,7 +756,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
                     <div className="space-y-2 text-sm" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
                       <div className="flex items-center space-x-2">
                         <Phone className="w-3 h-3" />
-                        <span>+84 123 456 789</span>
+                        <span>+84 375 914 908</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Mail className="w-3 h-3" />

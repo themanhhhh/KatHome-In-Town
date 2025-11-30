@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Separator } from "../separator/separator";
 import { Badge } from "../badge/badge";
 import { donDatPhongApi } from "@/lib/api";
+import { toast } from "sonner";
 import Img from "next/image";
 import { 
   ArrowLeft,
@@ -179,7 +180,10 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
 
   const handleConfirmPayment = async () => {
     if (!createdBookingId) {
-      alert('Vui lòng hoàn tất đặt phòng trước.');
+      toast.warning('Vui lòng hoàn tất đặt phòng trước.', {
+        description: 'Bạn cần tạo đặt phòng trước khi xác nhận thanh toán.',
+        duration: 4000,
+      });
       return;
     }
 
@@ -188,13 +192,25 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     try {
       // Map payment method to backend enum (Card or Cash)
       const mapPaymentMethod = (method: string): string => {
-        if (method === 'bank-transfer' || method === 'Bank Transfer') {
+        // Normalize to lowercase for comparison
+        const normalizedMethod = method?.toLowerCase().trim();
+        
+        if (normalizedMethod === 'bank-transfer' || normalizedMethod === 'bank transfer') {
           return 'Cash'; // Bank transfer is treated as Cash payment in backend
         }
-        if (method === 'card') {
+        if (normalizedMethod === 'card' || normalizedMethod === 'credit-card' || normalizedMethod === 'debit-card') {
           return 'Card';
         }
-        return method; // Fallback to original value
+        if (normalizedMethod === 'cash' || normalizedMethod === 'cash on delivery' || normalizedMethod === 'thanh toán tại chỗ') {
+          return 'Cash';
+        }
+        // If already in correct format (Card, Cash), return as is
+        if (method === 'Card' || method === 'Cash') {
+          return method;
+        }
+        // Fallback: default to Cash for unknown methods
+        console.warn(`⚠️ Unknown payment method "${method}", defaulting to Cash`);
+        return 'Cash';
       };
 
       const backendPaymentMethod = mapPaymentMethod(formData.paymentMethod);
@@ -233,7 +249,11 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
       }
     } catch (error) {
       console.error('Error confirming payment:', error);
-      alert(error instanceof Error ? error.message : 'Có lỗi xảy ra khi xác nhận thanh toán. Vui lòng thử lại.');
+      const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra khi xác nhận thanh toán. Vui lòng thử lại.';
+      toast.error('Lỗi xác nhận thanh toán', {
+        description: errorMessage,
+        duration: 5000,
+      });
     } finally {
       setIsConfirmingPayment(false);
     }
@@ -316,7 +336,11 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     } catch (error) {
       console.error('Error creating booking:', error);
       setIsProcessing(false);
-      alert(error instanceof Error ? error.message : 'Có lỗi xảy ra khi tạo đặt phòng. Vui lòng thử lại.');
+      const errorMessage = error instanceof Error ? error.message : 'Có lỗi xảy ra khi tạo đặt phòng. Vui lòng thử lại.';
+      toast.error('Lỗi tạo đặt phòng', {
+        description: errorMessage,
+        duration: 5000,
+      });
     }
   };
 

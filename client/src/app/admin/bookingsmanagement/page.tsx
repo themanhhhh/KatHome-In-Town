@@ -38,6 +38,8 @@ const BookingsManagementPage = () => {
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [editingBooking, setEditingBooking] = useState<ApiBooking | null>(null);
   const [viewingBooking, setViewingBooking] = useState<ApiBooking | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch data from API
   const { data: bookings = [], loading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useApi<ApiBooking[]>(
@@ -60,10 +62,11 @@ const BookingsManagementPage = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      CF: { label: 'Đã xác nhận', className: Style.badgeConfirmed },
       R: { label: 'Chờ xác nhận', className: Style.badgePending },
-      AB: { label: 'Đã hủy', className: Style.badgeCancelled },
-      CC: { label: 'Hoàn thành', className: Style.badgeCompleted }
+      CF: { label: 'Đã xác nhận', className: Style.badgeConfirmed },
+      PA: { label: 'Đã thanh toán', className: Style.badgePaid || Style.badgeConfirmed },
+      CC: { label: 'Hoàn thành', className: Style.badgeCompleted },
+      AB: { label: 'Đã hủy', className: Style.badgeCancelled }
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || { label: status, className: Style.badge };
@@ -148,6 +151,53 @@ const BookingsManagementPage = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedBookings = filteredBookings.slice(startIndex, endIndex);
+
+  // Generate page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow + 2) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      
+      if (currentPage <= 3) {
+        for (let i = 2; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   const handleSelectBooking = (bookingId: string) => {
     setSelectedBookings(prev => 
       prev.includes(bookingId) 
@@ -157,10 +207,10 @@ const BookingsManagementPage = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedBookings.length === filteredBookings.length) {
-      setSelectedBookings([]);
+    if (paginatedBookings.length > 0 && paginatedBookings.every(booking => selectedBookings.includes(booking.maDatPhong))) {
+      setSelectedBookings(prev => prev.filter(id => !paginatedBookings.map(b => b.maDatPhong).includes(id)));
     } else {
-      setSelectedBookings(filteredBookings.map(booking => booking.maDatPhong));
+      setSelectedBookings(prev => [...new Set([...prev, ...paginatedBookings.map(booking => booking.maDatPhong)])]);
     }
   };
 
@@ -349,10 +399,14 @@ const BookingsManagementPage = () => {
           <div className={Style.statContent}>
             <div className={Style.statValue}>
               {(() => {
+                // Chỉ tính doanh thu từ các booking đã hoàn thành (CC - Checked-out/Completed)
                 const totalRevenue = (bookings || []).reduce((sum, b) => {
+                  // Chỉ tính với booking có trạng thái hoàn thành
+                  if (b.trangThai === 'CC') {
                   const amount = b.totalAmount;
                   if (amount && !isNaN(amount) && amount > 0) {
                     return sum + amount;
+                    }
                   }
                   return sum;
                 }, 0);
@@ -397,7 +451,7 @@ const BookingsManagementPage = () => {
                   <th className={Style.tableHeadCell}>
                     <input
                       type="checkbox"
-                      checked={selectedBookings.length === filteredBookings.length}
+                      checked={paginatedBookings.length > 0 && paginatedBookings.every(booking => selectedBookings.includes(booking.maDatPhong))}
                       onChange={handleSelectAll}
                       className={Style.checkbox}
                     />
@@ -412,7 +466,7 @@ const BookingsManagementPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredBookings.map((booking, index) => {
+                {paginatedBookings.map((booking, index) => {
                   // Get total guests from chiTiet
                   const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => 
                     sum + (ct.soNguoiLon || 0) + (ct.soTreEm || 0), 0
@@ -525,6 +579,53 @@ const BookingsManagementPage = () => {
             )}
           </div>
         </div>
+
+        {/* Pagination */}
+        {filteredBookings.length > 0 && (
+          <div className={Style.pagination}>
+            <div className={Style.paginationInfo}>
+              Hiển thị {startIndex + 1}-{Math.min(endIndex, filteredBookings.length)} trong tổng số {filteredBookings.length} booking
+            </div>
+            <div className={Style.paginationControls}>
+              <button
+                className={Style.paginationButton}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                Trước
+              </button>
+              
+              <div className={Style.paginationNumbers}>
+                {getPageNumbers().map((page, index) => {
+                  if (page === '...') {
+                    return (
+                      <span key={`ellipsis-${index}`} className={Style.paginationEllipsis}>
+                        ...
+                      </span>
+                    );
+                  }
+                  return (
+                    <button
+                      key={page}
+                      className={`${Style.paginationNumber} ${currentPage === page ? Style.paginationNumberActive : ''}`}
+                      onClick={() => setCurrentPage(page as number)}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                className={Style.paginationButton}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Tiếp
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Booking Form Modal */}

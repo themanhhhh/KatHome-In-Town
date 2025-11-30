@@ -286,14 +286,19 @@ const RoomsManagementPage = () => {
   const uniqueRoomTypesCount = uniqueRoomTypes.length;
   
   // Calculate total revenue from bookings
+  // Chỉ tính doanh thu từ các booking đã hoàn thành (CC - Checked-out/Completed)
   const totalRevenue = React.useMemo(() => {
     const revenue = (bookings || []).reduce((sum, booking) => {
-      const amount = booking.totalAmount;
-      // Handle null, undefined, NaN, and ensure it's a valid number
-      if (amount == null || isNaN(Number(amount))) {
-        return sum;
+      // Chỉ tính với booking có trạng thái hoàn thành
+      if (booking.trangThai === 'CC') {
+        const amount = booking.totalAmount;
+        // Handle null, undefined, NaN, and ensure it's a valid number
+        if (amount == null || isNaN(Number(amount))) {
+          return sum;
+        }
+        return sum + Number(amount);
       }
-      return sum + Number(amount);
+      return sum;
     }, 0);
     // Ensure we return a valid number (not NaN)
     return isNaN(revenue) ? 0 : revenue;
@@ -306,13 +311,18 @@ const RoomsManagementPage = () => {
     );
 
     const bookingCount = relatedBookings.length;
+    // Chỉ tính doanh thu từ các booking đã hoàn thành (CC - Checked-out/Completed)
     const revenue = relatedBookings.reduce((sum, booking) => {
-      const amount = booking.totalAmount;
-      // Handle null, undefined, NaN, and ensure it's a valid number
-      if (amount == null || isNaN(Number(amount))) {
-        return sum;
+      // Chỉ tính với booking có trạng thái hoàn thành
+      if (booking.trangThai === 'CC') {
+        const amount = booking.totalAmount;
+        // Handle null, undefined, NaN, and ensure it's a valid number
+        if (amount == null || isNaN(Number(amount))) {
+          return sum;
+        }
+        return sum + Number(amount);
       }
-      return sum + Number(amount);
+      return sum;
     }, 0);
 
     // Ensure we return a valid number (not NaN)

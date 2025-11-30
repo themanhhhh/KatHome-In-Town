@@ -48,10 +48,12 @@ export default function PaymentSuccessPage() {
 
     if (savedBookingData) {
       setBookingData(JSON.parse(savedBookingData));
-      // Clear all checkout data
+      // ⚠️ KHÔNG xóa paymentSuccessData ở đây
+      // PaymentSuccess component sẽ xóa sau khi finalize thành công
+      // Điều này đảm bảo nếu user refresh trang, data vẫn còn
+      // Chỉ xóa checkoutRoomData và checkoutSearchData vì không cần thiết nữa
       sessionStorage.removeItem('checkoutRoomData');
       sessionStorage.removeItem('checkoutSearchData');
-      sessionStorage.removeItem('paymentSuccessData');
     } else {
       // If no data, redirect to home
       router.push('/');

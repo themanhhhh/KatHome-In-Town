@@ -22,8 +22,8 @@ import {
 
 import Style from "../../styles/usersmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
-import { usersApi, khachHangApi, donDatPhongApi } from "../../../lib/api";
-import { ApiUser, ApiCustomer, ApiBooking } from "../../../types/api";
+import { usersApi, khachHangApi, donDatPhongApi, danhGiaApi, khieuNaiApi } from "../../../lib/api";
+import { ApiUser, ApiCustomer, ApiBooking, ApiDanhGia, ApiKhieuNai } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { UserForm } from "../../components/user-form";
 import { CustomerForm } from "../../components/customer-form";
@@ -78,6 +78,18 @@ const UsersManagementPage = () => {
     []
   );
 
+  // Fetch reviews to calculate average ratings
+  const { data: reviews = [] } = useApi<ApiDanhGia[]>(
+    () => danhGiaApi.getAll({ trangThai: 'approved' }),
+    []
+  );
+
+  // Fetch complaints
+  const { data: complaints = [] } = useApi<ApiKhieuNai[]>(
+    () => khieuNaiApi.getAll(),
+    []
+  );
+
   const formatPrice = (price: number | undefined | null) => {
     if (price === undefined || price === null || isNaN(price)) {
       return '0đ';
@@ -104,11 +116,31 @@ const UsersManagementPage = () => {
     return stats;
   }, [bookings]);
 
+  // Calculate average ratings from reviews
+  const userRatings = React.useMemo(() => {
+    const ratings: Record<string, { total: number; count: number; average: number }> = {};
+    
+    (reviews || []).forEach(review => {
+      const email = review.email;
+      if (email) {
+        if (!ratings[email]) {
+          ratings[email] = { total: 0, count: 0, average: 0 };
+        }
+        ratings[email].total += review.diemDanhGia;
+        ratings[email].count += 1;
+        ratings[email].average = ratings[email].total / ratings[email].count;
+      }
+    });
+    
+    return ratings;
+  }, [reviews]);
+
   // Combine users and customers for unified display
   const allUsers = [
     ...(users || []).map(user => {
       const email = user.gmail || '';
       const stats = email ? userStats[email] : null;
+      const rating = email ? userRatings[email] : null;
       return {
         ...user,
         id: user.id.toString(),
@@ -122,11 +154,12 @@ const UsersManagementPage = () => {
         type: 'user' as const,
         totalBookings: stats?.bookings || 0,
         totalSpent: stats?.spent || 0,
-        averageRating: 0 // Placeholder
+        averageRating: rating?.average || 0
       };
     }),
     ...(customers || []).map(customer => {
       const stats = customer.email ? userStats[customer.email] : null;
+      const rating = customer.email ? userRatings[customer.email] : null;
       return {
         ...customer,
         id: customer.maKhachHang,
@@ -140,7 +173,7 @@ const UsersManagementPage = () => {
         type: 'customer' as const,
         totalBookings: stats?.bookings || 0,
         totalSpent: stats?.spent || 0,
-        averageRating: 0 // Placeholder
+        averageRating: rating?.average || 0
       };
     })
   ];
@@ -719,12 +752,73 @@ const UsersManagementPage = () => {
         <div className={Style.sectionCard}>
           <div className={Style.sectionHeader}>
             <Star className={Style.sectionIcon} />
-            <h3 className={Style.sectionTitle}>Đánh giá</h3>
+            <h3 className={Style.sectionTitle}>Đánh giá ({(reviews || []).length})</h3>
           </div>
           <div className={Style.sectionContent}>
+            {(reviews || []).length === 0 ? (
             <p className={Style.sectionPlaceholder}>
-              Phần đánh giá sẽ được hiển thị tại đây
-            </p>
+                Chưa có đánh giá nào
+              </p>
+            ) : (
+              <div className={Style.reviewsList}>
+                {(reviews || []).slice(0, 10).map((review) => {
+                  const user = allUsers.find(u => u.email === review.email);
+                  return (
+                    <div key={review.maDanhGia} className={Style.reviewItem}>
+                      <div className={Style.reviewHeader}>
+                        <div className={Style.reviewUserInfo}>
+                          <div className={Style.reviewUserName}>
+                            {review.hoTen || user?.name || review.email || 'Khách'}
+                          </div>
+                          <div className={Style.reviewUserEmail}>
+                            {review.email || 'N/A'}
+                          </div>
+                        </div>
+                        <div className={Style.reviewRating}>
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`${Style.starIcon} ${star <= review.diemDanhGia ? Style.starFilled : ''}`}
+                              size={16}
+                            />
+                          ))}
+                          <span className={Style.reviewRatingValue}>
+                            {review.diemDanhGia}/5
+                          </span>
+                        </div>
+                      </div>
+                      <div className={Style.reviewContent}>
+                        {review.noiDung}
+                      </div>
+                      <div className={Style.reviewFooter}>
+                        <span className={Style.reviewDate}>
+                          {new Date(review.ngayDanhGia).toLocaleDateString('vi-VN', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </span>
+                        {review.phong && (
+                          <span className={Style.reviewRoom}>
+                            Phòng: {review.phong.tenPhong || review.phong.maPhong}
+                          </span>
+                        )}
+                      </div>
+                      {review.phanHoi && (
+                        <div className={Style.reviewResponse}>
+                          <strong>Phản hồi:</strong> {review.phanHoi}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {(reviews || []).length > 10 && (
+                  <div className={Style.reviewsMore}>
+                    <p>Hiển thị 10/{(reviews || []).length} đánh giá</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -732,12 +826,101 @@ const UsersManagementPage = () => {
         <div className={Style.sectionCard}>
           <div className={Style.sectionHeader}>
             <AlertCircle className={Style.sectionIcon} />
-            <h3 className={Style.sectionTitle}>Khiếu nại</h3>
+            <h3 className={Style.sectionTitle}>Khiếu nại ({(complaints || []).length})</h3>
           </div>
           <div className={Style.sectionContent}>
+            {(complaints || []).length === 0 ? (
             <p className={Style.sectionPlaceholder}>
-              Phần khiếu nại sẽ được hiển thị tại đây
-            </p>
+                Chưa có khiếu nại nào
+              </p>
+            ) : (
+              <div className={Style.complaintsList}>
+                {(complaints || []).slice(0, 10).map((complaint) => {
+                  const getStatusBadge = (status: string) => {
+                    switch (status) {
+                      case 'pending':
+                        return { text: 'Chờ xử lý', class: Style.complaintStatusPending };
+                      case 'processing':
+                        return { text: 'Đang xử lý', class: Style.complaintStatusProcessing };
+                      case 'resolved':
+                        return { text: 'Đã giải quyết', class: Style.complaintStatusResolved };
+                      case 'rejected':
+                        return { text: 'Đã từ chối', class: Style.complaintStatusRejected };
+                      default:
+                        return { text: status, class: Style.complaintStatusPending };
+                    }
+                  };
+                  const statusBadge = getStatusBadge(complaint.trangThai);
+                  const getTypeLabel = (type: string) => {
+                    switch (type) {
+                      case 'service': return 'Dịch vụ';
+                      case 'room': return 'Phòng';
+                      case 'staff': return 'Nhân viên';
+                      default: return 'Khác';
+                    }
+                  };
+                  return (
+                    <div key={complaint.maKhieuNai} className={Style.complaintItem}>
+                      <div className={Style.complaintHeader}>
+                        <div className={Style.complaintUserInfo}>
+                          <div className={Style.complaintUserName}>
+                            {complaint.hoTen || complaint.khachHang?.ten || complaint.khachHang?.tenKhachHang || complaint.email || 'Khách'}
+                          </div>
+                          <div className={Style.complaintUserEmail}>
+                            {complaint.email || complaint.khachHang?.email || 'N/A'}
+                          </div>
+                        </div>
+                        <div className={Style.complaintMeta}>
+                          <span className={`${Style.complaintStatus} ${statusBadge.class}`}>
+                            {statusBadge.text}
+                          </span>
+                          <span className={Style.complaintType}>
+                            {getTypeLabel(complaint.loaiKhieuNai)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className={Style.complaintTitle}>
+                        {complaint.tieuDe}
+                      </div>
+                      <div className={Style.complaintContent}>
+                        {complaint.dienGiai}
+                      </div>
+                      <div className={Style.complaintFooter}>
+                        <span className={Style.complaintDate}>
+                          {new Date(complaint.ngayKhieuNai).toLocaleDateString('vi-VN', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        {complaint.donDatPhong && (
+                          <span className={Style.complaintBooking}>
+                            Booking: {complaint.donDatPhong.maDatPhong}
+                          </span>
+                        )}
+                      </div>
+                      {complaint.phanHoi && (
+                        <div className={Style.complaintResponse}>
+                          <strong>Phản hồi:</strong> {complaint.phanHoi}
+                          {complaint.ngayPhanHoi && (
+                            <span className={Style.complaintResponseDate}>
+                              ({new Date(complaint.ngayPhanHoi).toLocaleDateString('vi-VN')})
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {(complaints || []).length > 10 && (
+                  <div className={Style.complaintsMore}>
+                    <p>Hiển thị 10/{(complaints || []).length} khiếu nại</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

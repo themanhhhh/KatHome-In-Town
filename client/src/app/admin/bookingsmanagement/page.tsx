@@ -22,7 +22,7 @@ import {
 
 import Style from "../../styles/bookingsmanagement.module.css";
 import { useApi } from "../../../hooks/useApi";
-import { donDatPhongApi } from "../../../lib/api";
+import { donDatPhongApi, revenueApi, RevenueSummaryResponse } from "../../../lib/api";
 import { ApiBooking } from "../../../types/api";
 import LoadingSpinner from "../../components/loading-spinner";
 import { BookingForm } from "../../components/booking-form";
@@ -44,6 +44,12 @@ const BookingsManagementPage = () => {
   // Fetch data from API
   const { data: bookings = [], loading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useApi<ApiBooking[]>(
     () => donDatPhongApi.getAll(),
+    []
+  );
+
+  // Try to fetch revenue summary from backend (preferred)
+  const { data: revenueSummary } = useApi<RevenueSummaryResponse>(
+    () => revenueApi.getSummary(),
     []
   );
 
@@ -376,10 +382,10 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(bookings || []).filter(b => b.trangThai === 'R').length}
+              {(bookings || []).filter(b => b.trangThai === 'AB').length}
             </div>
             <div className={Style.statLabel}>
-              Chờ xác nhận
+              Đã hủy
             </div>
           </div>
         </div>
@@ -387,10 +393,10 @@ const BookingsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {(bookings || []).filter(b => b.trangThai === 'CF').length}
+              {(bookings || []).filter(b => b.trangThai === 'CC').length}
             </div>
             <div className={Style.statLabel}>
-              Đã xác nhận
+              Hoàn thành
             </div>
           </div>
         </div>
@@ -399,18 +405,35 @@ const BookingsManagementPage = () => {
           <div className={Style.statContent}>
             <div className={Style.statValue}>
               {(() => {
-                // Chỉ tính doanh thu từ các booking đã hoàn thành (CC - Checked-out/Completed)
-                const totalRevenue = (bookings || []).reduce((sum, b) => {
-                  // Chỉ tính với booking có trạng thái hoàn thành
-                  if (b.trangThai === 'CC') {
-                  const amount = b.totalAmount;
-                  if (amount && !isNaN(amount) && amount > 0) {
-                    return sum + amount;
-                    }
+                // Prefer server-side revenue summary if available
+                const serverTotal = revenueSummary?.data?.totalRevenue;
+                if (typeof serverTotal === 'number') {
+                  return formatPrice(serverTotal);
+                }
+
+                // Fallback: sum bookings that have been paid (paymentStatus === 'paid')
+                const fallbackTotal = (bookings || []).reduce((sum, b) => {
+                  const paid = b.paymentStatus === 'paid' || b.totalPaid != null;
+                  const amount = b.totalPaid ?? b.totalAmount ?? 0;
+                  if (paid && !isNaN(Number(amount)) && Number(amount) > 0) {
+                    return sum + Number(amount);
                   }
                   return sum;
                 }, 0);
-                return formatPrice(totalRevenue);
+
+                // Last-resort: keep previous behavior (CC) if nothing else
+                if (fallbackTotal === 0) {
+                  const ccTotal = (bookings || []).reduce((sum, b) => {
+                    if (b.trangThai === 'CC') {
+                      const amount = b.totalAmount ?? 0;
+                      if (!isNaN(Number(amount))) return sum + Number(amount);
+                    }
+                    return sum;
+                  }, 0);
+                  return formatPrice(ccTotal);
+                }
+
+                return formatPrice(fallbackTotal);
               })()}
             </div>
             <div className={Style.statLabel}>
@@ -512,7 +535,7 @@ const BookingsManagementPage = () => {
                       <td className={Style.tableCell}>
                         <div>
                           <div className={Style.roomName}>
-                            {firstRoom?.phong?.moTa || 'N/A'}
+                            {firstRoom?.phong?.tenPhong || 'N/A'}
                           </div>
                           <div className={Style.guestCount}>
                             <Users className={Style.contactIcon} />

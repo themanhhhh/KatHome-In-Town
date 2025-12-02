@@ -484,17 +484,6 @@ const RoomsManagementPage = () => {
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
-              {uniqueRoomTypesCount}
-            </div>
-            <div className={Style.statLabel}>
-              Số loại phòng
-            </div>
-          </div>
-        </div>
-        
-        <div className={Style.statCard}>
-          <div className={Style.statContent}>
-            <div className={Style.statValue}>
               {roomsWithCoSo}
             </div>
             <div className={Style.statLabel}>

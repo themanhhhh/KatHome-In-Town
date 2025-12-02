@@ -26,7 +26,7 @@ export class QRCodeService {
     qrCodeUrl: string;
   } {
     const bankId = process.env.BANK_ID || 'VCB';
-    const accountNo = process.env.BANK_ACCOUNT_NO || '1234567890';
+    const accountNo = process.env.BANK_ACCOUNT_NO || '1024018878';
     const accountName = process.env.BANK_ACCOUNT_NAME || 'HOTEL BOOKING';
 
     return {

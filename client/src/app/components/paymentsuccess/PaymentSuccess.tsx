@@ -744,7 +744,8 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
                       </div>
                       <div className="flex items-center space-x-2">
                         <MapPin className="w-3 h-3" />
-                        <span>123 Đường Hoa Hồng, Phường 1, Đà Lạt</span>
+                        <span>Hệ thống cơ sở tại Hà Nội<br />
+                   Tây Hồ, Ba Đình, Hoàn Kiếm...</span>
                       </div>
                     </div>
                   </div>
@@ -773,7 +774,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
             </h2>
             <p className="text-lg opacity-80 max-w-2xl mx-auto" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
               Chúng tôi rất mong được phục vụ bạn và mang đến những trải nghiệm tuyệt vời nhất. 
-              Chúc bạn có một kỳ nghỉ đáng nhớ tại Đà Lạt!
+              Chúc bạn có một kỳ nghỉ đáng nhớ tại Hà Nội!
             </p>
           </div>
         </div>

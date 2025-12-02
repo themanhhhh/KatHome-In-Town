@@ -36,7 +36,7 @@ export default function BranchesPage() {
       try {
         setIsLoading(true);
         const data = await coSoApi.getAll();
-        setBranches(data);
+        setBranches(data as CoSo[]);
       } catch (err) {
         console.error("Error fetching branches:", err);
         setError("Không thể tải danh sách cơ sở. Vui lòng thử lại sau.");

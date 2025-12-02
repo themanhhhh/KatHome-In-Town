@@ -510,20 +510,6 @@ const UsersManagementPage = () => {
             </div>
           </div>
         </div>
-        
-        <div className={Style.statCard}>
-          <div className={Style.statContent}>
-            <div className={Style.statValue}>
-              {formatPrice(allUsers.reduce((sum, u) => {
-                const spent = u.totalSpent || 0;
-                return sum + (isNaN(spent) ? 0 : spent);
-              }, 0))}
-            </div>
-            <div className={Style.statLabel}>
-              Tổng chi tiêu
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Users Table */}

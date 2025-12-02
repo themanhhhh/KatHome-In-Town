@@ -609,7 +609,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                         <h4 className="font-heading" style={{ color: '#3D0301' }}>Thông tin chuyển khoản:</h4>
                         <div className="text-sm space-y-1" style={{ color: 'rgba(61, 3, 1, 0.7)' }}>
                           <p><strong>Ngân hàng:</strong> Vietcombank</p>
-                          <p><strong>Số tài khoản:</strong> 0123456789</p>
+                          <p><strong>Số tài khoản:</strong> 1024018878</p>
                           <p><strong>Tên tài khoản:</strong> KatHome In Town</p>
                           <p><strong>Số tiền:</strong> {formatPrice(getTotalPrice())}</p>
                           <p><strong>Nội dung:</strong> {formData.firstName} {formData.lastName} - Dat phong</p>

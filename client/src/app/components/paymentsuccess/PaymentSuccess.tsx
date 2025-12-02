@@ -370,15 +370,103 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
 
   const handleDownloadReceipt = async () => {
     setIsDownloading(true);
-    // Simulate download process
-    setTimeout(() => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const resp = await fetch(`${baseUrl}/api/bookings/${encodeURIComponent(bookingData.bookingId)}/confirmation-slip`);
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        const message = err.message || err.error || `Server returned ${resp.status}`;
+        throw new Error(message);
+      }
+
+      const json = await resp.json();
+      const slip = json.data;
+
+      // Build a simple printable HTML invoice
+      const invoiceHtml = `
+        <html>
+        <head>
+          <title>Hóa đơn - ${bookingData.bookingId}</title>
+          <meta charset="utf-8" />
+          <style>
+            body { font-family: Arial, sans-serif; color: #222; padding: 20px; }
+            .header { text-align: center; margin-bottom: 20px; }
+            .section { margin-bottom: 16px; }
+            .row { display: flex; justify-content: space-between; }
+            table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+            th, td { padding: 8px; border: 1px solid #ddd; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>KatHome In Town</h1>
+            <div>Mã đặt phòng: ${bookingData.bookingId}</div>
+            <div>Ngày: ${formatDateTime(bookingData.bookingDate)}</div>
+          </div>
+
+          <div class="section">
+            <h3>Thông tin khách hàng</h3>
+            <div class="row"><div>${bookingData.guestInfo.firstName} ${bookingData.guestInfo.lastName}</div><div>${bookingData.guestInfo.email}</div></div>
+            <div class="row"><div>${bookingData.guestInfo.phone}</div><div>${bookingData.guestInfo.address || ''}</div></div>
+          </div>
+
+          <div class="section">
+            <h3>Chi tiết đặt phòng</h3>
+            <div>Phòng: ${bookingData.roomData.name} (${bookingData.roomData.type})</div>
+            <div>Nhận: ${formatDate(slip.checkIn || bookingData.searchData.checkIn)}</div>
+            <div>Trả: ${formatDate(slip.checkOut || bookingData.searchData.checkOut)}</div>
+            <table>
+              <thead>
+                <tr><th>Mục</th><th>Giá</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Giá phòng</td><td>${formatPrice(bookingData.roomData.price)}</td></tr>
+                <tr><td>Số đêm</td><td>${calculateNights()}</td></tr>
+                <tr><td>Tổng</td><td>${formatPrice(bookingData.paymentInfo.total)}</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="section">
+            <h3>Ghi chú</h3>
+            <div>${slip.ghiChu || ''}</div>
+          </div>
+
+          <div style="margin-top:24px; text-align:center; color:#666; font-size:12px;">In hoặc lưu thành PDF bằng tính năng In/Save của trình duyệt.</div>
+        </body>
+        </html>
+      `;
+
+      // Tạo iframe ẩn để in
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!doc) throw new Error('Không thể truy cập iframe document');
+
+      doc.write(invoiceHtml);
+      doc.close();
+
+      // Gọi print sau khi nội dung tải xong
+      setTimeout(() => {
+        try {
+          iframe.contentWindow?.print();
+          toast.success('Hộp thoại in đã mở.', { duration: 3000 });
+        } catch (printErr) {
+          console.warn('Auto print blocked:', printErr);
+          toast.error('Không thể mở hộp thoại in.', { duration: 3000 });
+        }
+        // Xóa iframe sau khi in
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+      }, 500);
+    } catch (error) {
+      console.error('Error downloading receipt:', error);
+      const msg = error instanceof Error ? error.message : 'Lỗi khi tải hóa đơn';
+      toast.error('Không thể tải hóa đơn', { description: msg, duration: 6000 });
+    } finally {
       setIsDownloading(false);
-      // In real app, would generate and download PDF
-      toast.success('Hóa đơn đã được tải xuống!', {
-        description: 'File PDF đã được tải về máy của bạn.',
-        duration: 3000,
-      });
-    }, 2000);
+    }
   };
 
   const handleShare = async () => {

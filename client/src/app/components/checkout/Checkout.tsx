@@ -847,7 +847,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Số tài khoản:</span>
-                  <span>0123456789</span>
+                  <span>1024018878</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Tên tài khoản:</span>

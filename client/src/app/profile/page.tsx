@@ -253,10 +253,9 @@ export default function ProfilePage() {
                             <div>
                               <p className="text-sm text-gray-600 mb-1">Phương thức thanh toán</p>
                               <p className="text-sm font-medium">
-                                {booking.paymentMethod === 'Card' ? '💳 Thẻ tín dụng' : 
-                                 booking.paymentMethod === 'Cash' ? '💵 Tiền mặt' :
-                                 booking.phuongThucThanhToan === 'Card' ? '💳 Thẻ tín dụng' :
-                                 booking.phuongThucThanhToan === 'Cash' ? '💵 Tiền mặt' :
+                                {booking.paymentMethod === 'Card' || booking.phuongThucThanhToan === 'Card' ? '💳 Thẻ tín dụng' : 
+                                 booking.paymentMethod === 'Cash' || booking.phuongThucThanhToan === 'Cash' ? '💵 Tiền mặt' :
+                                 booking.paymentMethod === 'Bank-Transfer' || booking.phuongThucThanhToan === 'Bank-Transfer' ? '🏦 Chuyển khoản ngân hàng' :
                                  booking.paymentMethod || booking.phuongThucThanhToan || 'Chưa xác định'}
                               </p>
                             </div>

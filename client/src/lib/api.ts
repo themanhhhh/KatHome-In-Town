@@ -309,6 +309,8 @@ export interface CreateBookingRequest {
     price: number;
   }[];
   notes?: string;
+  // Optional canonical payment method: 'Card' | 'Cash'
+  paymentMethod?: string;
 }
 
 export const donDatPhongApi = {

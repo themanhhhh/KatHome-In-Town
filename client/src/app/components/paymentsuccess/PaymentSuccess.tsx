@@ -54,6 +54,7 @@ interface BookingData {
   };
   paymentInfo: {
     method: string;
+    backendMethod?: string;
     total: number;
   };
   bookingId: string;
@@ -81,7 +82,7 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
     const normalizedMethod = method?.toLowerCase().trim();
     
     if (normalizedMethod === 'bank-transfer' || normalizedMethod === 'bank transfer') {
-      return 'Cash'; // Bank transfer is treated as Cash payment in backend
+      return 'Bank-Transfer'; // Use new enum value for bank transfers
     }
     if (normalizedMethod === 'card' || normalizedMethod === 'credit-card' || normalizedMethod === 'debit-card') {
       return 'Card';
@@ -166,8 +167,8 @@ export function PaymentSuccess({ bookingData, onBackToHome }: PaymentSuccessProp
         const backendPaymentMethod = mapPaymentMethod(bookingData.paymentInfo.method);
         console.log('🔍 Payment method mapping:', bookingData.paymentInfo.method, '->', backendPaymentMethod);
         
-        // Validate mapped payment method
-        if (!backendPaymentMethod || (backendPaymentMethod !== 'Card' && backendPaymentMethod !== 'Cash')) {
+        // Validate mapped payment method (allow Card, Cash, Bank-Transfer)
+        if (!backendPaymentMethod || (backendPaymentMethod !== 'Card' && backendPaymentMethod !== 'Cash' && backendPaymentMethod !== 'Bank-Transfer')) {
           console.error('❌ Validation failed: Invalid payment method', backendPaymentMethod);
           throw new Error('Invalid payment method');
         }

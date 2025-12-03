@@ -26,6 +26,8 @@ export interface CreateBookingParams {
   notes?: string;
   bookingSource?: string;
   promotionCode?: string;
+  // Optional canonical payment method 'Card'|'Cash' passed from frontend at create time
+  paymentMethod?: string;
 }
 
 export class BookingService {
@@ -76,10 +78,11 @@ export class BookingService {
         customerEmail, 
         customerPhone, 
         customerName,
-        rooms, 
+          rooms, 
         notes, 
         bookingSource = 'website',
-        promotionCode
+          promotionCode,
+          paymentMethod
       } = params;
 
       // 1. Check availability (theo flowchart)
@@ -228,8 +231,9 @@ export class BookingService {
         coSo,
         khachHang,
         trangThai: 'R', // Reserved (PENDING theo flowchart)
-        phuongThucThanhToan: 'Cash',
-        paymentMethod: 'Cash', // Đồng bộ với phuongThucThanhToan
+        // Use provided paymentMethod if present, otherwise default to 'Cash'
+        phuongThucThanhToan: paymentMethod || 'Cash',
+        paymentMethod: paymentMethod || 'Cash', // Đồng bộ với phuongThucThanhToan
         checkinDuKien: checkIn,
         checkoutDuKien: checkOut,
         ngayDat: new Date(),

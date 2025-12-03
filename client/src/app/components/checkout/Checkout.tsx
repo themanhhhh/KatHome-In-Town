@@ -62,6 +62,7 @@ interface BookingData {
   };
   paymentInfo: {
     method: string;
+    backendMethod?: string;
     total: number;
   };
   bookingId: string;
@@ -140,6 +141,29 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     return subtotal;
   };
 
+  // Map payment method to backend enum (Card or Cash)
+  const mapPaymentMethod = (method: string): string => {
+    // Normalize to lowercase for comparison
+    const normalizedMethod = method?.toLowerCase().trim();
+    
+    if (normalizedMethod === 'bank-transfer' || normalizedMethod === 'bank transfer') {
+      return 'Bank-Transfer'; // Use new enum value for bank transfers
+    }
+    if (normalizedMethod === 'card' || normalizedMethod === 'credit-card' || normalizedMethod === 'debit-card') {
+      return 'Card';
+    }
+    if (normalizedMethod === 'cash' || normalizedMethod === 'cash on delivery' || normalizedMethod === 'thanh toán tại chỗ') {
+      return 'Cash';
+    }
+    // If already in correct format (Card, Cash), return as is
+    if (method === 'Card' || method === 'Cash') {
+      return method;
+    }
+    // Fallback: default to Cash for unknown methods
+    console.warn(`⚠️ Unknown payment method "${method}", defaulting to Cash`);
+    return 'Cash';
+  };
+
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
 
@@ -190,29 +214,6 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
     setIsConfirmingPayment(true);
     
     try {
-      // Map payment method to backend enum (Card or Cash)
-      const mapPaymentMethod = (method: string): string => {
-        // Normalize to lowercase for comparison
-        const normalizedMethod = method?.toLowerCase().trim();
-        
-        if (normalizedMethod === 'bank-transfer' || normalizedMethod === 'bank transfer') {
-          return 'Cash'; // Bank transfer is treated as Cash payment in backend
-        }
-        if (normalizedMethod === 'card' || normalizedMethod === 'credit-card' || normalizedMethod === 'debit-card') {
-          return 'Card';
-        }
-        if (normalizedMethod === 'cash' || normalizedMethod === 'cash on delivery' || normalizedMethod === 'thanh toán tại chỗ') {
-          return 'Cash';
-        }
-        // If already in correct format (Card, Cash), return as is
-        if (method === 'Card' || method === 'Cash') {
-          return method;
-        }
-        // Fallback: default to Cash for unknown methods
-        console.warn(`⚠️ Unknown payment method "${method}", defaulting to Cash`);
-        return 'Cash';
-      };
-
       const backendPaymentMethod = mapPaymentMethod(formData.paymentMethod);
       const response = await donDatPhongApi.confirmPayment(createdBookingId, backendPaymentMethod) as { success: boolean; message?: string };
       
@@ -235,7 +236,9 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
               specialRequests: formData.specialRequests
             },
             paymentInfo: {
-              method: 'bank-transfer',
+              // Keep the raw method selected by the user for display (e.g. 'bank-transfer', 'card')
+              method: formData.paymentMethod || backendPaymentMethod,
+              backendMethod: backendPaymentMethod,
               total: totalPrice
             },
             bookingId: createdBookingId,
@@ -294,6 +297,8 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
           price: totalPrice,
         }],
         notes: formData.specialRequests || undefined,
+        // Persist initial payment method on create so DB reflects user's choice
+        paymentMethod: mapPaymentMethod(formData.paymentMethod),
       }) as { success: boolean; data: { maDatPhong: string; ngayDat: string }; message?: string };
 
       if (!response.success) {
@@ -325,6 +330,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
         },
         paymentInfo: {
           method: formData.paymentMethod || 'cash',
+          backendMethod: mapPaymentMethod(formData.paymentMethod),
           total: totalPrice
         },
         bookingId: booking.maDatPhong,

@@ -24,7 +24,7 @@ export class DonDatPhong {
   @Column({ type: "enum", enum: ["R", "CF", "PA", "CC", "AB"] })
   trangThai!: string;
 
-  @Column({ type: "enum", enum: ["Card", "Cash"] })
+  @Column({ type: "enum", enum: ["Card", "Cash", "Bank-Transfer"] })
   phuongThucThanhToan!: string;
 
   @Column({ type: "timestamp" })

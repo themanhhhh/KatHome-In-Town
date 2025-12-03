@@ -83,7 +83,8 @@ export class DonDatPhongController {
         customerPhone, 
         customerName,
         rooms, 
-        notes 
+        notes,
+        paymentMethod
       } = req.body;
 
       // Validation
@@ -126,6 +127,7 @@ export class DonDatPhongController {
         rooms: parsedRooms,
         notes,
         bookingSource: 'website',
+        paymentMethod
       });
 
       res.status(201).json({
@@ -312,9 +314,11 @@ export class DonDatPhongController {
 
       // Update booking payment fields
       booking.paymentStatus = 'paid';
-      // Giữ phuongThucThanhToan nếu đã có (từ lúc create hoặc confirm payment)
-      // Chỉ set paymentMethod để đồng bộ với phuongThucThanhToan
-      const finalPaymentMethod = booking.phuongThucThanhToan || paymentMethod || 'Cash';
+      // Nếu client truyền `paymentMethod` thì ưu tiên dùng nó (ví dụ: Card),
+      // nếu không thì giữ `phuongThucThanhToan` đã lưu trước đó, cuối cùng default 'Cash'.
+      const finalPaymentMethod = (paymentMethod && String(paymentMethod).trim().length > 0)
+        ? paymentMethod
+        : (booking.phuongThucThanhToan || 'Cash');
       booking.phuongThucThanhToan = finalPaymentMethod;
       booking.paymentMethod = finalPaymentMethod; // Đồng bộ cả hai field
       booking.paymentRef = paymentRef || null;
@@ -336,7 +340,7 @@ export class DonDatPhongController {
       const revenue = queryRunner.manager.create(Revenue, {
         donDatPhong: booking,
         amount: totalAmount,
-        paymentMethod,
+        paymentMethod: finalPaymentMethod,
         paymentDate: paidDate,
         paymentRef: paymentRef || null
       });

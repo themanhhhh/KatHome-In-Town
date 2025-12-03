@@ -312,8 +312,11 @@ export class DonDatPhongController {
 
       // Update booking payment fields
       booking.paymentStatus = 'paid';
-      booking.paymentMethod = paymentMethod;
-      booking.phuongThucThanhToan = paymentMethod; // Đồng bộ cả hai field
+      // Giữ phuongThucThanhToan nếu đã có (từ lúc create hoặc confirm payment)
+      // Chỉ set paymentMethod để đồng bộ với phuongThucThanhToan
+      const finalPaymentMethod = booking.phuongThucThanhToan || paymentMethod || 'Cash';
+      booking.phuongThucThanhToan = finalPaymentMethod;
+      booking.paymentMethod = finalPaymentMethod; // Đồng bộ cả hai field
       booking.paymentRef = paymentRef || null;
       booking.paidAt = paidDate;
       booking.totalPaid = totalAmount;

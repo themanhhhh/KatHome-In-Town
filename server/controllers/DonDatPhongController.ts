@@ -313,6 +313,7 @@ export class DonDatPhongController {
       // Update booking payment fields
       booking.paymentStatus = 'paid';
       booking.paymentMethod = paymentMethod;
+      booking.phuongThucThanhToan = paymentMethod; // Đồng bộ cả hai field
       booking.paymentRef = paymentRef || null;
       booking.paidAt = paidDate;
       booking.totalPaid = totalAmount;
@@ -470,6 +471,7 @@ export class DonDatPhongController {
       // Cập nhật trạng thái chờ xác nhận
       booking.paymentStatus = 'waiting_confirmation';
       booking.paymentMethod = paymentMethod;
+      booking.phuongThucThanhToan = paymentMethod; // Đồng bộ cả hai field
       booking.paymentRef = paymentRef || null;
       
       await donDatPhongRepo.save(booking);

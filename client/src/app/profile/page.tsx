@@ -251,11 +251,6 @@ export default function ProfilePage() {
                             </div>
 
                             <div>
-                              <p className="text-sm text-gray-600 mb-1">Trạng thái thanh toán</p>
-                              {getPaymentStatusBadge(booking.paymentStatus)}
-                            </div>
-
-                            <div>
                               <p className="text-sm text-gray-600 mb-1">Phương thức thanh toán</p>
                               <p className="text-sm font-medium">
                                 {booking.paymentMethod === 'Card' ? '💳 Thẻ tín dụng' : 

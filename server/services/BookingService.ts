@@ -229,6 +229,7 @@ export class BookingService {
         khachHang,
         trangThai: 'R', // Reserved (PENDING theo flowchart)
         phuongThucThanhToan: 'Cash',
+        paymentMethod: 'Cash', // Đồng bộ với phuongThucThanhToan
         checkinDuKien: checkIn,
         checkoutDuKien: checkOut,
         ngayDat: new Date(),
@@ -368,6 +369,7 @@ export class BookingService {
       booking.paymentStatus = 'paid';
       booking.trangThai = 'CF'; // Confirmed
       booking.phuongThucThanhToan = paymentMethod;
+      booking.paymentMethod = paymentMethod; // Đồng bộ cả hai field
       booking.paidAt = new Date();
       booking.totalPaid = booking.totalAmount;
       booking.ngayXacNhan = new Date();

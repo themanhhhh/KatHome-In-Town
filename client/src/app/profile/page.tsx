@@ -65,6 +65,24 @@ export default function ProfilePage() {
     );
   };
 
+  const getPaymentStatusBadge = (paymentStatus?: string) => {
+    const statusMap: Record<string, { label: string; bgColor: string; textColor: string }> = {
+      'pending': { label: 'Chờ thanh toán', bgColor: '#FEF3C7', textColor: '#92400E' },
+      'waiting_confirmation': { label: 'Chờ xác nhận', bgColor: '#DBEAFE', textColor: '#1E40AF' },
+      'paid': { label: 'Đã thanh toán', bgColor: '#DCFCE7', textColor: '#166534' },
+      'failed': { label: 'Thanh toán thất bại', bgColor: '#FEE2E2', textColor: '#991B1B' },
+    };
+
+    const status = paymentStatus?.toLowerCase() || 'pending';
+    const statusInfo = statusMap[status] || { label: status, bgColor: '#F3F4F6', textColor: '#374151' };
+    
+    return (
+      <Badge style={{ backgroundColor: statusInfo.bgColor, color: statusInfo.textColor, border: 'none' }}>
+        {statusInfo.label}
+      </Badge>
+    );
+  };
+
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -232,14 +250,21 @@ export default function ProfilePage() {
                               </p>
                             </div>
 
-                            {booking.paymentMethod && (
-                              <div>
-                                <p className="text-sm text-gray-600 mb-1">Phương thức</p>
-                                <p className="text-sm font-medium">
-                                  {booking.paymentMethod === 'Card' ? '💳 Thẻ' : '💵 Tiền mặt'}
-                                </p>
-                              </div>
-                            )}
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1">Trạng thái thanh toán</p>
+                              {getPaymentStatusBadge(booking.paymentStatus)}
+                            </div>
+
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1">Phương thức thanh toán</p>
+                              <p className="text-sm font-medium">
+                                {booking.paymentMethod === 'Card' ? '💳 Thẻ tín dụng' : 
+                                 booking.paymentMethod === 'Cash' ? '💵 Tiền mặt' :
+                                 booking.phuongThucThanhToan === 'Card' ? '💳 Thẻ tín dụng' :
+                                 booking.phuongThucThanhToan === 'Cash' ? '💵 Tiền mặt' :
+                                 booking.paymentMethod || booking.phuongThucThanhToan || 'Chưa xác định'}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </CardContent>

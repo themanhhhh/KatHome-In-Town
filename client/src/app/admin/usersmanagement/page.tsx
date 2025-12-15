@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import * as XLSX from 'xlsx';
-import { 
+import {
   Search,
   Filter,
   Users,
@@ -52,7 +52,7 @@ const UsersManagementPage = () => {
   const [activeTab, setActiveTab] = useState<'users' | 'customers'>('users');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
-  
+
   // Delete confirmation dialog state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{
@@ -80,7 +80,7 @@ const UsersManagementPage = () => {
 
   // Fetch reviews to calculate average ratings
   const { data: reviews = [] } = useApi<ApiDanhGia[]>(
-    () => danhGiaApi.getAll({ trangThai: 'approved' }),
+    () => danhGiaApi.getAll(),
     []
   );
 
@@ -101,7 +101,7 @@ const UsersManagementPage = () => {
   // Calculate real statistics from bookings
   const userStats = React.useMemo(() => {
     const stats: Record<string, { bookings: number; spent: number }> = {};
-    
+
     (bookings || []).forEach(booking => {
       const email = booking.customerEmail || booking.khachHang?.email;
       if (email) {
@@ -112,14 +112,14 @@ const UsersManagementPage = () => {
         stats[email].spent += booking.totalAmount || 0;
       }
     });
-    
+
     return stats;
   }, [bookings]);
 
   // Calculate average ratings from reviews
   const userRatings = React.useMemo(() => {
     const ratings: Record<string, { total: number; count: number; average: number }> = {};
-    
+
     (reviews || []).forEach(review => {
       const email = review.email;
       if (email) {
@@ -131,7 +131,7 @@ const UsersManagementPage = () => {
         ratings[email].average = ratings[email].total / ratings[email].count;
       }
     });
-    
+
     return ratings;
   }, [reviews]);
 
@@ -180,8 +180,8 @@ const UsersManagementPage = () => {
 
   const filteredUsers = allUsers.filter(user => {
     const matchesSearch = (user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (user.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (user.phone || '').includes(searchTerm);
+      (user.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.phone || '').includes(searchTerm);
     const matchesStatus = statusFilter === "all" || user.status === statusFilter;
     const matchesTab = activeTab === 'users' ? user.type === 'user' : user.type === 'customer';
     return matchesSearch && matchesStatus && matchesTab;
@@ -197,14 +197,14 @@ const UsersManagementPage = () => {
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
     const maxPagesToShow = 5;
-    
+
     if (totalPages <= maxPagesToShow + 2) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
       pages.push(1);
-      
+
       if (currentPage <= 3) {
         for (let i = 2; i <= 4; i++) {
           pages.push(i);
@@ -225,7 +225,7 @@ const UsersManagementPage = () => {
         pages.push(totalPages);
       }
     }
-    
+
     return pages;
   };
 
@@ -284,10 +284,10 @@ const UsersManagementPage = () => {
     } catch (error) {
       console.error(`Error deleting ${itemToDelete.type}:`, error);
       const errorObj = error as { response?: { data?: { error?: string; message?: string } }; message?: string };
-      const errorMessage = errorObj?.response?.data?.error || 
-                         errorObj?.response?.data?.message || 
-                         errorObj?.message || 
-                         `Có lỗi xảy ra khi xóa ${itemToDelete.type === 'user' ? 'người dùng' : 'khách hàng'}`;
+      const errorMessage = errorObj?.response?.data?.error ||
+        errorObj?.response?.data?.message ||
+        errorObj?.message ||
+        `Có lỗi xảy ra khi xóa ${itemToDelete.type === 'user' ? 'người dùng' : 'khách hàng'}`;
       toast.error(`Lỗi khi xóa ${itemToDelete.type === 'user' ? 'người dùng' : 'khách hàng'}`, {
         description: errorMessage,
         duration: 5000
@@ -401,10 +401,10 @@ const UsersManagementPage = () => {
             <h1>Quản lý người dùng</h1>
             <p>Quản lý thông tin và hoạt động của người dùng và khách hàng</p>
           </div>
-          
+
           <div className={Style.headerActions}>
             {activeTab === 'customers' && (
-              <button 
+              <button
                 className={Style.exportButton}
                 onClick={() => {
                   setEditingCustomer(null);
@@ -456,12 +456,12 @@ const UsersManagementPage = () => {
                 className={Style.searchInput}
               />
             </div>
-            
+
             <div className={Style.filterControls}>
               <div className={Style.filterGroup}>
                 <Filter className={Style.filterIcon} />
-                <select 
-                  value={statusFilter} 
+                <select
+                  value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className={Style.selectTrigger}
                 >
@@ -488,7 +488,7 @@ const UsersManagementPage = () => {
             </div>
           </div>
         </div>
-        
+
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
@@ -499,7 +499,7 @@ const UsersManagementPage = () => {
             </div>
           </div>
         </div>
-        
+
         <div className={Style.statCard}>
           <div className={Style.statContent}>
             <div className={Style.statValue}>
@@ -524,7 +524,7 @@ const UsersManagementPage = () => {
                 <span className={Style.bulkText}>
                   Đã chọn {selectedUsers.length} người dùng
                 </span>
-                <button 
+                <button
                   className={`${Style.bulkButton} ${Style.bulkButtonDanger}`}
                   onClick={handleBulkDelete}
                 >
@@ -628,7 +628,7 @@ const UsersManagementPage = () => {
                         </button>
                         {user.type === 'user' && (
                           <>
-                            <button 
+                            <button
                               className={Style.actionButton}
                               onClick={() => {
                                 const apiUser = (users || []).find(u => u.id.toString() === user.id);
@@ -637,7 +637,7 @@ const UsersManagementPage = () => {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               className={`${Style.actionButton} ${Style.actionButtonDanger}`}
                               onClick={() => handleDeleteUser(user.id, user.name || 'người dùng này')}
                             >
@@ -647,7 +647,7 @@ const UsersManagementPage = () => {
                         )}
                         {user.type === 'customer' && (
                           <>
-                            <button 
+                            <button
                               className={Style.actionButton}
                               onClick={() => {
                                 const apiCustomer = (customers || []).find(c => c.maKhachHang === user.id);
@@ -656,7 +656,7 @@ const UsersManagementPage = () => {
                             >
                               <Edit className="w-4 h-4" />
                             </button>
-                            <button 
+                            <button
                               className={`${Style.actionButton} ${Style.actionButtonDanger}`}
                               onClick={() => {
                                 const apiCustomer = (customers || []).find(c => c.maKhachHang === user.id);
@@ -674,7 +674,7 @@ const UsersManagementPage = () => {
                 ))}
               </tbody>
             </table>
-            
+
             {filteredUsers.length === 0 && (
               <div className={Style.emptyState}>
                 <Users className={Style.emptyIcon} />
@@ -698,7 +698,7 @@ const UsersManagementPage = () => {
               >
                 Trước
               </button>
-              
+
               <div className={Style.paginationNumbers}>
                 {getPageNumbers().map((page, index) => {
                   if (page === '...') {
@@ -742,7 +742,7 @@ const UsersManagementPage = () => {
           </div>
           <div className={Style.sectionContent}>
             {(reviews || []).length === 0 ? (
-            <p className={Style.sectionPlaceholder}>
+              <p className={Style.sectionPlaceholder}>
                 Chưa có đánh giá nào
               </p>
             ) : (
@@ -816,7 +816,7 @@ const UsersManagementPage = () => {
           </div>
           <div className={Style.sectionContent}>
             {(complaints || []).length === 0 ? (
-            <p className={Style.sectionPlaceholder}>
+              <p className={Style.sectionPlaceholder}>
                 Chưa có khiếu nại nào
               </p>
             ) : (
@@ -963,7 +963,7 @@ const UsersManagementPage = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel 
+            <AlertDialogCancel
               onClick={() => {
                 setDeleteDialogOpen(false);
                 setItemToDelete(null);

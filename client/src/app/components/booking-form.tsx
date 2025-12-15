@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from './button/button';
 import { Card } from './card/card';
 import { X, Save } from 'lucide-react';
-import { ApiBooking, ApiRoom, ApiCoSo, ApiNhanVien, ApiCustomer } from '../../types/api';  
+import { ApiBooking, ApiRoom, ApiCoSo, ApiNhanVien, ApiCustomer } from '../../types/api';
 import { donDatPhongApi, phongApi, cosoApi, nhanVienApi, khachHangApi } from '../../lib/api';
 import { toast } from 'sonner';
 
@@ -28,7 +28,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
     trangThai: 'R' as string, // R, CF, AB, CC
     phuongThucThanhToan: 'Cash',
     notes: '',
-    
+
     // Required fields for creation
     coSoId: '',
     nhanVienId: '',
@@ -36,7 +36,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
     customerEmail: '',
     customerPhone: '',
     customerName: '',
-    
+
     // Room details
     rooms: [{
       roomId: '',
@@ -46,7 +46,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
       children: 0,
       price: 0
     }],
-    
+
     // Legacy fields for backward compatibility
     maPhong: '',
     soNguoiLon: 1,
@@ -115,34 +115,34 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
       });
       return;
     }
-    
+
     // Chỉ set khi đã có booking
     const firstRoom = booking.chiTiet?.[0];
     const totalGuests = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soNguoiLon || 0), 0);
     const totalChildren = (booking.chiTiet || []).reduce((sum, ct) => sum + (ct.soTreEm || 0), 0);
-    
+
     // Get coSoId from booking - tự điền cơ sở
     const coSoId = booking.coSo?.maCoSo || '';
-    
+
     // Get roomId from first chiTiet - tự điền phòng
     const maPhong = firstRoom?.phong?.maPhong || '';
-    
+
     // Tự điền nhân viên từ booking
     const nhanVienId = booking.nhanVien?.maNhanVien || '';
-    
+
     // Tự điền khách hàng từ booking
     const khachHangId = booking.khachHang?.maKhachHang || '';
-    
+
     // Tìm khách hàng trong danh sách nếu đã load
-    const selectedCustomer = customers.length > 0 && khachHangId 
+    const selectedCustomer = customers.length > 0 && khachHangId
       ? customers.find(c => c.maKhachHang === khachHangId)
       : null;
-    
+
     // Lấy thông tin khách hàng từ booking hoặc từ danh sách
     const customerEmail = booking.customerEmail || booking.khachHang?.email || selectedCustomer?.email || '';
     const customerPhone = booking.customerPhone || booking.khachHang?.soDienThoai || booking.khachHang?.sdt || selectedCustomer?.soDienThoai || selectedCustomer?.sdt || '';
     const customerName = booking.customerName || booking.khachHang?.tenKhachHang || booking.khachHang?.ten || selectedCustomer?.tenKhachHang || selectedCustomer?.ten || '';
-    
+
     // Set form data - ưu tiên giá trị từ booking, không fallback về prev nếu booking có giá trị
     setFormData({
       // Basic booking info
@@ -152,7 +152,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
       trangThai: booking.trangThai || 'R',
       phuongThucThanhToan: booking.phuongThucThanhToan || booking.paymentMethod || 'Cash',
       notes: booking.notes || '',
-      
+
       // Tự điền đầy đủ thông tin cơ sở, nhân viên, khách hàng - set trực tiếp từ booking
       coSoId: coSoId,
       nhanVienId: nhanVienId,
@@ -160,7 +160,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
       customerEmail: customerEmail,
       customerPhone: customerPhone,
       customerName: customerName,
-      
+
       // Room details
       rooms: booking.chiTiet && booking.chiTiet.length > 0 ? booking.chiTiet.map(ct => ({
         roomId: ct.phong?.maPhong || '',
@@ -177,7 +177,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
         children: 0,
         price: 0
       }],
-      
+
       // Legacy fields for backward compatibility
       maPhong: maPhong,
       soNguoiLon: totalGuests > 0 ? totalGuests : 1,
@@ -237,7 +237,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
 
         const checkInDate = new Date(formData.checkinDuKien);
         const checkOutDate = new Date(formData.checkoutDuKien);
-        
+
         if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
           toast.error('Ngày tháng không hợp lệ', {
             description: 'Vui lòng kiểm tra lại ngày nhận phòng và ngày trả phòng.'
@@ -245,7 +245,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
           setIsSubmitting(false);
           return;
         }
-        
+
         if (checkOutDate <= checkInDate) {
           toast.error('Ngày trả phòng không hợp lệ', {
             description: 'Ngày trả phòng phải sau ngày nhận phòng.'
@@ -279,8 +279,8 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
       return;
     }
 
-      const checkIn = new Date(formData.checkinDuKien);
-      const checkOut = new Date(formData.checkoutDuKien);
+    const checkIn = new Date(formData.checkinDuKien);
+    const checkOut = new Date(formData.checkoutDuKien);
     const diffTime = checkOut.getTime() - checkIn.getTime();
 
     if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime()) || diffTime <= 0) {
@@ -296,7 +296,7 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
     const pricePerNight = selectedRoom.donGiaQuaDem || selectedRoom.donGia4h || 0;
     const total = nights * pricePerNight;
 
-      setFormData(prev => ({ ...prev, totalAmount: total }));
+    setFormData(prev => ({ ...prev, totalAmount: total }));
   }, [rooms, formData.maPhong, formData.checkinDuKien, formData.checkoutDuKien]);
 
   useEffect(() => {
@@ -338,9 +338,9 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                     // Reset phòng đã chọn nếu phòng đó không thuộc cơ sở mới
                     const selectedRoom = rooms.find(r => r.maPhong === formData.maPhong);
                     const shouldResetRoom = newCoSoId && selectedRoom && selectedRoom.coSo?.maCoSo !== newCoSoId;
-                    
-                    setFormData({ 
-                      ...formData, 
+
+                    setFormData({
+                      ...formData,
                       coSoId: newCoSoId,
                       maPhong: shouldResetRoom ? '' : formData.maPhong
                     });
@@ -374,9 +374,9 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                         ? `${nv.ten || nv.email} - ${nv.email}`
                         : nv.ten || nv.maNhanVien;
                       return (
-                    <option key={nv.maNhanVien} value={nv.maNhanVien}>
+                        <option key={nv.maNhanVien} value={nv.maNhanVien}>
                           {label}
-                    </option>
+                        </option>
                       );
                     })}
                 </select>
@@ -550,7 +550,6 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                   onChange={(e) => setFormData({ ...formData, phuongThucThanhToan: e.target.value })}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                 >
-                  <option value="Cash">Tiền mặt</option>
                   <option value="Card">Thẻ</option>
                 </select>
               </div>
@@ -574,10 +573,10 @@ export function BookingForm({ booking, onClose, onSuccess }: BookingFormProps) {
                       return room.coSo?.maCoSo === formData.coSoId;
                     })
                     .map((room) => (
-                    <option key={room.maPhong} value={room.maPhong}>
-                                {room.tenPhong || room.moTa || 'N/A'}
-                    </option>
-                  ))}
+                      <option key={room.maPhong} value={room.maPhong}>
+                        {room.tenPhong || room.moTa || 'N/A'}
+                      </option>
+                    ))}
                 </select>
                 {!formData.coSoId && (
                   <p className="text-sm text-gray-500 mt-1">Vui lòng chọn cơ sở trước khi chọn phòng</p>

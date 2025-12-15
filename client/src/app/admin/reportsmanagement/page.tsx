@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { 
+import {
   Download,
   DollarSign,
   Calendar,
@@ -69,7 +69,7 @@ const ReportsManagementPage = () => {
   // Process data from API responses
   const stats = useMemo(() => {
     console.log('📊 Processing API data...');
-    
+
     // Get data from API responses
     const summary = summaryData?.data || {
       totalRevenue: 0,
@@ -80,16 +80,16 @@ const ReportsManagementPage = () => {
       completedBookings: 0,
       successRate: 0
     };
-    
+
     const trend = trendData?.data || [];
     const statusStats = statusStatsData?.data || [];
-    
+
     console.log('📈 Processed data:', { summary, trend, statusStats });
-    
+
     // Calculate trend percentage
     const currentPeriodRevenue = trend[trend.length - 1]?.revenue || 0;
     const previousPeriodRevenue = trend[trend.length - 2]?.revenue || 1;
-    const revenueTrend = previousPeriodRevenue > 0 
+    const revenueTrend = previousPeriodRevenue > 0
       ? ((currentPeriodRevenue - previousPeriodRevenue) / previousPeriodRevenue * 100)
       : 0;
 
@@ -139,10 +139,10 @@ const ReportsManagementPage = () => {
         'Ngày đặt': new Date(booking.ngayDat).toLocaleDateString('vi-VN'),
         'Check-in': new Date(booking.checkinDuKien).toLocaleDateString('vi-VN'),
         'Check-out': new Date(booking.checkoutDuKien).toLocaleDateString('vi-VN'),
-        'Trạng thái': booking.trangThai === 'CF' ? 'Đã xác nhận' : 
-                     booking.trangThai === 'R' ? 'Chờ xác nhận' :
-                     booking.trangThai === 'AB' ? 'Đã hủy' :
-                     booking.trangThai === 'CC' ? 'Hoàn thành' : booking.trangThai,
+        'Trạng thái': booking.trangThai === 'CF' ? 'Đã xác nhận' :
+          booking.trangThai === 'R' ? 'Chờ xác nhận' :
+            booking.trangThai === 'AB' ? 'Đã hủy' :
+              booking.trangThai === 'CC' ? 'Hoàn thành' : booking.trangThai,
         'Tổng tiền': booking.totalAmount,
         'Phương thức thanh toán': booking.paymentMethod,
         'Trạng thái thanh toán': booking.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán',
@@ -256,7 +256,7 @@ const ReportsManagementPage = () => {
             <div className={Style.statInfo}>
               <div className={Style.statValueLarge}>{formatPrice(stats.totalRevenue)}</div>
               <div className={Style.statLabel}>Tổng doanh thu</div>
-              
+
             </div>
           </div>
         </div>
@@ -304,27 +304,21 @@ const ReportsManagementPage = () => {
           <div className={Style.filterLabel}>
             <Calendar className="w-4 h-4" />
             <span>Khoảng thời gian:</span>
-            </div>
+          </div>
           <div className={Style.dateRangeButtons}>
-            <button 
-              className={`${Style.dateRangeButton} ${dateRange === 'week' ? Style.active : ''}`}
-              onClick={() => setDateRange('week')}
-            >
-              Tuần
-            </button>
-            <button 
+            <button
               className={`${Style.dateRangeButton} ${dateRange === 'month' ? Style.active : ''}`}
               onClick={() => setDateRange('month')}
             >
               Tháng
             </button>
-            <button 
+            <button
               className={`${Style.dateRangeButton} ${dateRange === 'quarter' ? Style.active : ''}`}
               onClick={() => setDateRange('quarter')}
             >
               Quý
             </button>
-            <button 
+            <button
               className={`${Style.dateRangeButton} ${dateRange === 'year' ? Style.active : ''}`}
               onClick={() => setDateRange('year')}
             >
@@ -346,29 +340,29 @@ const ReportsManagementPage = () => {
             {stats.monthlyRevenue && stats.monthlyRevenue.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={stats.monthlyRevenue}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value: number) => formatPrice(value)}
-                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb' }}
-                />
-                <Legend />
-                <Bar dataKey="revenue" fill="#10b981" name="Doanh thu" />
-              </BarChart>
-            </ResponsiveContainer>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(value: number) => formatPrice(value)}
+                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb' }}
+                  />
+                  <Legend />
+                  <Bar dataKey="revenue" fill="#10b981" name="Doanh thu" />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px', color: '#6b7280' }}>
                 <div style={{ textAlign: 'center' }}>
                   <p>Không có dữ liệu</p>
                   <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                    Bookings: {bookingsDetailData?.data?.length || 0} | 
+                    Bookings: {bookingsDetailData?.data?.length || 0} |
                     Stats data: {stats.monthlyRevenue?.length || 0}
                   </p>
                 </div>
-            </div>
-          )}
-        </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bookings Line Chart */}
@@ -381,36 +375,36 @@ const ReportsManagementPage = () => {
             {stats.monthlyRevenue && stats.monthlyRevenue.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={stats.monthlyRevenue}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb' }} />
-                <Legend />
-                <Line 
-                  type="monotone" 
-                  dataKey="bookings" 
-                  stroke="#3b82f6" 
-                  strokeWidth={2}
-                  name="Số booking"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb' }} />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="bookings"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    name="Số booking"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '300px', color: '#6b7280' }}>
                 <div style={{ textAlign: 'center' }}>
                   <p>Không có dữ liệu booking</p>
-                    </div>
-                  </div>
-            )}
-                  </div>
                 </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Booking Status Pie Chart */}
         <div className={Style.chartCard}>
           <div className={Style.chartHeader}>
             <h3 className={Style.chartTitle}>Phân bố trạng thái booking</h3>
             <Download className="w-4 h-4 text-gray-400 cursor-pointer" onClick={handleExportExcel} />
-                        </div>
+          </div>
           <div className={Style.chartContainer}>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -431,48 +425,48 @@ const ReportsManagementPage = () => {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
-                        </div>
-                      </div>
+          </div>
+        </div>
 
         {/* Summary Stats Card */}
         <div className={Style.chartCard}>
           <div className={Style.chartHeader}>
             <h3 className={Style.chartTitle}>Tổng quan thống kê</h3>
-                      </div>
+          </div>
           <div className={Style.summaryStats}>
             <div className={Style.summaryItem}>
               <div className={Style.summaryLabel}>Booking đã xác nhận</div>
               <div className={Style.summaryValue}>{stats.confirmedBookings}</div>
               <div className={Style.summaryPercent}>
                 {((stats.confirmedBookings / stats.totalBookings) * 100).toFixed(1)}%
-                    </div>
-                  </div>
+              </div>
+            </div>
             <div className={Style.summaryItem}>
               <div className={Style.summaryLabel}>Booking hoàn thành</div>
               <div className={Style.summaryValue}>{stats.completedBookings}</div>
               <div className={Style.summaryPercent}>
                 {((stats.completedBookings / stats.totalBookings) * 100).toFixed(1)}%
-                    </div>
-                  </div>
+              </div>
+            </div>
             <div className={Style.summaryItem}>
               <div className={Style.summaryLabel}>Booking đã hủy</div>
               <div className={Style.summaryValue}>{stats.cancelledBookings}</div>
               <div className={Style.summaryPercent}>
                 {((stats.cancelledBookings / stats.totalBookings) * 100).toFixed(1)}%
-                    </div>
-                  </div>
+              </div>
+            </div>
             <div className={Style.summaryItem}>
               <div className={Style.summaryLabel}>Tỷ lệ thành công</div>
               <div className={Style.summaryValue}>
                 {(((stats.confirmedBookings + stats.completedBookings) / stats.totalBookings) * 100).toFixed(1)}%
-                    </div>
+              </div>
               <div className={Style.summaryPercent}>
                 {stats.confirmedBookings + stats.completedBookings}/{stats.totalBookings}
-                  </div>
-                </div>
               </div>
             </div>
+          </div>
         </div>
+      </div>
     </div>
   );
 };

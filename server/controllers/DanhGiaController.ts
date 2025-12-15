@@ -9,17 +9,15 @@ export class DanhGiaController {
   static async getAll(req: Request, res: Response) {
     try {
       const { trangThai, phongMaPhong, limit } = req.query;
-      
+
       const queryBuilder = danhGiaRepository.createQueryBuilder('danhGia')
         .leftJoinAndSelect('danhGia.phong', 'phong')
         .leftJoinAndSelect('danhGia.donDatPhong', 'donDatPhong')
         .orderBy('danhGia.ngayDanhGia', 'DESC');
 
-      // Filter by status (default: approved for public view)
+      // Filter by status (optional - show all if not specified)
       if (trangThai) {
         queryBuilder.andWhere('danhGia.trangThai = :trangThai', { trangThai });
-      } else {
-        queryBuilder.andWhere('danhGia.trangThai = :trangThai', { trangThai: 'approved' });
       }
 
       // Filter by room
@@ -80,7 +78,7 @@ export class DanhGiaController {
         hoTen,
         email,
         soDienThoai,
-        trangThai: 'pending' // Reviews need approval
+        trangThai: 'approved' // Auto-approved for immediate display
       });
 
       // Set relations if provided
@@ -92,9 +90,9 @@ export class DanhGiaController {
       }
 
       const result = await danhGiaRepository.save(danhGia);
-      res.status(201).json({ 
+      res.status(201).json({
         message: 'Cảm ơn bạn đã đánh giá! Đánh giá của bạn sẽ được hiển thị sau khi được phê duyệt.',
-        data: result 
+        data: result
       });
     } catch (error) {
       console.error('Error creating review:', error);
@@ -106,7 +104,7 @@ export class DanhGiaController {
   static async updateStatus(req: Request, res: Response) {
     try {
       const { trangThai, phanHoi } = req.body;
-      
+
       const danhGia = await danhGiaRepository.findOneBy({ maDanhGia: req.params.id });
       if (!danhGia) {
         return res.status(404).json({ message: 'Không tìm thấy đánh giá' });
@@ -162,10 +160,10 @@ export class DanhGiaController {
       }
 
       const reviews = await queryBuilder.getMany();
-      
+
       const stats = {
         totalReviews: reviews.length,
-        averageRating: reviews.length > 0 
+        averageRating: reviews.length > 0
           ? (reviews.reduce((sum, r) => sum + r.diemDanhGia, 0) / reviews.length).toFixed(1)
           : 0,
         ratingDistribution: {

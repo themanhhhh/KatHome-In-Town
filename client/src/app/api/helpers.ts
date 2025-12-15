@@ -12,14 +12,17 @@ export async function forwardToBackend(
 ) {
   try {
     const url = getApiUrl(endpoint);
-    
+    console.log('[API Proxy] Forwarding to:', url);
+    console.log('[API Proxy] Method:', request.method);
+
     // Get request body if it's a POST/PUT request
     let body = undefined;
     if (request.method === 'POST' || request.method === 'PUT') {
       try {
         body = await request.json();
+        console.log('[API Proxy] Request body:', body);
       } catch (e) {
-        // No body or invalid JSON
+        console.error('[API Proxy] Failed to parse body:', e);
       }
     }
 
@@ -27,13 +30,13 @@ export async function forwardToBackend(
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
-    
+
     // Forward authorization header from client request
     const authHeader = request.headers.get('authorization');
     if (authHeader) {
       headers['Authorization'] = authHeader;
     }
-    
+
     // Forward other headers (except host and connection which are server-specific)
     request.headers.forEach((value, key) => {
       if (key.toLowerCase() !== 'host' && key.toLowerCase() !== 'connection') {
@@ -41,6 +44,7 @@ export async function forwardToBackend(
       }
     });
 
+    console.log('[API Proxy] Sending request...');
     const response = await fetch(url, {
       method: request.method,
       headers,
@@ -48,11 +52,13 @@ export async function forwardToBackend(
       ...options,
     });
 
+    console.log('[API Proxy] Response status:', response.status);
     const data = await response.json();
+    console.log('[API Proxy] Response data:', data);
 
     return NextResponse.json(data, { status: response.status });
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('[API Proxy] Error:', error);
     return NextResponse.json(
       { message: 'Lỗi kết nối đến server', error: String(error) },
       { status: 500 }

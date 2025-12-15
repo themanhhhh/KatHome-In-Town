@@ -9,7 +9,7 @@ export class KhieuNaiController {
   static async getAll(req: Request, res: Response) {
     try {
       const { trangThai, loaiKhieuNai } = req.query;
-      
+
       const queryBuilder = khieuNaiRepository.createQueryBuilder('khieuNai')
         .leftJoinAndSelect('khieuNai.khachHang', 'khachHang')
         .leftJoinAndSelect('khieuNai.donDatPhong', 'donDatPhong')
@@ -49,16 +49,18 @@ export class KhieuNaiController {
   // Create new complaint (public endpoint - no auth required)
   static async create(req: Request, res: Response) {
     try {
-      const { 
-        tieuDe, 
-        dienGiai, 
-        loaiKhieuNai, 
-        hoTen, 
-        email, 
-        soDienThoai, 
-        khachHangMaKhachHang, 
-        donDatPhongMaDatPhong 
+      const {
+        tieuDe,
+        dienGiai,
+        loaiKhieuNai,
+        hoTen,
+        email,
+        soDienThoai,
+        khachHangMaKhachHang,
+        donDatPhongMaDatPhong
       } = req.body;
+
+      console.log('Received complaint data:', req.body);
 
       // Validation
       if (!tieuDe || !dienGiai) {
@@ -70,7 +72,8 @@ export class KhieuNaiController {
         return res.status(400).json({ message: 'Vui lòng cung cấp họ tên và email' });
       }
 
-      const khieuNai = khieuNaiRepository.create({
+      // Create the complaint object with all fields
+      const complaintData: any = {
         tieuDe,
         dienGiai,
         loaiKhieuNai: loaiKhieuNai || 'other',
@@ -78,25 +81,33 @@ export class KhieuNaiController {
         email,
         soDienThoai,
         trangThai: 'pending'
-      });
+      };
 
-      // Set relations if provided
+      // Add foreign key references if provided
       if (khachHangMaKhachHang) {
-        (khieuNai as any).khachHangMaKhachHang = khachHangMaKhachHang;
+        complaintData.khachHangMaKhachHang = khachHangMaKhachHang;
       }
       if (donDatPhongMaDatPhong) {
-        (khieuNai as any).donDatPhongMaDatPhong = donDatPhongMaDatPhong;
+        complaintData.donDatPhongMaDatPhong = donDatPhongMaDatPhong;
       }
 
+      const khieuNai = khieuNaiRepository.create(complaintData);
       const result = await khieuNaiRepository.save(khieuNai);
-      
-      res.status(201).json({ 
+
+      console.log('Complaint created successfully');
+
+      res.status(201).json({
         message: 'Khiếu nại của bạn đã được gửi thành công. Chúng tôi sẽ xử lý và phản hồi trong thời gian sớm nhất.',
-        data: result 
+        data: result
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating complaint:', error);
-      res.status(500).json({ message: 'Lỗi khi tạo khiếu nại', error });
+      console.error('Error details:', error.message, error.stack);
+      res.status(500).json({
+        message: 'Lỗi khi tạo khiếu nại',
+        error: error.message || 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
     }
   }
 
@@ -104,7 +115,7 @@ export class KhieuNaiController {
   static async updateStatus(req: Request, res: Response) {
     try {
       const { trangThai, phanHoi } = req.body;
-      
+
       const khieuNai = await khieuNaiRepository.findOneBy({ maKhieuNai: req.params.id });
       if (!khieuNai) {
         return res.status(404).json({ message: 'Không tìm thấy khiếu nại' });
@@ -154,4 +165,3 @@ export class KhieuNaiController {
     }
   }
 }
-

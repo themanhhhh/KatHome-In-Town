@@ -12,10 +12,16 @@ export class KhieuNai {
   @JoinColumn({ name: 'khachHangMaKhachHang' })
   khachHang?: KhachHang;
 
+  @Column({ nullable: true })
+  khachHangMaKhachHang?: string;
+
   // Optional relation to booking
   @ManyToOne(() => DonDatPhong, { nullable: true })
   @JoinColumn({ name: 'donDatPhongMaDatPhong' })
   donDatPhong?: DonDatPhong;
+
+  @Column({ nullable: true })
+  donDatPhongMaDatPhong?: string;
 
   // Guest information (for non-logged-in users)
   @Column({ nullable: true })

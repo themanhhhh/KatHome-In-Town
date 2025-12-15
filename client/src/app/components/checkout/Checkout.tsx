@@ -514,9 +514,7 @@ export function Checkout({ roomData, searchData, onBack, onProceedToVerification
                         <SelectValue placeholder="Chọn phương thức thanh toán" />
                       </SelectTrigger>
                       <SelectContent className="bg-white" style={{ backgroundColor: '#ffffff' }}>
-                        <SelectItem value="card">Thẻ tín dụng/ghi nợ</SelectItem>
                         <SelectItem value="bank-transfer">Chuyển khoản ngân hàng</SelectItem>
-                        <SelectItem value="cash">Thanh toán tại chỗ</SelectItem>
                       </SelectContent>
                     </Select>
                     {errors.paymentMethod && (
